@@ -109,7 +109,14 @@
                         {% for month in months %}
                             <td class="px-4 py-4 whitespace-nowrap text-center">
                                 <div class="text-sm font-bold text-gray-900">
-                                    {% set total = networth_data.get(month, {}).get('total_net_worth', 0) %}
+                                    {% set month_data = networth_data.get(month, {}) %}
+                                    {% set total = 0 %}
+                                    {% for platform in platforms %}
+                                        {% set platform_value = month_data.get(platform.name, 0) %}
+                                        {% if platform_value %}
+                                            {% set total = total + platform_value %}
+                                        {% endif %}
+                                    {% endfor %}
                                     {% if total > 0 %}
                                         £{{ "{:,.0f}".format(total) }}
                                     {% else %}
@@ -128,7 +135,14 @@
                         {% set previous_total = 0 %}
                         {% for month in months %}
                             <td class="px-4 py-4 whitespace-nowrap text-center">
-                                {% set current_total = networth_data.get(month, {}).get('total_net_worth', 0) %}
+                                {% set month_data = networth_data.get(month, {}) %}
+                                {% set current_total = 0 %}
+                                {% for platform in platforms %}
+                                    {% set platform_value = month_data.get(platform.name, 0) %}
+                                    {% if platform_value %}
+                                        {% set current_total = current_total + platform_value %}
+                                    {% endif %}
+                                {% endfor %}
                                 {% if current_total > 0 and previous_total > 0 %}
                                     {% set change_percent = ((current_total - previous_total) / previous_total) * 100 %}
                                     <div class="text-sm font-medium {{ 'text-green-600' if change_percent > 0 else 'text-red-600' if change_percent < 0 else 'text-gray-500' }}">

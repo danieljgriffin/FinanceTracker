@@ -142,9 +142,9 @@ class DataManager:
         
         data[month][platform] = value
         
-        # Calculate monthly total
-        total = sum(data[month].values())
-        data[month]['total_net_worth'] = total
+        # Remove any existing total_net_worth field to avoid incorrect calculations
+        if 'total_net_worth' in data[month]:
+            del data[month]['total_net_worth']
         
         self.save_networth_data(data, year)
     
@@ -157,15 +157,19 @@ class DataManager:
             
             # Try to get 31st Dec value, fallback to latest month
             if '31st Dec' in current_data:
-                current_value = current_data['31st Dec'].get('total_net_worth', 0)
+                month_data = current_data['31st Dec']
+                current_value = sum(v for k, v in month_data.items() if k != 'total_net_worth' and isinstance(v, (int, float)))
             else:
                 # Find the latest month with data
                 months = ['1st Dec', '1st Nov', '1st Oct', '1st Sep', '1st Aug', '1st Jul', 
                          '1st Jun', '1st May', '1st Apr', '1st Mar', '1st Feb', '1st Jan']
                 for month in months:
-                    if month in current_data and current_data[month].get('total_net_worth', 0) > 0:
-                        current_value = current_data[month]['total_net_worth']
-                        break
+                    if month in current_data:
+                        month_data = current_data[month]
+                        month_total = sum(v for k, v in month_data.items() if k != 'total_net_worth' and isinstance(v, (int, float)))
+                        if month_total > 0:
+                            current_value = month_total
+                            break
             
             # Get previous year end value
             previous_year = current_year - 1
@@ -173,13 +177,17 @@ class DataManager:
             previous_value = 0
             
             if '31st Dec' in previous_data:
-                previous_value = previous_data['31st Dec'].get('total_net_worth', 0)
+                month_data = previous_data['31st Dec']
+                previous_value = sum(v for k, v in month_data.items() if k != 'total_net_worth' and isinstance(v, (int, float)))
             else:
                 # Find the latest month with data from previous year
                 for month in months:
-                    if month in previous_data and previous_data[month].get('total_net_worth', 0) > 0:
-                        previous_value = previous_data[month]['total_net_worth']
-                        break
+                    if month in previous_data:
+                        month_data = previous_data[month]
+                        month_total = sum(v for k, v in month_data.items() if k != 'total_net_worth' and isinstance(v, (int, float)))
+                        if month_total > 0:
+                            previous_value = month_total
+                            break
             
             # Calculate increase
             if previous_value > 0:
