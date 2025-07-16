@@ -100,6 +100,8 @@ Preferred communication style: Simple, everyday language.
 - **Live Price Updates**: Successfully fetching real-time prices for Baillie Gifford and UBS S&P 500 funds
 - **Transaction History**: Complete audit trail of all investment changes with timestamps
 - **Flexible Input Options**: Support for both "Amount Spent" and "Average Buy Price" input methods
+- **Currency Conversion Fix**: Corrected USD to GBP conversion logic (META: $702.75 → £524.62)
+- **UBS Fund Price Fix**: Fixed UBS S&P 500 to use web scraping (correct price: £2.1106 vs incorrect £0.81)
 
 ## Deployment Strategy
 

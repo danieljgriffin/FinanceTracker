@@ -34,8 +34,7 @@ class PriceFetcher:
             'GB00BMN91T34': {
                 'name': 'UBS S&P 500 Index Class C - Acc',
                 'morningstar_id': 'F00000UE1Z',
-                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/u/ubs-s-and-p-500-index-accumulation',
-                'yahoo_symbol': 'GB00BMN91T34.L'
+                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/u/ubs-s-and-p-500-index-accumulation'
             }
         }
     
@@ -119,10 +118,10 @@ class PriceFetcher:
             'GB00BYVGKV59': 3.5510,  # Baillie Gifford Positive Change (355.10p)
             'LU1033663649': 15.50,   # Fidelity Global Technology (estimate)
             'LU0345781172': 8.25,    # Ninety One Natural Resources (estimate)
-            'GB00BMN91T34': 0.81     # UBS S&P 500 (81.00p)
+            'GB00BMN91T34': 2.1106   # UBS S&P 500 (211.06p)
         }
         
-        # Try Yahoo Finance first for UBS fund
+        # Try Yahoo Finance first if available
         if 'yahoo_symbol' in fund_info:
             try:
                 self.logger.info(f"Trying to fetch price for {fund_info['name']} from Yahoo Finance")
@@ -232,11 +231,12 @@ class PriceFetcher:
             
             # Look for price patterns in the HTML
             price_patterns = [
-                r'Sell:(\d+\.?\d*)p',  # Sell:355.10p
-                r'Buy:(\d+\.?\d*)p',   # Buy:355.10p
+                r'Sell:(\d+\.?\d*)p',  # Sell:355.10p or Sell:211.06p
+                r'Buy:(\d+\.?\d*)p',   # Buy:355.10p or Buy:211.06p
                 r'Price:(\d+\.?\d*)p', # Price:355.10p
-                r'(\d+\.?\d*)p\s*Buy', # 355.10p Buy
-                r'(\d+\.?\d*)p\s*Sell', # 355.10p Sell
+                r'(\d+\.?\d*)p\s*Buy', # 355.10p Buy or 211.06p Buy
+                r'(\d+\.?\d*)p\s*Sell', # 355.10p Sell or 211.06p Sell
+                r'(\d{2,3}\.\d{2})p',  # Generic pattern for XXX.XXp like 211.06p
                 r'price[\'\"]\s*:\s*[\'\"]\s*(\d+\.?\d*)',
                 r'\"price\"\s*:\s*\"(\d+\.?\d*)',
                 r'<span[^>]*>(\d+\.?\d*)p</span>'
@@ -331,9 +331,10 @@ class PriceFetcher:
             
             for field in price_fields:
                 if field in info and info[field]:
-                    # This gives us GBP per USD, but we want USD per GBP
-                    gbp_per_usd = float(info[field])
-                    usd_per_gbp = 1 / gbp_per_usd
+                    # GBPUSD=X gives us USD per GBP (how many USD for 1 GBP)
+                    # We need GBP per USD, so take the reciprocal
+                    usd_per_gbp = float(info[field])
+                    gbp_per_usd = 1 / usd_per_gbp
                     
                     self.usd_to_gbp_rate = gbp_per_usd
                     self.last_rate_update = datetime.now()
@@ -343,7 +344,8 @@ class PriceFetcher:
             # Try history if info doesn't work
             hist = ticker.history(period='1d')
             if not hist.empty:
-                gbp_per_usd = float(hist['Close'].iloc[-1])
+                usd_per_gbp = float(hist['Close'].iloc[-1])
+                gbp_per_usd = 1 / usd_per_gbp
                 self.usd_to_gbp_rate = gbp_per_usd
                 self.last_rate_update = datetime.now()
                 self.logger.debug(f"Updated USD/GBP rate from history: {self.usd_to_gbp_rate}")
