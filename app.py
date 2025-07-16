@@ -335,5 +335,87 @@ def update_prices():
     
     return redirect(url_for('investment_manager'))
 
+@app.route('/edit-investment/<platform>/<int:index>')
+def edit_investment(platform, index):
+    """Edit an existing investment"""
+    try:
+        investments_data = data_manager.get_investments_data()
+        
+        if platform not in investments_data or index >= len(investments_data[platform]):
+            flash('Investment not found', 'error')
+            return redirect(url_for('investment_manager'))
+        
+        investment = investments_data[platform][index]
+        unique_names = data_manager.get_unique_investment_names()
+        
+        return render_template('edit_investment.html',
+                             investment=investment,
+                             platform=platform,
+                             index=index,
+                             unique_names=unique_names,
+                             platform_colors=PLATFORM_COLORS)
+    except Exception as e:
+        logging.error(f"Error editing investment: {str(e)}")
+        flash(f'Error editing investment: {str(e)}', 'error')
+        return redirect(url_for('investment_manager'))
+
+@app.route('/update-investment/<platform>/<int:index>', methods=['POST'])
+def update_investment(platform, index):
+    """Update an existing investment"""
+    try:
+        name = request.form.get('name')
+        holdings = float(request.form.get('holdings', 0))
+        input_type = request.form.get('input_type', 'amount_spent')
+        symbol = request.form.get('symbol', '')
+        
+        if not name or holdings <= 0:
+            flash('Investment name and holdings are required', 'error')
+            return redirect(url_for('edit_investment', platform=platform, index=index))
+        
+        # Prepare update data
+        updates = {
+            'name': name,
+            'holdings': holdings,
+            'symbol': symbol
+        }
+        
+        # Handle different input types
+        if input_type == 'amount_spent':
+            amount_spent = float(request.form.get('amount_spent', 0))
+            if amount_spent <= 0:
+                flash('Amount spent must be greater than 0', 'error')
+                return redirect(url_for('edit_investment', platform=platform, index=index))
+            updates['amount_spent'] = amount_spent
+            updates['average_buy_price'] = amount_spent / holdings
+        elif input_type == 'average_buy_price':
+            average_buy_price = float(request.form.get('average_buy_price', 0))
+            if average_buy_price <= 0:
+                flash('Average buy price must be greater than 0', 'error')
+                return redirect(url_for('edit_investment', platform=platform, index=index))
+            updates['average_buy_price'] = average_buy_price
+            updates['amount_spent'] = average_buy_price * holdings
+        
+        data_manager.update_investment(platform, index, updates)
+        flash(f'Investment {name} updated successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error updating investment: {str(e)}")
+        flash(f'Error updating investment: {str(e)}', 'error')
+    
+    return redirect(url_for('investment_manager'))
+
+@app.route('/delete-investment/<platform>/<int:index>', methods=['POST'])
+def delete_investment(platform, index):
+    """Delete an existing investment"""
+    try:
+        data_manager.remove_investment(platform, index)
+        flash('Investment deleted successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error deleting investment: {str(e)}")
+        flash(f'Error deleting investment: {str(e)}', 'error')
+    
+    return redirect(url_for('investment_manager'))
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

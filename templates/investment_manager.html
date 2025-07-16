@@ -202,10 +202,10 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center space-x-2">
-                                                <button class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                <button onclick="editInvestment('{{ platform }}', {{ loop.index0 }})" class="text-gray-400 hover:text-blue-600 transition-colors">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button class="text-gray-400 hover:text-red-600 transition-colors">
+                                                <button onclick="deleteInvestment('{{ platform }}', {{ loop.index0 }}, '{{ investment.name }}')" class="text-gray-400 hover:text-red-600 transition-colors">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -349,5 +349,21 @@ function toggleInputType() {
 document.addEventListener('DOMContentLoaded', function() {
     toggleInputType();
 });
+
+function editInvestment(platform, index) {
+    // For now, we'll use a simple approach - redirect to a form with pre-filled data
+    window.location.href = `/edit-investment/${platform}/${index}`;
+}
+
+function deleteInvestment(platform, index, name) {
+    if (confirm(`Are you sure you want to delete "${name}" from ${platform}?`)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-investment/${platform}/${index}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
 </script>
 {% endblock %}

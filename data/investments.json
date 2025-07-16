@@ -7,13 +7,13 @@
   "HL Stocks & Shares LISA": [
     {
       "name": "UBS S&P 500 Index Class C - Acc",
-      "holdings": 4485.15,
-      "amount_spent": 7665.5,
-      "average_buy_price": 1.7090844230404783,
+      "holdings": 8970.3043,
+      "amount_spent": 15331.0,
+      "average_buy_price": 1.7090836037747348,
       "symbol": "",
       "current_price": 0,
       "created_at": "2025-07-16T16:25:52.414012",
-      "last_updated": "2025-07-16T16:25:52.414020"
+      "last_updated": "2025-07-16T16:29:50.384477"
     }
   ],
   "Cash": []

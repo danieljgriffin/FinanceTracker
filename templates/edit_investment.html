@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Investment - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-bold text-white">Edit Investment</h1>
+            <p class="text-white/80 mt-1">Update your investment details</p>
+        </div>
+        <a href="{{ url_for('investment_manager') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 16px rgba(107, 114, 128, 0.4);">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Portfolio
+        </a>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="card">
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-xl font-semibold text-gray-900">Edit Investment</h2>
+        </div>
+        <form method="POST" action="{{ url_for('update_investment', platform=platform, index=index) }}" class="p-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Investment Name</label>
+                    <input type="text" name="name" value="{{ investment.name }}" list="investment-names" required 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <datalist id="investment-names">
+                        {% for name in unique_names %}
+                            <option value="{{ name }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Symbol (Optional)</label>
+                    <input type="text" name="symbol" value="{{ investment.symbol or '' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                           placeholder="e.g., AAPL, BTC-USD">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Holdings (Quantity)</label>
+                    <input type="number" step="0.000001" name="holdings" value="{{ investment.holdings }}" required 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Input Type</label>
+                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="amount_spent">Amount Spent</option>
+                        <option value="average_buy_price">Average Buy Price</option>
+                    </select>
+                </div>
+                
+                <div id="amount_spent_input">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Spent (£)</label>
+                    <input type="number" step="0.01" name="amount_spent" value="{{ investment.amount_spent or '' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                
+                <div id="average_buy_price_input" style="display: none;">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Average Buy Price (£)</label>
+                    <input type="number" step="0.0001" name="average_buy_price" value="{{ investment.average_buy_price or '' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </div>
+            
+            <div class="mt-8 flex justify-end space-x-4">
+                <a href="{{ url_for('investment_manager') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-all duration-300">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-save mr-2"></i>Update Investment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleInputType() {
+    const inputType = document.getElementById('input_type').value;
+    const amountSpentInput = document.getElementById('amount_spent_input');
+    const averageBuyPriceInput = document.getElementById('average_buy_price_input');
+    
+    if (inputType === 'amount_spent') {
+        amountSpentInput.style.display = 'block';
+        averageBuyPriceInput.style.display = 'none';
+        document.querySelector('input[name="amount_spent"]').required = true;
+        document.querySelector('input[name="average_buy_price"]').required = false;
+    } else {
+        amountSpentInput.style.display = 'none';
+        averageBuyPriceInput.style.display = 'block';
+        document.querySelector('input[name="amount_spent"]').required = false;
+        document.querySelector('input[name="average_buy_price"]').required = true;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleInputType();
+});
+</script>
+{% endblock %}

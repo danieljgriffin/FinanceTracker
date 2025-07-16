@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "transaction_id": "txn_20250716_162950",
+    "timestamp": "2025-07-16T16:29:50.384529",
+    "action": "ADD",
+    "platform": "HL Stocks & Shares LISA",
+    "investment_name": "UBS S&P 500 Index Class C - Acc",
+    "holdings_change": 4485.1543,
+    "amount_spent_change": 7665.5,
+    "average_buy_price": 1.709082784509777,
+    "symbol": "",
+    "old_holdings": 4485.15,
+    "new_holdings": 8970.3043,
+    "old_amount_spent": 7665.5,
+    "new_amount_spent": 15331.0
+  }
+]
