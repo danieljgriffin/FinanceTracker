@@ -184,6 +184,50 @@ def update_monthly_value():
     
     return redirect(url_for('yearly_tracker', year=year))
 
+@app.route('/auto-populate-month', methods=['POST'])
+def auto_populate_month():
+    """Auto-populate current month with investment data"""
+    try:
+        year = int(request.form.get('year'))
+        current_month = datetime.now().strftime('%B')
+        
+        # Get current investment data
+        investments_data = data_manager.get_investments_data()
+        
+        # Calculate platform totals (investments + cash)
+        platform_totals = {}
+        for platform, investments in investments_data.items():
+            total_value = 0
+            
+            if isinstance(investments, list):
+                # Calculate investment values
+                for investment in investments:
+                    if isinstance(investment, dict) and 'holdings' in investment:
+                        try:
+                            holdings = float(investment.get('holdings', 0))
+                            price = float(investment.get('price', 0))
+                            total_value += holdings * price
+                        except (ValueError, TypeError):
+                            continue
+            
+            # Add cash balance
+            cash_balance = data_manager.get_platform_cash(platform)
+            total_value += cash_balance
+            
+            if total_value > 0:
+                platform_totals[platform] = total_value
+        
+        # Update monthly values for all platforms
+        for platform, value in platform_totals.items():
+            data_manager.update_monthly_networth(year, current_month, platform, value)
+        
+        flash(f'Auto-populated {current_month} {year} with current investment data', 'success')
+        return redirect(url_for('yearly_tracker', year=year))
+    except Exception as e:
+        logging.error(f"Error auto-populating month: {str(e)}")
+        flash(f'Error auto-populating month: {str(e)}', 'error')
+        return redirect(url_for('yearly_tracker'))
+
 @app.route('/income-investments')
 def income_investments():
     """Income vs Investment tracker"""
