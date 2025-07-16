@@ -24,11 +24,12 @@ class PriceFetcher:
             'LU1033663649': {
                 'name': 'Fidelity Global Technology Class W - Acc',
                 'morningstar_id': 'F00000QYQT',
-                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/f/fidelity-global-technology-class-w-accumulation'
+                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/f/fidelity-global-technology-w-gbp-accumulation'
             },
             'LU0345781172': {
                 'name': 'Ninety One GSF Global Natural Resources Class I - Acc',
                 'morningstar_id': 'F0GBR04S0N',
+                'ft_url': 'https://markets.ft.com/data/funds/tearsheet/performance?s=LU0954591375:GBP',
                 'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/n/ninety-one-gsf-global-natural-resources-class-i-accumulation'
             },
             'GB00BMN91T34': {
@@ -116,8 +117,8 @@ class PriceFetcher:
         # Fallback prices (manually updated as needed - these are from July 16, 2025)
         fallback_prices = {
             'GB00BYVGKV59': 3.5510,  # Baillie Gifford Positive Change (355.10p)
-            'LU1033663649': 15.50,   # Fidelity Global Technology (estimate)
-            'LU0345781172': 8.25,    # Ninety One Natural Resources (estimate)
+            'LU1033663649': 9.334,   # Fidelity Global Technology (933.40p)
+            'LU0345781172': 48.24,   # Ninety One Natural Resources (£48.24)
             'GB00BMN91T34': 2.1106   # UBS S&P 500 (211.06p)
         }
         
@@ -154,10 +155,13 @@ class PriceFetcher:
                 self.logger.error(f"Error fetching from Yahoo Finance: {str(e)}")
         
         # Try web scraping
-        sources = [
-            ('Hargreaves Lansdown', self.scrape_hl_price, fund_info['hl_url']),
-            ('FT Markets', self.scrape_ft_price, isin)
-        ]
+        sources = []
+        if 'hl_url' in fund_info:
+            sources.append(('Hargreaves Lansdown', self.scrape_hl_price, fund_info['hl_url']))
+        if 'ft_url' in fund_info:
+            sources.append(('FT Markets', self.scrape_ft_price, fund_info['ft_url']))
+        if not sources and 'hl_url' in fund_info:
+            sources.append(('FT Markets', self.scrape_ft_price, isin))
         
         for source_name, scraper_func, identifier in sources:
             try:
@@ -257,10 +261,14 @@ class PriceFetcher:
             
         return None
     
-    def scrape_ft_price(self, isin: str) -> Optional[float]:
+    def scrape_ft_price(self, url_or_isin: str) -> Optional[float]:
         """Scrape price from Financial Times Markets"""
         try:
-            url = f"https://markets.ft.com/data/funds/tearsheet/summary?s={isin}"
+            # Check if it's already a URL or if we need to construct one
+            if url_or_isin.startswith('http'):
+                url = url_or_isin
+            else:
+                url = f"https://markets.ft.com/data/funds/tearsheet/summary?s={url_or_isin}"
             
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -276,6 +284,7 @@ class PriceFetcher:
                 
             # Look for price patterns in the content
             price_patterns = [
+                r'Price\s*\(GBP\)\s*(\d+\.?\d*)',  # Price (GBP)48.24
                 r'Price\s*[:\-]?\s*£?(\d+\.?\d*)',
                 r'NAV\s*[:\-]?\s*£?(\d+\.?\d*)',
                 r'£(\d+\.?\d*)\s*NAV',

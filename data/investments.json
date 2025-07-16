@@ -6,9 +6,9 @@
       "amount_spent": 1073.16,
       "average_buy_price": 268.29,
       "symbol": "META",
-      "current_price": 524.3532672236083,
+      "current_price": 524.526733275128,
       "created_at": "2025-07-16T16:43:23.548990",
-      "last_updated": "2025-07-16T16:56:02.234669"
+      "last_updated": "2025-07-16T17:00:36.113507"
     }
   ],
   "Trading212 ISA": [],
@@ -24,7 +24,38 @@
       "symbol": "GB00BMN91T34",
       "current_price": 2.1106,
       "created_at": "2025-07-16T16:42:23.559630",
-      "last_updated": "2025-07-16T16:42:23.559634"
+      "last_updated": "2025-07-16T17:00:36.940419"
+    },
+    {
+      "name": "Baillie Gifford Positive Change Class B - Accumulation (GBP)",
+      "holdings": 1543.62,
+      "amount_spent": 4674.18,
+      "average_buy_price": 3.028063901737475,
+      "symbol": "GB00BYVGKV59",
+      "current_price": 3.551,
+      "created_at": "2025-07-16T16:59:50.427203",
+      "last_updated": "2025-07-16T17:06:06.516065",
+      "updated_at": "2025-07-16T17:02:07.215532"
+    },
+    {
+      "name": "Fidelity Global Technology Class W - Accumulation (GBP",
+      "holdings": 1071.13,
+      "amount_spent": 7699.0,
+      "average_buy_price": 7.187736315853351,
+      "symbol": "LU1033663649",
+      "current_price": 9.334,
+      "created_at": "2025-07-16T17:00:14.327373",
+      "last_updated": "2025-07-16T17:06:06.790959"
+    },
+    {
+      "name": "Ninety One GSF Global Natural Resources Class I - Accumulation - GBP",
+      "holdings": 53.922,
+      "amount_spent": 2274.0,
+      "average_buy_price": 42.17202626015356,
+      "symbol": "LU0345781172",
+      "current_price": 48.24,
+      "created_at": "2025-07-16T17:02:34.101124",
+      "last_updated": "2025-07-16T17:06:07.481732"
     }
   ],
   "Cash": []

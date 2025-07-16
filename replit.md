@@ -97,11 +97,16 @@ Preferred communication style: Simple, everyday language.
 - **Fixed Edit/Delete Functionality**: Investment edit and delete buttons now fully functional
 - **Enhanced Price Fetching**: Added USD to GBP currency conversion for all US stocks
 - **HL LISA Fund Support**: Custom web scraping for 4 specific funds that don't work with yfinance
-- **Live Price Updates**: Successfully fetching real-time prices for Baillie Gifford and UBS S&P 500 funds
+- **Live Price Updates**: Successfully fetching real-time prices for all 4 HL LISA funds
 - **Transaction History**: Complete audit trail of all investment changes with timestamps
 - **Flexible Input Options**: Support for both "Amount Spent" and "Average Buy Price" input methods
 - **Currency Conversion Fix**: Corrected USD to GBP conversion logic (META: $702.75 → £524.62)
 - **UBS Fund Price Fix**: Fixed UBS S&P 500 to use web scraping (correct price: £2.1106 vs incorrect £0.81)
+- **All HL LISA Funds Updated**: Added symbols and live prices for all 4 funds:
+  - Baillie Gifford: GB00BYVGKV59 (£3.5510)
+  - Fidelity Global Technology: LU1033663649 (£9.3340)
+  - Ninety One Natural Resources: LU0345781172 (£48.2400)
+  - UBS S&P 500: GB00BMN91T34 (£2.1106)
 
 ## Deployment Strategy
 
