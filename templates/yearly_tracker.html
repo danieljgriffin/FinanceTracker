@@ -162,6 +162,113 @@
     </div>
 </div>
 
+<!-- Income vs Investments Table -->
+<div class="card">
+    <div class="px-8 py-6 border-b border-gray-600/30">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-semibold text-white">Income vs Investments Overview</h2>
+                <p class="text-sm text-gray-400 mt-1">Track yearly take-home income and investment amounts</p>
+            </div>
+            <button id="editSaveIncomeBtn" onclick="toggleIncomeEditMode()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                <i class="fas fa-edit mr-2"></i>Edit
+            </button>
+        </div>
+    </div>
+    
+    <div class="p-8 overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-gray-600/30">
+                    <th class="text-left text-white font-semibold py-3">Year</th>
+                    <th class="text-right text-white font-semibold py-3">Take Home Income</th>
+                    <th class="text-right text-white font-semibold py-3">Invested</th>
+                    <th class="text-right text-white font-semibold py-3">% Invested</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Sep-Dec 2017 -->
+                <tr class="border-b border-gray-600/20">
+                    <td class="py-3 text-white">Sep-Dec 2017</td>
+                    <td class="py-3 text-right">
+                        <div class="flex items-center justify-end">
+                            <span class="text-gray-400 mr-1">£</span>
+                            <input type="number" 
+                                   class="income-input w-20 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" 
+                                   data-year="2017" 
+                                   data-field="take_home_income" 
+                                   value="{{ income_data.get('2017', {}).get('take_home_income', 0) }}"
+                                   step="1" />
+                        </div>
+                    </td>
+                    <td class="py-3 text-right">
+                        <div class="flex items-center justify-end">
+                            <span class="text-gray-400 mr-1">£</span>
+                            <input type="number" 
+                                   class="income-input w-20 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" 
+                                   data-year="2017" 
+                                   data-field="amount_invested" 
+                                   value="{{ income_data.get('2017', {}).get('amount_invested', 0) }}"
+                                   step="1" />
+                        </div>
+                    </td>
+                    <td class="py-3 text-right">
+                        <span class="text-gray-300 income-percentage" data-year="2017">
+                            {% set income_2017 = income_data.get('2017', {}).get('take_home_income', 0) %}
+                            {% set invested_2017 = income_data.get('2017', {}).get('amount_invested', 0) %}
+                            {% if income_2017 > 0 %}
+                                {{ "{:.1f}".format((invested_2017 / income_2017) * 100) }}%
+                            {% else %}
+                                0.0%
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+                
+                <!-- Years 2018-2025 -->
+                {% for year in range(2018, 2026) %}
+                <tr class="border-b border-gray-600/20">
+                    <td class="py-3 text-white">{{ year }}</td>
+                    <td class="py-3 text-right">
+                        <div class="flex items-center justify-end">
+                            <span class="text-gray-400 mr-1">£</span>
+                            <input type="number" 
+                                   class="income-input w-20 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" 
+                                   data-year="{{ year }}" 
+                                   data-field="take_home_income" 
+                                   value="{{ income_data.get(year|string, {}).get('take_home_income', 0) }}"
+                                   step="1" />
+                        </div>
+                    </td>
+                    <td class="py-3 text-right">
+                        <div class="flex items-center justify-end">
+                            <span class="text-gray-400 mr-1">£</span>
+                            <input type="number" 
+                                   class="income-input w-20 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1" 
+                                   data-year="{{ year }}" 
+                                   data-field="amount_invested" 
+                                   value="{{ income_data.get(year|string, {}).get('amount_invested', 0) }}"
+                                   step="1" />
+                        </div>
+                    </td>
+                    <td class="py-3 text-right">
+                        <span class="text-gray-300 income-percentage" data-year="{{ year }}">
+                            {% set income_year = income_data.get(year|string, {}).get('take_home_income', 0) %}
+                            {% set invested_year = income_data.get(year|string, {}).get('amount_invested', 0) %}
+                            {% if income_year > 0 %}
+                                {{ "{:.1f}".format((invested_year / income_year) * 100) }}%
+                            {% else %}
+                                0.0%
+                            {% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <script>
 function changeYear(year) {
     window.location.href = `/yearly-tracker/${year}`;
@@ -173,7 +280,9 @@ function toggleNewYearForm() {
 }
 
 let isEditMode = false;
+let isIncomeEditMode = false;
 let originalValues = {};
+let originalIncomeValues = {};
 
 function toggleEditMode() {
     const editBtn = document.getElementById('editSaveBtn');
@@ -270,10 +379,94 @@ function autoPopulateMonth() {
     form.submit();
 }
 
+function toggleIncomeEditMode() {
+    const editBtn = document.getElementById('editSaveIncomeBtn');
+    const inputs = document.querySelectorAll('.income-input');
+    
+    if (!isIncomeEditMode) {
+        // Enter edit mode
+        isIncomeEditMode = true;
+        editBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save';
+        editBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        editBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        
+        // Store original values and enable inputs
+        inputs.forEach(input => {
+            originalIncomeValues[input.dataset.year + '-' + input.dataset.field] = input.value;
+            input.disabled = false;
+            input.classList.remove('bg-gray-800', 'text-gray-300');
+            input.classList.add('bg-gray-700', 'text-white');
+        });
+        
+    } else {
+        // Save mode - collect all changes and submit
+        const changes = [];
+        inputs.forEach(input => {
+            const key = input.dataset.year + '-' + input.dataset.field;
+            if (input.value !== originalIncomeValues[key]) {
+                changes.push({
+                    year: input.dataset.year,
+                    field: input.dataset.field,
+                    value: input.value || 0
+                });
+            }
+        });
+        
+        if (changes.length > 0) {
+            saveIncomeChanges(changes);
+        } else {
+            // No changes, just exit edit mode
+            exitIncomeEditMode();
+        }
+    }
+}
+
+function saveIncomeChanges(changes) {
+    // Create a form and submit all changes
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/update-income-data';
+    
+    // Add changes as JSON
+    const changesInput = document.createElement('input');
+    changesInput.type = 'hidden';
+    changesInput.name = 'changes';
+    changesInput.value = JSON.stringify(changes);
+    form.appendChild(changesInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+
+function exitIncomeEditMode() {
+    isIncomeEditMode = false;
+    const editBtn = document.getElementById('editSaveIncomeBtn');
+    const inputs = document.querySelectorAll('.income-input');
+    
+    editBtn.innerHTML = '<i class="fas fa-edit mr-2"></i>Edit';
+    editBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+    editBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+    
+    inputs.forEach(input => {
+        input.disabled = true;
+        input.classList.remove('bg-gray-700', 'text-white');
+        input.classList.add('bg-gray-800', 'text-gray-300');
+    });
+    
+    originalIncomeValues = {};
+}
+
 // Initialize disabled state
 document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('.value-input');
     inputs.forEach(input => {
+        input.disabled = true;
+        input.classList.add('bg-gray-800', 'text-gray-300');
+    });
+    
+    // Initialize income inputs as disabled
+    const incomeInputs = document.querySelectorAll('.income-input');
+    incomeInputs.forEach(input => {
         input.disabled = true;
         input.classList.add('bg-gray-800', 'text-gray-300');
     });

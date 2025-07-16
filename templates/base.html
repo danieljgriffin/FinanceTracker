@@ -48,9 +48,6 @@
                     <a href="{{ url_for('yearly_tracker') }}" class="nav-link {% if request.endpoint == 'yearly_tracker' %}active{% endif %}">
                         <i class="fas fa-calendar-alt mr-2 text-white"></i><span class="text-white">Yearly Tracker</span>
                     </a>
-                    <a href="{{ url_for('income_investments') }}" class="nav-link {% if request.endpoint == 'income_investments' %}active{% endif %}">
-                        <i class="fas fa-money-bill-wave mr-2 text-white"></i><span class="text-white">Income vs Investments</span>
-                    </a>
                     <a href="{{ url_for('monthly_breakdown') }}" class="nav-link {% if request.endpoint == 'monthly_breakdown' %}active{% endif %}">
                         <i class="fas fa-chart-pie mr-2 text-white"></i><span class="text-white">Monthly Breakdown</span>
                     </a>

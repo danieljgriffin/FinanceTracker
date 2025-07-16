@@ -94,6 +94,20 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
+- **Automatic Price Refresh System**: Implemented background price updates for real-time data
+  - **Background Updates**: Prices refresh automatically every 15 minutes using background threads
+  - **Price Status Display**: Shows last refresh time and next update countdown on dashboard and investment manager
+  - **API Endpoint**: `/api/price-status` provides real-time price update information
+  - **JavaScript Integration**: Auto-refresh price status every 30 seconds without page reload
+  - **Manual Override**: "Update Prices" button still works for immediate refresh
+- **Income vs Investments Integration**: Moved income tracking to yearly tracker page
+  - **Navigation Update**: Removed "Income vs Investments" from navigation menu
+  - **Yearly Tracker Addition**: Added comprehensive income table below monthly net worth tracker
+  - **Years Coverage**: Sep-Dec 2017 row plus full years 2018-2025 for complete tracking
+  - **Editable Interface**: Click-to-edit income and investment amounts with save functionality
+  - **Persistent Display**: Income table shows regardless of selected year in dropdown
+  - **Automatic Calculations**: Live percentage calculations for % of income invested
+  - **Backend Integration**: New `/update-income-data` endpoint for saving changes
 - **Dark Mode Liquid Glass UI**: Complete visual overhaul with dark theme and liquid glass effects
   - **Background**: Multi-layered dark gradient background (slate-900 to slate-800)
   - **Card Styling**: Transparent liquid glass cards with subtle borders and backdrop blur

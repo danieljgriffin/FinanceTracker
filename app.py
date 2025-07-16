@@ -278,6 +278,9 @@ def yearly_tracker(year=None):
             if jan_total > 0 and dec_total > 0:
                 yearly_increase_percent = ((dec_total - jan_total) / jan_total) * 100
         
+        # Get income data for the income vs investments table
+        income_data = data_manager.get_income_data()
+        
         return render_template('yearly_tracker.html', 
                              networth_data=networth_data,
                              platforms=all_platforms,
@@ -287,7 +290,8 @@ def yearly_tracker(year=None):
                              yearly_increase_percent=yearly_increase_percent,
                              current_year=year,
                              available_years=available_years,
-                             platform_colors=PLATFORM_COLORS)
+                             platform_colors=PLATFORM_COLORS,
+                             income_data=income_data)
     except Exception as e:
         logging.error(f"Error in yearly tracker: {str(e)}")
         flash(f'Error loading yearly tracker: {str(e)}', 'error')
@@ -300,7 +304,8 @@ def yearly_tracker(year=None):
                              yearly_increase_percent=0,
                              current_year=2025,
                              available_years=[2025],
-                             platform_colors=PLATFORM_COLORS)
+                             platform_colors=PLATFORM_COLORS,
+                             income_data={})
 
 @app.route('/tracker-2025')
 def tracker_2025():
@@ -398,6 +403,36 @@ def auto_populate_month():
     except Exception as e:
         logging.error(f"Error auto-populating month: {str(e)}")
         flash(f'Error auto-populating month: {str(e)}', 'error')
+        return redirect(url_for('yearly_tracker'))
+
+@app.route('/update-income-data', methods=['POST'])
+def update_income_data():
+    """Update income vs investments data"""
+    try:
+        changes = json.loads(request.form.get('changes', '[]'))
+        income_data = data_manager.get_income_data()
+        
+        for change in changes:
+            year = change['year']
+            field = change['field']
+            value = float(change['value'])
+            
+            # Initialize year data if it doesn't exist
+            if year not in income_data:
+                income_data[year] = {}
+            
+            # Update the specific field
+            income_data[year][field] = value
+        
+        # Save updated data
+        data_manager.save_income_data(income_data)
+        
+        flash(f'Updated {len(changes)} income values successfully', 'success')
+        return redirect(url_for('yearly_tracker'))
+        
+    except Exception as e:
+        logging.error(f"Error updating income data: {str(e)}")
+        flash(f'Error updating income data: {str(e)}', 'error')
         return redirect(url_for('yearly_tracker'))
 
 @app.route('/income-investments')
