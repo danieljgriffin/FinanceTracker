@@ -132,6 +132,10 @@ Preferred communication style: Simple, everyday language.
   - Fixed price update error handling to skip invalid data structures
   - European ETFs require correct suffixes (e.g., VUSA.L for London Stock Exchange)
   - Success messages include live price information when available
+- **Enhanced Decimal Precision**: Increased holdings precision to support 7 decimal places
+  - Input fields now accept step="0.0000001" for precise share quantities
+  - Display format updated to show 7 decimal places (e.g., 15.5521236 shares)
+  - Both add and edit investment forms support high-precision holdings input
 
 ## Deployment Strategy
 
