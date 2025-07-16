@@ -133,5 +133,50 @@
     "new_holdings": 47.0,
     "old_amount_spent": null,
     "new_amount_spent": 91.6
+  },
+  {
+    "transaction_id": "txn_20250716_180141",
+    "timestamp": "2025-07-16T18:01:41.930663",
+    "action": "CREATE",
+    "platform": "Degiro",
+    "investment_name": "Vanguard S&P 500",
+    "holdings_change": 62.0,
+    "amount_spent_change": 3894.84,
+    "average_buy_price": 62.82,
+    "symbol": "VUSA",
+    "old_holdings": null,
+    "new_holdings": 62.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 3894.84
+  },
+  {
+    "transaction_id": "txn_20250716_180212",
+    "timestamp": "2025-07-16T18:02:12.537722",
+    "action": "CREATE",
+    "platform": "Degiro",
+    "investment_name": "Xtrackers S&P 500 Equal Weight",
+    "holdings_change": 45.0,
+    "amount_spent_change": 2895.3,
+    "average_buy_price": 64.34,
+    "symbol": "XDEW",
+    "old_holdings": null,
+    "new_holdings": 45.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 2895.3
+  },
+  {
+    "transaction_id": "txn_20250716_180534",
+    "timestamp": "2025-07-16T18:05:34.125496",
+    "action": "CREATE",
+    "platform": "Degiro",
+    "investment_name": "Test Apple Stock",
+    "holdings_change": 1.0,
+    "amount_spent_change": 100.0,
+    "average_buy_price": 100.0,
+    "symbol": "AAPL",
+    "old_holdings": null,
+    "new_holdings": 1.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 100.0
   }
 ]

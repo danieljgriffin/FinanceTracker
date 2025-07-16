@@ -315,7 +315,32 @@ def add_investment():
             flash('Invalid input type', 'error')
             return redirect(url_for('investment_manager'))
         
-        flash(f'Investment {name} added successfully', 'success')
+        # Automatically fetch live price if symbol is provided
+        if symbol:
+            try:
+                price = price_fetcher.get_price(symbol)
+                if price:
+                    # Update the newly added investment with the current price
+                    investments_data = data_manager.get_investments_data()
+                    if platform in investments_data and investments_data[platform]:
+                        # Get the last added investment (most recent)
+                        last_investment = investments_data[platform][-1]
+                        if last_investment.get('name') == name:
+                            last_investment['current_price'] = price
+                            last_investment['last_updated'] = datetime.now().isoformat()
+                            data_manager.save_investments_data(investments_data)
+                            flash(f'Investment {name} added successfully with live price £{price:.4f}', 'success')
+                        else:
+                            flash(f'Investment {name} added successfully (price fetch failed)', 'success')
+                    else:
+                        flash(f'Investment {name} added successfully (price fetch failed)', 'success')
+                else:
+                    flash(f'Investment {name} added successfully (no live price available for {symbol})', 'success')
+            except Exception as e:
+                logging.error(f"Error fetching price for {symbol}: {str(e)}")
+                flash(f'Investment {name} added successfully (price fetch failed)', 'success')
+        else:
+            flash(f'Investment {name} added successfully', 'success')
         
     except Exception as e:
         logging.error(f"Error adding investment: {str(e)}")
@@ -349,6 +374,10 @@ def update_prices():
         updated_count = 0
         
         for platform, investments in investments_data.items():
+            # Skip cash platforms and ensure investments is a list
+            if platform.endswith('_cash') or not isinstance(investments, list):
+                continue
+                
             for investment in investments:
                 if investment.get('symbol'):
                     try:

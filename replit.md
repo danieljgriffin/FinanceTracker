@@ -127,6 +127,11 @@ Preferred communication style: Simple, everyday language.
   - Shows total investment value (excluding cash), total amount spent, percentage P/L, and total P/L
   - Backend calculation ensures accurate totals (e.g., EQ: £6,139.50 total, £1,796.81 spent, +241.69% P/L)
   - Visually distinguished with gray background and bold formatting for easy identification
+- **Automatic Price Fetching**: Implemented live price fetching when investments are added
+  - Automatically fetches current price when symbol is provided during investment creation
+  - Fixed price update error handling to skip invalid data structures
+  - European ETFs require correct suffixes (e.g., VUSA.L for London Stock Exchange)
+  - Success messages include live price information when available
 
 ## Deployment Strategy
 
