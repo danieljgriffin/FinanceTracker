@@ -123,6 +123,10 @@ Preferred communication style: Simple, everyday language.
   - HLN.L: Correctly displays £3.6000 (converted from 360.0 pence)
   - Added automatic detection of Yahoo Finance "GBp" currency code for UK stocks
   - EQ platform now shows correct total: £6,139.50 (GSK £5,970.30 + Haleon £169.20)
+- **Platform Totals Implementation**: Added comprehensive platform summary rows at bottom of each platform
+  - Shows total investment value (excluding cash), total amount spent, percentage P/L, and total P/L
+  - Backend calculation ensures accurate totals (e.g., EQ: £6,139.50 total, £1,796.81 spent, +241.69% P/L)
+  - Visually distinguished with gray background and bold formatting for easy identification
 
 ## Deployment Strategy
 

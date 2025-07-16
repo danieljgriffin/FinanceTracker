@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Manager - Net Worth Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'degiro': '#1e3a8a',
+                        'trading212': '#0d9488',
+                        'eq': '#dc2626',
+                        'investengine': '#ea580c',
+                        'crypto': '#7c3aed',
+                        'hl': '#0ea5e9',
+                        'cash': '#059669'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <!-- Background overlay for glass effect -->
+    <div class="fixed inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 pointer-events-none"></div>
+    <!-- Modern Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 glass-dark">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-line text-white text-lg"></i>
+                        </div>
+                        <span class="text-xl font-bold text-white">Net Worth Tracker</span>
+                    </div>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-2">
+                    <a href="/" class="nav-link ">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="/tracker-2025" class="nav-link ">
+                        <i class="fas fa-calendar-alt mr-2"></i>2025 Tracker
+                    </a>
+                    <a href="/income-investments" class="nav-link ">
+                        <i class="fas fa-money-bill-wave mr-2"></i>Income vs Investments
+                    </a>
+                    <a href="/monthly-breakdown" class="nav-link ">
+                        <i class="fas fa-chart-pie mr-2"></i>Monthly Breakdown
+                    </a>
+                    <a href="/investment-manager" class="nav-link active">
+                        <i class="fas fa-cog mr-2"></i>Investment Manager
+                    </a>
+                </div>
+                
+                <div class="flex items-center">
+                    <a href="/update-prices" class="px-6 py-2 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                        <i class="fas fa-sync-alt mr-2"></i>Update Prices
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Spacer for fixed navigation -->
+    <div class="h-20"></div>
+
+    <!-- Flash Messages -->
+    
+        
+    
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-6 lg:px-8 py-8 relative z-10">
+        
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-4xl font-bold text-white">Investment Portfolio</h1>
+            <p class="text-white/80 mt-1">Manage your actual investment holdings and their current values</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="/transaction-history" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
+                <i class="fas fa-history mr-2"></i>History
+            </a>
+            <a href="/update-prices" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
+                <i class="fas fa-sync mr-2"></i>Update Prices
+            </a>
+            <button onclick="toggleAddForm()" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-plus mr-2"></i>Add Investment
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Investment Form -->
+    <div id="addForm" class="card p-8 hidden">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Add New Investment to Portfolio</h2>
+        <form method="POST" action="/add-investment" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Platform</label>
+                    <select name="platform" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select Platform</option>
+                        
+                            <option value="Degiro">Degiro</option>
+                        
+                            <option value="Trading212 ISA">Trading212 ISA</option>
+                        
+                            <option value="EQ (GSK shares)">EQ (GSK shares)</option>
+                        
+                            <option value="InvestEngine ISA">InvestEngine ISA</option>
+                        
+                            <option value="Crypto">Crypto</option>
+                        
+                            <option value="HL Stocks &amp; Shares LISA">HL Stocks &amp; Shares LISA</option>
+                        
+                            <option value="Cash">Cash</option>
+                        
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Investment Name</label>
+                    <input type="text" name="name" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Tesla Stock" list="investment-names">
+                    <datalist id="investment-names">
+                        
+                        <option value="Baillie Gifford Positive Change Class B - Accumulation (GBP)">
+                        
+                        <option value="Fidelity Global Technology Class W - Accumulation (GBP">
+                        
+                        <option value="GSK Shares Reward">
+                        
+                        <option value="Haleon Shares PLC">
+                        
+                        <option value="Meta">
+                        
+                        <option value="Ninety One GSF Global Natural Resources Class I - Accumulation - GBP">
+                        
+                        <option value="UBS S&amp;P 500 Index Class C - Acc">
+                        
+                    </datalist>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Holdings (Quantity)</label>
+                    <input type="number" step="0.000001" name="holdings" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 10 shares or 0.5 BTC">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Input Type</label>
+                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="amount_spent">Amount Spent</option>
+                        <option value="average_buy_price">Average Buy Price</option>
+                    </select>
+                </div>
+                
+                <div id="amount_spent_input">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Spent (£)</label>
+                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                </div>
+                
+                <div id="average_buy_price_input" style="display: none;">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Average Buy Price (£)</label>
+                    <input type="number" step="0.0001" name="average_buy_price" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Symbol (Optional - for live price updates)</label>
+                    <input type="text" name="symbol" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., TSLA, BTC-USD, ^GSPC">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="toggleAddForm()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-3 text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
+                    Add Investment
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Investment Platforms -->
+    
+        <div class="space-y-6">
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #1e3a8a20;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #1e3a8a"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">Degiro</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    1 investment
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £2,122.11
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">Meta</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        META
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £524.5267
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">4.000000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £2,098.11
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£268.2900</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£1,073.16</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +95.51%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +1,024.95
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('Degiro', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('Degiro', 0, 'Meta')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£24.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/Degiro" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="24.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #0d948820;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0d9488"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">Trading212 ISA</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    0 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £0.00
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="px-6 py-8 text-center">
+                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-500">No investments in this platform</p>
+                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/Trading212%20ISA" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #dc262620;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #dc2626"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">EQ (GSK shares)</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    2 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £6,139.50
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">GSK Shares Reward</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        GSK.L
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £14.2150
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">420.000000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £5,970.30
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£4.0600</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£1,705.21</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +250.12%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +4,265.09
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('EQ (GSK shares)', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('EQ (GSK shares)', 0, 'GSK Shares Reward')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">Haleon Shares PLC</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        HLN.L
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £3.6000
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">47.000000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £169.20
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£1.9489</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£91.60</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +84.72%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +77.60
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('EQ (GSK shares)', 1)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('EQ (GSK shares)', 1, 'Haleon Shares PLC')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/EQ%20(GSK%20shares)" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #ea580c20;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #ea580c"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">InvestEngine ISA</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    0 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £0.00
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="px-6 py-8 text-center">
+                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-500">No investments in this platform</p>
+                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/InvestEngine%20ISA" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #7c3aed20;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #7c3aed"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">Crypto</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    0 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £0.00
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="px-6 py-8 text-center">
+                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-500">No investments in this platform</p>
+                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/Crypto" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #0ea5e920;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0ea5e9"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">HL Stocks &amp; Shares LISA</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    4 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £27,903.88
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200">
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">UBS S&amp;P 500 Index Class C - Acc</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        GB00BMN91T34
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £2.1106
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">4,485.150000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £9,466.36
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£1.7091</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£7,665.50</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +23.49%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +1,800.86
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 0, 'UBS S&amp;P 500 Index Class C - Acc')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">Baillie Gifford Positive Change Class B - Accumulation (GBP)</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        GB00BYVGKV59
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £3.5510
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">1,543.620000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £5,481.39
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£3.0281</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£4,674.18</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +17.27%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +807.21
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 1)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 1, 'Baillie Gifford Positive Change Class B - Accumulation (GBP)')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">Fidelity Global Technology Class W - Accumulation (GBP</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        LU1033663649
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £9.3340
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">1,071.130000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £9,997.93
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£7.1877</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£7,699.00</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +29.86%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +2,298.93
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 2)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 2, 'Fidelity Global Technology Class W - Accumulation (GBP')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center">
+                                                <div class="text-sm font-medium text-gray-900">Ninety One GSF Global Natural Resources Class I - Accumulation - GBP</div>
+                                                
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        LU0345781172
+                                                    </span>
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">
+                                                
+                                                    £48.2400
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">53.922000</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">
+                                                
+                                                    £2,601.20
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£42.1720</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-900">£2,274.00</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +14.39%
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-green-600">
+                                                
+                                                    +327.20
+                                                
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center space-x-2">
+                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 3)" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 3, 'Ninety One GSF Global Natural Resources Class I - Accumulation - GBP')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£357.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/HL%20Stocks%20&amp;%20Shares%20LISA" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="357.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #05966920;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #059669"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">Cash</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    0 investments
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    £0.00
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Total Value (incl. cash)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    
+                        <div class="px-6 py-8 text-center">
+                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-500">No investments in this platform</p>
+                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
+                        </div>
+                    
+                    
+                    <!-- Cash Balance Section -->
+                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
+                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
+                            </div>
+                            <form method="POST" action="/update_cash/Cash" class="flex items-center space-x-2">
+                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       placeholder="0.00">
+                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                    Update
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+                
+            
+        </div>
+    
+
+    <!-- Summary Statistics -->
+    <div class="card">
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-xl font-semibold text-gray-900">Investment Summary</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">
+                        
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                        0
+                    </div>
+                    <div class="text-sm text-gray-500">Total Investments</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">
+                        
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                        0
+                    </div>
+                    <div class="text-sm text-gray-500">Active Platforms</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">
+                        £35,784
+                    </div>
+                    <div class="text-sm text-gray-500">Total Portfolio Value</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">
+                        £25,183
+                    </div>
+                    <div class="text-sm text-gray-500">Total Amount Spent</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-gray-900">
+                        
+                        
+                            
+                                
+                                    
+                                        
+                                    
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                                    
+                                        
+                                    
+                                
+                                    
+                                        
+                                    
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                                
+                                    
+                                        
+                                    
+                                
+                                    
+                                        
+                                    
+                                
+                                    
+                                        
+                                    
+                                
+                                    
+                                        
+                                    
+                                
+                            
+                        
+                            
+                                
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                            
+                        
+                        0
+                    </div>
+                    <div class="text-sm text-gray-500">Live Price Tracking</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Platform Distribution -->
+    <div class="card">
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-xl font-semibold text-gray-900">Platform Distribution</h2>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                
+                    
+                        
+                        
+                            
+                            
+                        
+                        
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #1e3a8a"></div>
+                                <span class="font-medium text-gray-900">Degiro</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">£0.00</div>
+                                <div class="text-sm text-gray-500">0.0%</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all duration-300" 
+                                 style="width: 0.0%; background-color: #1e3a8a"></div>
+                        </div>
+                    
+                
+                    
+                
+                    
+                        
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                        
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #dc2626"></div>
+                                <span class="font-medium text-gray-900">EQ (GSK shares)</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">£0.00</div>
+                                <div class="text-sm text-gray-500">0.0%</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all duration-300" 
+                                 style="width: 0.0%; background-color: #dc2626"></div>
+                        </div>
+                    
+                
+                    
+                
+                    
+                
+                    
+                        
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                            
+                            
+                        
+                        
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0ea5e9"></div>
+                                <span class="font-medium text-gray-900">HL Stocks &amp; Shares LISA</span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">£0.00</div>
+                                <div class="text-sm text-gray-500">0.0%</div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full transition-all duration-300" 
+                                 style="width: 0.0%; background-color: #0ea5e9"></div>
+                        </div>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAddForm() {
+    const form = document.getElementById('addForm');
+    form.classList.toggle('hidden');
+}
+
+function toggleInputType() {
+    const inputType = document.getElementById('input_type').value;
+    const amountSpentInput = document.getElementById('amount_spent_input');
+    const averageBuyPriceInput = document.getElementById('average_buy_price_input');
+    
+    if (inputType === 'amount_spent') {
+        amountSpentInput.style.display = 'block';
+        averageBuyPriceInput.style.display = 'none';
+        document.querySelector('input[name="amount_spent"]').required = true;
+        document.querySelector('input[name="average_buy_price"]').required = false;
+    } else {
+        amountSpentInput.style.display = 'none';
+        averageBuyPriceInput.style.display = 'block';
+        document.querySelector('input[name="amount_spent"]').required = false;
+        document.querySelector('input[name="average_buy_price"]').required = true;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleInputType();
+});
+
+function editInvestment(platform, index) {
+    // For now, we'll use a simple approach - redirect to a form with pre-filled data
+    window.location.href = `/edit-investment/${platform}/${index}`;
+}
+
+function deleteInvestment(platform, index, name) {
+    if (confirm(`Are you sure you want to delete "${name}" from ${platform}?`)) {
+        // Create a form and submit it
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete-investment/${platform}/${index}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-dark mt-12 relative z-10">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+            <div class="text-center text-white/70 text-sm">
+                <p>&copy; 2025 Net Worth Tracker. Built with Flask and Tailwind CSS.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

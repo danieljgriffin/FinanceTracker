@@ -105,7 +105,12 @@
                             </div>
                             <div class="text-right">
                                 <div class="text-sm font-medium text-gray-900">
-                                    £{{ "{:,.2f}".format(platform_totals.get(platform, 0)) }}
+                                    {% set platform_data = platform_totals.get(platform, {}) %}
+                                    {% if platform_data and platform_data.get('total_value') %}
+                                        £{{ "{:,.2f}".format(platform_data.total_value) }}
+                                    {% else %}
+                                        £0.00
+                                    {% endif %}
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     Total Value (incl. cash)
@@ -208,6 +213,44 @@
                                         </td>
                                     </tr>
                                     {% endfor %}
+                                    
+                                    <!-- Platform Totals Row -->
+                                    {% if investments and platform_totals.get(platform) %}
+                                    {% set platform_data = platform_totals.get(platform) %}
+                                    <tr class="border-t-2 border-gray-300 bg-gray-50">
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900">Total</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-500">-</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-500">-</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data.investment_value) }}</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-500">-</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data.amount_spent) }}</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data.percentage_pl > 0 else 'text-red-600' if platform_data.percentage_pl < 0 else 'text-gray-900' }}">
+                                                {{ "{:+.2f}".format(platform_data.percentage_pl) }}%
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data.total_pl > 0 else 'text-red-600' if platform_data.total_pl < 0 else 'text-gray-900' }}">
+                                                {{ "{:+,.2f}".format(platform_data.total_pl) }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-500">-</div>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>

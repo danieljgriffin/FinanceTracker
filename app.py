@@ -230,17 +230,36 @@ def investment_manager():
                 continue  # Skip cash keys
             
             platform_investment_total = 0
+            platform_amount_spent = 0
+            
             for investment in platform_investments:
                 holdings = investment.get('holdings', 0)
                 current_price = investment.get('current_price', 0)
+                amount_spent = investment.get('amount_spent', 0)
+                
                 current_value = holdings * current_price
                 platform_investment_total += current_value
+                platform_amount_spent += amount_spent
+                
                 total_current_value += current_value
-                total_amount_spent += investment.get('amount_spent', 0)
+                total_amount_spent += amount_spent
             
             # Add cash to platform total
             cash_balance = data_manager.get_platform_cash(platform)
-            platform_totals[platform] = platform_investment_total + cash_balance
+            platform_total_value = platform_investment_total + cash_balance
+            
+            # Calculate P/L metrics for this platform
+            platform_pl = platform_investment_total - platform_amount_spent  # Only investment P/L, not cash
+            platform_percentage_pl = (platform_pl / platform_amount_spent * 100) if platform_amount_spent > 0 else 0
+            
+            platform_totals[platform] = {
+                'total_value': platform_total_value,
+                'investment_value': platform_investment_total,
+                'amount_spent': platform_amount_spent,
+                'total_pl': platform_pl,
+                'percentage_pl': platform_percentage_pl,
+                'cash_balance': cash_balance
+            }
         
         # Get unique investment names for dropdown
         unique_names = data_manager.get_unique_investment_names()
