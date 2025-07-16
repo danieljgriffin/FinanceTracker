@@ -224,7 +224,9 @@ def investment_manager():
         total_current_value = 0
         total_amount_spent = 0
         
-        for platform_investments in investments_data.values():
+        for platform, platform_investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
             for investment in platform_investments:
                 holdings = investment.get('holdings', 0)
                 current_price = investment.get('current_price', 0)

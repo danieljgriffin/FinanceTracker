@@ -211,6 +211,8 @@ class DataManager:
         names = set()
         
         for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
             for investment in investments:
                 names.add(investment['name'])
         
