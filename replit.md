@@ -147,6 +147,11 @@ Preferred communication style: Simple, everyday language.
   - Fixed InvestEngine ISA live prices: VUAG.L (£88.25), CNX1.L (£967.00), IITU.L (£27.51)
   - System tries .L suffix first, falls back to original symbol if needed
   - Automatic price fetching works for all platforms when adding new investments
+- **Unlimited Decimal Precision**: Fixed decimal input limitations in holdings fields
+  - Changed from step="0.0000001" to step="any" for unlimited precision
+  - Both add investment and edit investment forms now support any decimal precision
+  - Successfully tested with 0.15146765 holdings value
+  - Resolves browser validation issues that prevented precise decimal input
 
 ## Deployment Strategy
 

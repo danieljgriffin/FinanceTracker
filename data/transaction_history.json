@@ -463,5 +463,35 @@
     "new_holdings": 1.0,
     "old_amount_spent": null,
     "new_amount_spent": 100.0
+  },
+  {
+    "transaction_id": "txn_20250716_190541",
+    "timestamp": "2025-07-16T19:05:41.439213",
+    "action": "CREATE",
+    "platform": "Crypto",
+    "investment_name": "Ethereum",
+    "holdings_change": 1.7698601,
+    "amount_spent_change": 4430.207610714,
+    "average_buy_price": 2503.14,
+    "symbol": "ETH",
+    "old_holdings": null,
+    "new_holdings": 1.7698601,
+    "old_amount_spent": null,
+    "new_amount_spent": 4430.207610714
+  },
+  {
+    "transaction_id": "txn_20250716_190820",
+    "timestamp": "2025-07-16T19:08:20.687075",
+    "action": "CREATE",
+    "platform": "Crypto",
+    "investment_name": "Test Decimal Investment",
+    "holdings_change": 0.15146765,
+    "amount_spent_change": 100.0,
+    "average_buy_price": 660.2069814907671,
+    "symbol": "BTC-USD",
+    "old_holdings": null,
+    "new_holdings": 0.15146765,
+    "old_amount_spent": null,
+    "new_amount_spent": 100.0
   }
 ]
