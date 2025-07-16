@@ -16,24 +16,17 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Enhanced navigation with glass effect */
+/* Clean navigation without backgrounds */
 .nav-link {
     @apply inline-flex items-center px-4 py-2 mx-1 rounded-xl text-sm font-medium transition-all duration-300 ease-in-out;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.15);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .nav-link.active {
-    background: rgba(59, 130, 246, 0.3);
-    border: 1px solid rgba(59, 130, 246, 0.4);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+    @apply font-semibold;
 }
 
 .nav-link span {
