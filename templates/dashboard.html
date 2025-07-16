@@ -6,8 +6,8 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <div class="text-sm text-gray-500">
+        <h1 class="text-4xl font-bold text-white">Dashboard</h1>
+        <div class="text-sm text-white/80">
             Last updated: {{ current_date }}
         </div>
     </div>
@@ -15,53 +15,53 @@
     <!-- Key Metrics -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Current Net Worth -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Current Net Worth</p>
+                    <p class="text-sm font-medium text-gray-600 mb-2">Current Net Worth</p>
                     <p class="text-3xl font-bold text-gray-900">£{{ "{:,.2f}".format(current_net_worth) }}</p>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-chart-line text-white text-2xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Month-on-Month Change -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Month-on-Month</p>
+                    <p class="text-sm font-medium text-gray-600 mb-2">Month-on-Month</p>
                     <p class="text-3xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                         {{ "{:+.1f}".format(mom_change) }}%
                     </p>
                 </div>
-                <div class="w-12 h-12 {% if mom_change >= 0 %}bg-green-100{% else %}bg-red-100{% endif %} rounded-full flex items-center justify-center">
-                    <i class="fas {% if mom_change >= 0 %}fa-arrow-up text-green-600{% else %}fa-arrow-down text-red-600{% endif %} text-xl"></i>
+                <div class="w-16 h-16 {% if mom_change >= 0 %}bg-gradient-to-br from-green-500 to-green-600{% else %}bg-gradient-to-br from-red-500 to-red-600{% endif %} rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="fas {% if mom_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} text-white text-2xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Total Platforms -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Active Platforms</p>
+                    <p class="text-sm font-medium text-gray-600 mb-2">Active Platforms</p>
                     <p class="text-3xl font-bold text-gray-900">{{ platform_allocations|length }}</p>
                 </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-building text-purple-600 text-xl"></i>
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <i class="fas fa-building text-white text-2xl"></i>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Platform Allocation -->
-    <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Platform Allocation</h2>
+    <div class="card">
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-xl font-semibold text-gray-900">Platform Allocation</h2>
         </div>
-        <div class="p-6">
+        <div class="p-8">
             {% if platform_allocations %}
                 <div class="space-y-4">
                     {% for platform, amount in platform_allocations.items() %}
@@ -92,45 +92,57 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
+    <div class="card">
+        <div class="px-8 py-6 border-b border-gray-200/50">
+            <h2 class="text-xl font-semibold text-gray-900">Quick Actions</h2>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <a href="{{ url_for('investment_manager') }}" 
-                   class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                    <i class="fas fa-plus text-blue-600 text-xl mr-3"></i>
+                   class="flex items-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
+                   style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-plus text-white text-lg"></i>
+                    </div>
                     <div>
-                        <div class="font-medium text-gray-900">Add Investment</div>
-                        <div class="text-sm text-gray-500">Manage investments</div>
+                        <div class="font-semibold text-gray-900">Add Investment</div>
+                        <div class="text-sm text-gray-600">Manage investments</div>
                     </div>
                 </a>
                 
                 <a href="{{ url_for('monthly_breakdown') }}" 
-                   class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                    <i class="fas fa-calendar text-green-600 text-xl mr-3"></i>
+                   class="flex items-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
+                   style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-calendar text-white text-lg"></i>
+                    </div>
                     <div>
-                        <div class="font-medium text-gray-900">Monthly View</div>
-                        <div class="text-sm text-gray-500">Current month breakdown</div>
+                        <div class="font-semibold text-gray-900">Monthly View</div>
+                        <div class="text-sm text-gray-600">Current month breakdown</div>
                     </div>
                 </a>
                 
                 <a href="{{ url_for('update_prices') }}" 
-                   class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                    <i class="fas fa-sync-alt text-purple-600 text-xl mr-3"></i>
+                   class="flex items-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
+                   style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05));">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-sync-alt text-white text-lg"></i>
+                    </div>
                     <div>
-                        <div class="font-medium text-gray-900">Update Prices</div>
-                        <div class="text-sm text-gray-500">Refresh live prices</div>
+                        <div class="font-semibold text-gray-900">Update Prices</div>
+                        <div class="text-sm text-gray-600">Refresh live prices</div>
                     </div>
                 </a>
                 
                 <a href="{{ url_for('tracker_2025') }}" 
-                   class="flex items-center p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                    <i class="fas fa-chart-bar text-orange-600 text-xl mr-3"></i>
+                   class="flex items-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
+                   style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05));">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-chart-bar text-white text-lg"></i>
+                    </div>
                     <div>
-                        <div class="font-medium text-gray-900">2025 Tracker</div>
-                        <div class="text-sm text-gray-500">Monthly progress</div>
+                        <div class="font-semibold text-gray-900">2025 Tracker</div>
+                        <div class="text-sm text-gray-600">Monthly progress</div>
                     </div>
                 </a>
             </div>
