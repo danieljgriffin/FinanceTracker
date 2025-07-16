@@ -1,1 +1,31 @@
-{}
+{
+  "2017": {
+    "take_home_income": 3948.0
+  },
+  "2018": {
+    "take_home_income": 14297.0
+  },
+  "2019": {
+    "take_home_income": 16459.0
+  },
+  "2020": {
+    "take_home_income": 18573.0
+  },
+  "2021": {
+    "take_home_income": 17333.0
+  },
+  "2022": {
+    "take_home_income": 21751.0
+  },
+  "2023": {
+    "take_home_income": 22259.0
+  },
+  "2024": {
+    "take_home_income": 25748.0,
+    "amount_invested": 20699.0
+  },
+  "2025": {
+    "take_home_income": 13368.0,
+    "amount_invested": 7790.0
+  }
+}

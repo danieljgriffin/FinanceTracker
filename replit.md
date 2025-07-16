@@ -108,10 +108,23 @@ Preferred communication style: Simple, everyday language.
   - **Persistent Display**: Income table shows regardless of selected year in dropdown
   - **Automatic Calculations**: Live percentage calculations for % of income invested
   - **Backend Integration**: New `/update-income-data` endpoint for saving changes
+- **Left Sidebar Navigation**: Modern fintech-style navigation with enhanced user experience
+  - **Layout**: Fixed left sidebar navigation (288px wide) with main content adjusted accordingly
+  - **Active States**: Grey background highlighting for selected navigation items with blue accent
+  - **Icon Integration**: Font Awesome icons for each navigation item (dashboard, tracker, etc.)
+  - **Improved Spacing**: More space per navigation item for better readability
+  - **Visual Hierarchy**: Clear logo area with gradient icon and enhanced button styling
+- **Rounded Corner Design**: Complete UI modernization with rounded corners throughout
+  - **Cards**: All cards now use 16px border radius (rounded-xl) for modern appearance
+  - **Buttons**: All buttons use 12px radius (rounded-xl) with gradient backgrounds
+  - **Form Elements**: Input fields, selects, and textareas use 12px radius
+  - **Progress Bars**: Full rounded progress bars with smooth transitions
+  - **Tables**: Rounded table containers with proper overflow handling
+  - **Modals**: 16px radius for modal dialogs with enhanced backdrop blur
 - **Dark Mode Liquid Glass UI**: Complete visual overhaul with dark theme and liquid glass effects
   - **Background**: Multi-layered dark gradient background (slate-900 to slate-800)
   - **Card Styling**: Transparent liquid glass cards with subtle borders and backdrop blur
-  - **Navigation**: Simplified clean navigation without background boxes, just text
+  - **Navigation**: Left sidebar with glass morphism effect and smooth transitions
   - **Text Colors**: Updated all text to white/gray for dark mode compatibility
   - **Progress Bars**: Dark-themed progress bars with improved contrast
 - **Performance Optimizations**: Significant speed improvements across the application

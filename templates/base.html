@@ -28,50 +28,55 @@
 <body class="min-h-screen" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);">
     <!-- Dark mode background overlay for glass effect -->
     <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
-    <!-- Modern Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-dark">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-chart-line text-white text-lg"></i>
-                        </div>
-                        <span class="text-xl font-bold text-white">Net Worth Tracker</span>
-                    </div>
+    <!-- Left Sidebar Navigation -->
+    <div class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50">
+        <div class="p-6">
+            <!-- Logo/Title -->
+            <div class="flex items-center mb-12">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-4">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
-                
-                <div class="hidden md:flex items-center space-x-1">
-                    <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                        <i class="fas fa-tachometer-alt mr-2 text-white"></i><span class="text-white">Dashboard</span>
-                    </a>
-                    <a href="{{ url_for('yearly_tracker') }}" class="nav-link {% if request.endpoint == 'yearly_tracker' %}active{% endif %}">
-                        <i class="fas fa-calendar-alt mr-2 text-white"></i><span class="text-white">Yearly Tracker</span>
-                    </a>
-                    <a href="{{ url_for('monthly_breakdown') }}" class="nav-link {% if request.endpoint == 'monthly_breakdown' %}active{% endif %}">
-                        <i class="fas fa-chart-pie mr-2 text-white"></i><span class="text-white">Monthly Breakdown</span>
-                    </a>
-                    <a href="{{ url_for('investment_manager') }}" class="nav-link {% if request.endpoint == 'investment_manager' %}active{% endif %}">
-                        <i class="fas fa-cog mr-2 text-white"></i><span class="text-white">Investment Manager</span>
-                    </a>
-                </div>
-                
-                <div class="flex items-center">
-                    <a href="{{ url_for('update_prices') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
-                        <i class="fas fa-sync-alt mr-2 text-white"></i><span class="text-white">Update Prices</span>
-                    </a>
-                </div>
+                <span class="text-xl font-bold text-white">Net Worth Tracker</span>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="space-y-2">
+                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                    <i class="fas fa-tachometer-alt mr-4 text-lg"></i>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                    <i class="fas fa-calendar-alt mr-4 text-lg"></i>
+                    Yearly Tracker
+                </a>
+                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                    <i class="fas fa-chart-pie mr-4 text-lg"></i>
+                    Monthly Breakdown
+                </a>
+                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'investment_manager' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                    <i class="fas fa-briefcase mr-4 text-lg"></i>
+                    Investment Manager
+                </a>
+                <a href="{{ url_for('transaction_history') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'transaction_history' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                    <i class="fas fa-history mr-4 text-lg"></i>
+                    Transaction History
+                </a>
+            </nav>
+            
+            <!-- Update Prices Button -->
+            <div class="mt-8 pt-6 border-t border-gray-600/30">
+                <a href="{{ url_for('update_prices') }}" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Update Prices
+                </a>
             </div>
         </div>
-    </nav>
-    
-    <!-- Spacer for fixed navigation -->
-    <div class="h-20"></div>
+    </div>
 
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="max-w-7xl mx-auto px-6 lg:px-8 mt-4 relative z-10">
+            <div class="ml-72 px-8 mt-4 relative z-10">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} mb-4">
                         {% if category == 'error' %}
@@ -89,13 +94,13 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 lg:px-8 py-8 relative z-10">
+    <main class="ml-72 px-8 py-8 relative z-10">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     <footer class="glass-dark mt-12 relative z-10">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <div class="ml-72 px-8 py-8">
             <div class="text-center text-white/70 text-sm">
                 <p>&copy; 2025 Net Worth Tracker. Built with Flask and Tailwind CSS.</p>
             </div>

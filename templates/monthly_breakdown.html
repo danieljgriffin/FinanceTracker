@@ -6,9 +6,9 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">Monthly Breakdown</h1>
+        <h1 class="text-3xl font-bold text-white">Monthly Breakdown</h1>
         <div class="flex items-center space-x-4">
-            <select class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700">
+            <select class="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="{{ current_month }}" selected>{{ current_month }}</option>
                 <option value="January">January</option>
                 <option value="February">February</option>
@@ -27,7 +27,7 @@
     </div>
 
     <!-- Free Cash Summary -->
-    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg text-white p-6">
+    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg text-white p-6">
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-bold mb-2">Free Cash Available</h2>
@@ -47,28 +47,28 @@
     </div>
 
     <!-- Income Section -->
-    <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Income</h2>
+    <div class="card">
+        <div class="px-6 py-4 border-b border-gray-600/30">
+            <h2 class="text-lg font-semibold text-white">Income</h2>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="text-center p-4 bg-green-50 rounded-lg">
-                    <div class="text-2xl font-bold text-green-600">£{{ "{:,.2f}".format(monthly_income) }}</div>
-                    <div class="text-sm text-green-800">Monthly Take-Home</div>
+                <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
+                    <div class="text-2xl font-bold text-green-400">£{{ "{:,.2f}".format(monthly_income) }}</div>
+                    <div class="text-sm text-green-300">Monthly Take-Home</div>
                 </div>
-                <div class="text-center p-4 bg-green-50 rounded-lg">
-                    <div class="text-2xl font-bold text-green-600">£{{ "{:,.2f}".format(annual_income) }}</div>
-                    <div class="text-sm text-green-800">Annual Take-Home</div>
+                <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
+                    <div class="text-2xl font-bold text-green-400">£{{ "{:,.2f}".format(annual_income) }}</div>
+                    <div class="text-sm text-green-300">Annual Take-Home</div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Expenses Section -->
-    <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Expenses</h2>
+    <div class="card">
+        <div class="px-6 py-4 border-b border-gray-600/30">
+            <h2 class="text-lg font-semibold text-white">Expenses</h2>
         </div>
         <div class="overflow-x-auto">
             {% if monthly_expenses %}
