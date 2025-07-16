@@ -142,6 +142,11 @@ Preferred communication style: Simple, everyday language.
   - Fixed Rolls-Royce (RR.L) pricing: correct symbol now shows £9.88 vs incorrect £1.38
   - Enhanced currency detection supports GBp, GBX, pence variations for UK stocks
   - Stocks already in GBP remain unchanged to prevent double conversion
+- **Platform-Specific Symbol Handling**: Automatic symbol correction for UK/European platforms
+  - InvestEngine ISA, Degiro, Trading212 ISA, HL LISA automatically add .L suffix
+  - Fixed InvestEngine ISA live prices: VUAG.L (£88.25), CNX1.L (£967.00), IITU.L (£27.51)
+  - System tries .L suffix first, falls back to original symbol if needed
+  - Automatic price fetching works for all platforms when adding new investments
 
 ## Deployment Strategy
 

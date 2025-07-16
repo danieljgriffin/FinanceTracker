@@ -318,7 +318,21 @@ def add_investment():
         # Automatically fetch live price if symbol is provided
         if symbol:
             try:
+                # Platform-specific symbol handling
+                original_symbol = symbol
+                
+                # For UK/European platforms, try adding .L suffix if not present
+                if platform in ['Degiro', 'InvestEngine ISA', 'Trading212 ISA', 'HL Stocks & Shares LISA']:
+                    if not symbol.endswith('.L'):
+                        symbol = symbol + '.L'
+                
                 price = price_fetcher.get_price(symbol)
+                
+                # If .L suffix didn't work, try original symbol
+                if not price and symbol != original_symbol:
+                    price = price_fetcher.get_price(original_symbol)
+                    symbol = original_symbol
+                
                 if price:
                     # Update the newly added investment with the current price
                     investments_data = data_manager.get_investments_data()
@@ -327,6 +341,7 @@ def add_investment():
                         last_investment = investments_data[platform][-1]
                         if last_investment.get('name') == name:
                             last_investment['current_price'] = price
+                            last_investment['symbol'] = symbol  # Update with working symbol
                             last_investment['last_updated'] = datetime.now().isoformat()
                             data_manager.save_investments_data(investments_data)
                             flash(f'Investment {name} added successfully with live price £{price:.4f}', 'success')
