@@ -337,62 +337,29 @@
             <h2 class="text-xl font-semibold text-gray-900">Investment Summary</h2>
         </div>
         <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        {% set total_investments = 0 %}
-                        {% for platform, investments in investments_data.items() %}
-                            {% if not platform.endswith('_cash') %}
-                                {% set total_investments = total_investments + investments|length %}
-                            {% endif %}
-                        {% endfor %}
-                        {{ total_investments }}
-                    </div>
-                    <div class="text-sm text-gray-500">Total Investments</div>
-                </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        {% set platform_count = 0 %}
-                        {% for platform in investments_data.keys() %}
-                            {% if not platform.endswith('_cash') %}
-                                {% set platform_count = platform_count + 1 %}
-                            {% endif %}
-                        {% endfor %}
-                        {{ platform_count }}
-                    </div>
-                    <div class="text-sm text-gray-500">Active Platforms</div>
-                </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        £{{ "{:,.0f}".format(total_current_value) }}
-                    </div>
+                    <div class="text-2xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_portfolio_value) }}</div>
                     <div class="text-sm text-gray-500">Total Portfolio Value</div>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        £{{ "{:,.0f}".format(total_amount_spent) }}
-                    </div>
+                    <div class="text-2xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_amount_spent) }}</div>
                     <div class="text-sm text-gray-500">Total Amount Spent</div>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        {% set investments_with_symbols = 0 %}
-                        {% for platform, investments in investments_data.items() %}
-                            {% if not platform.endswith('_cash') %}
-                                {% for investment in investments %}
-                                    {% if investment.get('symbol') %}
-                                        {% set investments_with_symbols = investments_with_symbols + 1 %}
-                                    {% endif %}
-                                {% endfor %}
-                            {% endif %}
-                        {% endfor %}
-                        {{ investments_with_symbols }}
+                    <div class="text-2xl font-bold {{ 'text-green-600' if total_portfolio_percentage_pl > 0 else 'text-red-600' if total_portfolio_percentage_pl < 0 else 'text-gray-900' }}">
+                        {{ "{:+.2f}".format(total_portfolio_percentage_pl) }}%
                     </div>
-                    <div class="text-sm text-gray-500">Live Price Tracking</div>
+                    <div class="text-sm text-gray-500">Percentage Profit/Loss</div>
+                </div>
+                
+                <div class="text-center">
+                    <div class="text-2xl font-bold {{ 'text-green-600' if total_portfolio_pl > 0 else 'text-red-600' if total_portfolio_pl < 0 else 'text-gray-900' }}">
+                        £{{ "{:+,.2f}".format(total_portfolio_pl) }}
+                    </div>
+                    <div class="text-sm text-gray-500">Total Profit/Loss</div>
                 </div>
             </div>
         </div>
@@ -406,28 +373,27 @@
         <div class="p-6">
             <div class="space-y-4">
                 {% for platform, investments in investments_data.items() %}
-                    {% if not platform.endswith('_cash') and investments %}
-                        {% set platform_total = 0 %}
-                        {% for investment in investments %}
-                            {% set current_value = investment.get('holdings', 0) * investment.get('current_price', 0) %}
-                            {% set platform_total = platform_total + current_value %}
-                        {% endfor %}
-                        {% set percentage = (platform_total / total_current_value * 100) if total_current_value > 0 else 0 %}
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                <span class="font-medium text-gray-900">{{ platform }}</span>
+                    {% if not platform.endswith('_cash') %}
+                        {% set platform_data = platform_totals.get(platform, {}) %}
+                        {% set platform_total_value = platform_data.get('total_value', 0) %}
+                        {% if platform_total_value > 0 %}
+                            {% set percentage = (platform_total_value / total_portfolio_value * 100) if total_portfolio_value > 0 else 0 %}
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                    <span class="font-medium text-gray-900">{{ platform }}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(platform_total_value) }}</div>
+                                    <div class="text-sm text-gray-500">{{ "{:.1f}".format(percentage) }}%</div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(platform_total) }}</div>
-                                <div class="text-sm text-gray-500">{{ "{:.1f}".format(percentage) }}%</div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full transition-all duration-300" 
+                                     style="width: {{ percentage }}%; background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
                             </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: {{ percentage }}%; background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                        </div>
+                        {% endif %}
                     {% endif %}
                 {% endfor %}
             </div>

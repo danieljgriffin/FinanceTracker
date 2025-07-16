@@ -223,6 +223,7 @@ def investment_manager():
         # Calculate totals and metrics from live data
         total_current_value = 0
         total_amount_spent = 0
+        total_cash = 0
         platform_totals = {}
         
         for platform, platform_investments in investments_data.items():
@@ -247,6 +248,7 @@ def investment_manager():
             # Add cash to platform total
             cash_balance = data_manager.get_platform_cash(platform)
             platform_total_value = platform_investment_total + cash_balance
+            total_cash += cash_balance
             
             # Calculate P/L metrics for this platform
             platform_pl = platform_investment_total - platform_amount_spent  # Only investment P/L, not cash
@@ -261,6 +263,11 @@ def investment_manager():
                 'cash_balance': cash_balance
             }
         
+        # Calculate overall portfolio metrics (investments + cash)
+        total_portfolio_value = total_current_value + total_cash
+        total_portfolio_pl = total_current_value - total_amount_spent  # P/L from investments only
+        total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
+        
         # Get unique investment names for dropdown
         unique_names = data_manager.get_unique_investment_names()
         
@@ -270,6 +277,10 @@ def investment_manager():
                              platform_totals=platform_totals,
                              total_current_value=total_current_value,
                              total_amount_spent=total_amount_spent,
+                             total_cash=total_cash,
+                             total_portfolio_value=total_portfolio_value,
+                             total_portfolio_pl=total_portfolio_pl,
+                             total_portfolio_percentage_pl=total_portfolio_percentage_pl,
                              unique_names=unique_names,
                              data_manager=data_manager)
     except Exception as e:
@@ -281,6 +292,10 @@ def investment_manager():
                              platform_totals={},
                              total_current_value=0,
                              total_amount_spent=0,
+                             total_cash=0,
+                             total_portfolio_value=0,
+                             total_portfolio_pl=0,
+                             total_portfolio_percentage_pl=0,
                              unique_names=[],
                              data_manager=data_manager)
 
