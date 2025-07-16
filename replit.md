@@ -94,6 +94,23 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
+- **Yearly Tracker System**: Completely redesigned 2025 tracker into a comprehensive yearly tracking system
+  - **Multi-Year Support**: Can now track 2023, 2024, 2025 and create new years (e.g., 2026)
+  - **Enhanced Data Structure**: Monthly tracking with both 1st of month and 31st December entries
+  - **Platform-Based Tracking**: Track total platform values (investments + cash) instead of individual investments
+  - **Month-on-Month Calculations**: Automatic percentage change calculations between months
+  - **Year Management**: Easy year selection, creation, and navigation interface
+  - **Editable Interface**: Click-to-edit monthly values with automatic save functionality
+- **Dashboard Improvement**: Replaced "Active Platforms" metric with "Yearly Net Worth Increase"
+  - **Intelligent Calculation**: Compares current year vs previous year end values
+  - **Fallback Logic**: Uses latest available month data if December 31st not available
+  - **Visual Indicators**: Color-coded display (green for gains, red for losses) with trending icons
+- **Data Manager Enhancements**: Added multi-year support with automatic file management
+  - **Flexible Data Storage**: Separate JSON files for each year (networth_2023.json, networth_2024.json, etc.)
+  - **Automatic Initialization**: Creates missing year files when needed
+  - **Historical Data Support**: Ready for importing 2023 and 2024 historical data
+- **Navigation Updates**: Updated navigation to point to new "Yearly Tracker" instead of "2025 Tracker"
+- **Backward Compatibility**: Old /tracker-2025 route redirects to new yearly tracker system
 - **Fixed Edit/Delete Functionality**: Investment edit and delete buttons now fully functional
 - **Enhanced Price Fetching**: Added USD to GBP currency conversion for all US stocks
 - **HL LISA Fund Support**: Custom web scraping for 4 specific funds that don't work with yfinance

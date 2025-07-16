@@ -45,8 +45,8 @@
                     <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
                         <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
                     </a>
-                    <a href="{{ url_for('tracker_2025') }}" class="nav-link {% if request.endpoint == 'tracker_2025' %}active{% endif %}">
-                        <i class="fas fa-calendar-alt mr-2"></i>2025 Tracker
+                    <a href="{{ url_for('yearly_tracker') }}" class="nav-link {% if request.endpoint == 'yearly_tracker' %}active{% endif %}">
+                        <i class="fas fa-calendar-alt mr-2"></i>Yearly Tracker
                     </a>
                     <a href="{{ url_for('income_investments') }}" class="nav-link {% if request.endpoint == 'income_investments' %}active{% endif %}">
                         <i class="fas fa-money-bill-wave mr-2"></i>Income vs Investments

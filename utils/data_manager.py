@@ -93,13 +93,104 @@ class DataManager:
         except Exception as e:
             self.logger.error(f"Error saving data to {filepath}: {str(e)}")
     
-    def get_networth_data(self) -> Dict[str, Any]:
-        """Get net worth data"""
-        return self.load_json_file(os.path.join(self.data_dir, 'networth_2025.json'))
+    def get_networth_data(self, year: int = 2025) -> Dict[str, Any]:
+        """Get net worth data for a specific year"""
+        filename = f'networth_{year}.json'
+        filepath = os.path.join(self.data_dir, filename)
+        
+        # Create file if it doesn't exist
+        if not os.path.exists(filepath):
+            self.save_json_file(filepath, {})
+        
+        return self.load_json_file(filepath)
     
-    def save_networth_data(self, data: Dict[str, Any]):
-        """Save net worth data"""
-        self.save_json_file(os.path.join(self.data_dir, 'networth_2025.json'), data)
+    def save_networth_data(self, data: Dict[str, Any], year: int = 2025):
+        """Save net worth data for a specific year"""
+        filename = f'networth_{year}.json'
+        self.save_json_file(os.path.join(self.data_dir, filename), data)
+    
+    def get_available_years(self) -> List[int]:
+        """Get list of available years for networth tracking"""
+        available_years = []
+        for filename in os.listdir(self.data_dir):
+            if filename.startswith('networth_') and filename.endswith('.json'):
+                try:
+                    year = int(filename.replace('networth_', '').replace('.json', ''))
+                    available_years.append(year)
+                except ValueError:
+                    continue
+        return sorted(available_years)
+    
+    def create_new_year(self, year: int):
+        """Create a new year for networth tracking"""
+        filename = f'networth_{year}.json'
+        filepath = os.path.join(self.data_dir, filename)
+        
+        if not os.path.exists(filepath):
+            # Initialize with empty monthly data
+            initial_data = {}
+            self.save_json_file(filepath, initial_data)
+            return True
+        return False
+    
+    def update_monthly_networth(self, year: int, month: str, platform: str, value: float):
+        """Update networth value for a specific month and platform"""
+        data = self.get_networth_data(year)
+        
+        if month not in data:
+            data[month] = {}
+        
+        data[month][platform] = value
+        
+        # Calculate monthly total
+        total = sum(data[month].values())
+        data[month]['total_net_worth'] = total
+        
+        self.save_networth_data(data, year)
+    
+    def get_yearly_net_worth_increase(self, current_year: int = 2025) -> float:
+        """Calculate yearly net worth increase from previous year"""
+        try:
+            # Get current year end value (31st Dec or latest available)
+            current_data = self.get_networth_data(current_year)
+            current_value = 0
+            
+            # Try to get 31st Dec value, fallback to latest month
+            if '31st Dec' in current_data:
+                current_value = current_data['31st Dec'].get('total_net_worth', 0)
+            else:
+                # Find the latest month with data
+                months = ['1st Dec', '1st Nov', '1st Oct', '1st Sep', '1st Aug', '1st Jul', 
+                         '1st Jun', '1st May', '1st Apr', '1st Mar', '1st Feb', '1st Jan']
+                for month in months:
+                    if month in current_data and current_data[month].get('total_net_worth', 0) > 0:
+                        current_value = current_data[month]['total_net_worth']
+                        break
+            
+            # Get previous year end value
+            previous_year = current_year - 1
+            previous_data = self.get_networth_data(previous_year)
+            previous_value = 0
+            
+            if '31st Dec' in previous_data:
+                previous_value = previous_data['31st Dec'].get('total_net_worth', 0)
+            else:
+                # Find the latest month with data from previous year
+                for month in months:
+                    if month in previous_data and previous_data[month].get('total_net_worth', 0) > 0:
+                        previous_value = previous_data[month]['total_net_worth']
+                        break
+            
+            # Calculate increase
+            if previous_value > 0:
+                increase = ((current_value - previous_value) / previous_value) * 100
+                return increase
+            else:
+                return 0.0
+                
+        except Exception as e:
+            self.logger.error(f"Error calculating yearly net worth increase: {str(e)}")
+            return 0.0
     
     def get_income_data(self) -> Dict[str, Any]:
         """Get income data"""

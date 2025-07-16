@@ -68,11 +68,15 @@ def dashboard():
         # Calculate month-on-month change (simplified for demo)
         mom_change = 5.2  # Placeholder for demo - would need historical data tracking
         
+        # Calculate yearly net worth increase
+        yearly_increase = data_manager.get_yearly_net_worth_increase(2025)
+        
         return render_template('dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
                              mom_change=mom_change,
+                             yearly_increase=yearly_increase,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'))
     except Exception as e:
@@ -83,42 +87,102 @@ def dashboard():
                              platform_allocations={},
                              platform_percentages={},
                              mom_change=0,
+                             yearly_increase=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'))
 
-@app.route('/tracker-2025')
-def tracker_2025():
-    """2025 monthly tracker page"""
+@app.route('/yearly-tracker')
+@app.route('/yearly-tracker/<int:year>')
+def yearly_tracker(year=None):
+    """Yearly tracker page with support for multiple years"""
     try:
-        networth_data = data_manager.get_networth_data()
+        # Get available years and set default
+        available_years = data_manager.get_available_years()
+        if not available_years:
+            # Create initial years if none exist
+            for initial_year in [2023, 2024, 2025]:
+                data_manager.create_new_year(initial_year)
+            available_years = [2023, 2024, 2025]
+        
+        # Use current year or default to 2025
+        if year is None:
+            year = 2025
+        
+        # Ensure the requested year exists
+        if year not in available_years:
+            data_manager.create_new_year(year)
+            available_years = data_manager.get_available_years()
+        
+        networth_data = data_manager.get_networth_data(year)
         investments_data = data_manager.get_investments_data()
         
-        months = ['January', 'February', 'March', 'April', 'May', 'June',
-                 'July', 'August', 'September', 'October', 'November', 'December']
+        # Define months with both 1st and 31st entries for some months
+        months = [
+            '1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
+            '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec', '31st Dec'
+        ]
         
-        # Get all unique investments
-        all_investments = []
+        # Get all platforms (including cash)
+        all_platforms = []
         for platform, investments in investments_data.items():
-            for investment in investments:
-                all_investments.append({
-                    'name': investment['name'],
-                    'platform': platform,
+            if not platform.endswith('_cash'):
+                all_platforms.append({
+                    'name': platform,
                     'color': PLATFORM_COLORS.get(platform, '#6b7280')
                 })
         
-        return render_template('tracker_2025.html', 
+        return render_template('yearly_tracker.html', 
                              networth_data=networth_data,
-                             investments=all_investments,
+                             platforms=all_platforms,
                              months=months,
+                             current_year=year,
+                             available_years=available_years,
                              platform_colors=PLATFORM_COLORS)
     except Exception as e:
-        logging.error(f"Error in tracker 2025: {str(e)}")
-        flash(f'Error loading 2025 tracker: {str(e)}', 'error')
-        return render_template('tracker_2025.html', 
+        logging.error(f"Error in yearly tracker: {str(e)}")
+        flash(f'Error loading yearly tracker: {str(e)}', 'error')
+        return render_template('yearly_tracker.html', 
                              networth_data={},
-                             investments=[],
+                             platforms=[],
                              months=[],
+                             current_year=2025,
+                             available_years=[2025],
                              platform_colors=PLATFORM_COLORS)
+
+@app.route('/tracker-2025')
+def tracker_2025():
+    """Redirect to yearly tracker for backward compatibility"""
+    return redirect(url_for('yearly_tracker', year=2025))
+
+@app.route('/create-year', methods=['POST'])
+def create_year():
+    """Create a new year for tracking"""
+    try:
+        year = int(request.form.get('year'))
+        if data_manager.create_new_year(year):
+            flash(f'Year {year} created successfully', 'success')
+        else:
+            flash(f'Year {year} already exists', 'warning')
+    except (ValueError, TypeError):
+        flash('Invalid year format', 'error')
+    
+    return redirect(url_for('yearly_tracker', year=year))
+
+@app.route('/update-monthly-value', methods=['POST'])
+def update_monthly_value():
+    """Update monthly networth value"""
+    try:
+        year = int(request.form.get('year'))
+        month = request.form.get('month')
+        platform = request.form.get('platform')
+        value = float(request.form.get('value', 0))
+        
+        data_manager.update_monthly_networth(year, month, platform, value)
+        flash(f'Updated {platform} for {month} {year}', 'success')
+    except (ValueError, TypeError) as e:
+        flash(f'Error updating value: {str(e)}', 'error')
+    
+    return redirect(url_for('yearly_tracker', year=year))
 
 @app.route('/income-investments')
 def income_investments():
