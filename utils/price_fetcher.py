@@ -69,20 +69,25 @@ class PriceFetcher:
                     price = float(info[field])
                     self.logger.debug(f"Price for {symbol}: {price}")
                     
-                    # Convert USD to GBP if needed
+                    # Handle currency conversions
                     currency = info.get('currency', 'USD')
+                    self.logger.debug(f"Currency for {symbol}: {currency}")
+                    
                     if currency == 'USD':
+                        # Convert USD to GBP
                         gbp_price = self.convert_usd_to_gbp(price)
                         if gbp_price:
                             self.logger.debug(f"Converted {price} USD to {gbp_price} GBP")
                             return gbp_price
-                    
-                    # Convert pence to pounds for UK stocks
-                    if symbol.endswith('.L') and currency == 'GBp':
-                        # UK stocks on Yahoo Finance are typically in pence (GBp)
+                    elif currency == 'GBp' or (symbol.endswith('.L') and currency in ['GBX', 'GBp', 'pence']):
+                        # Convert pence to pounds for UK stocks
                         pounds_price = price / 100
                         self.logger.debug(f"Converted {price} pence to {pounds_price} GBP for UK stock {symbol}")
                         return pounds_price
+                    elif currency in ['GBP', 'GBP', 'pounds']:
+                        # Already in pounds
+                        self.logger.debug(f"Price already in GBP: {price}")
+                        return price
                     
                     return price
             

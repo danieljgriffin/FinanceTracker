@@ -136,6 +136,12 @@ Preferred communication style: Simple, everyday language.
   - Input fields now accept step="0.0000001" for precise share quantities
   - Display format updated to show 7 decimal places (e.g., 15.5521236 shares)
   - Both add and edit investment forms support high-precision holdings input
+- **Improved Currency Conversion Logic**: Enhanced price fetching with robust currency detection
+  - USD stocks automatically convert to GBP using live exchange rates
+  - UK stocks (*.L) correctly convert from pence (GBp) to pounds (÷100)
+  - Fixed Rolls-Royce (RR.L) pricing: correct symbol now shows £9.88 vs incorrect £1.38
+  - Enhanced currency detection supports GBp, GBX, pence variations for UK stocks
+  - Stocks already in GBP remain unchanged to prevent double conversion
 
 ## Deployment Strategy
 
