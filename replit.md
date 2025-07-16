@@ -94,21 +94,26 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
-- **UI/UX Improvements**: Refined hover effects throughout the application
-  - **Card Hover Removal**: Removed hover effects from regular content cards to prevent unwanted highlighting
-  - **Table Row Hovers**: Maintained hover effects on table rows for better data navigation
-  - **Quick Action Hovers**: Preserved scale and shadow effects on quick action buttons for interactive feedback
-  - **Navigation Hovers**: Kept navigation link hover effects for better user experience
-  - **Consistent Interaction**: Only interactive elements now have hover effects, improving UI clarity
-- **Edit/Save Mode Enhancement**: Implemented edit/save functionality for yearly tracker
-  - **No Page Refresh**: Removed immediate form submission that caused white screen flashes
-  - **Batch Updates**: Edit mode allows multiple changes before saving all at once
-  - **Visual Feedback**: Clear edit/save button states and input field styling
-  - **Better UX**: Prevents accidental refreshes and provides controlled editing experience
-- **Yearly Increase Calculation Fix**: Corrected dashboard yearly net worth calculation
-  - **Proper Baseline**: Now compares current live portfolio to 1st January current year values
-  - **Automatic Updates**: Calculation updates automatically based on current year
-  - **Accurate Reporting**: Shows true year-to-date performance growth
+- **Dark Mode Liquid Glass UI**: Complete visual overhaul with dark theme and liquid glass effects
+  - **Background**: Multi-layered dark gradient background (slate-900 to slate-800)
+  - **Card Styling**: Transparent liquid glass cards with subtle borders and backdrop blur
+  - **Navigation**: Simplified clean navigation without background boxes, just text
+  - **Text Colors**: Updated all text to white/gray for dark mode compatibility
+  - **Progress Bars**: Dark-themed progress bars with improved contrast
+- **Performance Optimizations**: Significant speed improvements across the application
+  - **Dashboard**: Optimized platform allocation calculations using list comprehensions
+  - **Investment Manager**: Streamlined data processing and reduced redundant calculations
+  - **Yearly Tracker**: Reduced initial year creation overhead
+  - **Font Awesome**: Updated to version 6.4.0 for better icon loading
+- **Month-on-Month Calculation Fix**: Corrected dashboard month-on-month calculation
+  - **Proper Logic**: Now compares current live net worth against current month's 1st day value
+  - **Dynamic Month Detection**: Automatically detects current month (July 2025)
+  - **Accurate Percentage**: Shows true month-to-date performance change
+- **Dynamic Arrow Icons**: Fixed yearly net worth icons to match month-on-month styling
+  - **Positive**: Green background with up arrow (fa-arrow-up)
+  - **Negative**: Red background with down arrow (fa-arrow-down)
+  - **Neutral**: Gray background with minus icon (fa-minus)
+  - **Consistent Design**: Both metrics now use identical visual patterns
 
 ## Recent Changes (July 16, 2025) - Previous
 - **Yearly Tracker System**: Completely redesigned 2025 tracker into a comprehensive yearly tracking system

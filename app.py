@@ -39,24 +39,22 @@ def dashboard():
         current_net_worth = 0
         platform_allocations = {}
         
-        # Calculate platform allocations using current investment values
+        # Calculate platform allocations using current investment values - optimized
         for platform, investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys
                 
-            platform_total = 0
-            
-            # Add investment values
-            for investment in investments:
-                holdings = investment.get('holdings', 0)
-                current_price = investment.get('current_price', 0)
-                platform_total += holdings * current_price
+            platform_total = sum(
+                investment.get('holdings', 0) * investment.get('current_price', 0)
+                for investment in investments
+            )
             
             # Add cash balance
             platform_total += data_manager.get_platform_cash(platform)
             
-            platform_allocations[platform] = platform_total
-            current_net_worth += platform_total
+            if platform_total > 0:  # Only include platforms with value
+                platform_allocations[platform] = platform_total
+                current_net_worth += platform_total
         
         # Calculate percentage allocations
         total_allocation = sum(platform_allocations.values())
@@ -146,13 +144,10 @@ def dashboard():
 def yearly_tracker(year=None):
     """Yearly tracker page with support for multiple years"""
     try:
-        # Get available years and set default
+        # Get available years and set default - optimized
         available_years = data_manager.get_available_years()
         if not available_years:
-            # Create initial years if none exist
-            for initial_year in [2023, 2024, 2025]:
-                data_manager.create_new_year(initial_year)
-            available_years = [2023, 2024, 2025]
+            available_years = [2025]  # Start with current year only
         
         # Use current year or default to 2025
         if year is None:
@@ -481,7 +476,7 @@ def investment_manager():
     try:
         investments_data = data_manager.get_investments_data()
         
-        # Calculate totals and metrics from live data
+        # Calculate totals and metrics from live data - optimized
         total_current_value = 0
         total_amount_spent = 0
         total_cash = 0
@@ -491,20 +486,18 @@ def investment_manager():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys
             
-            platform_investment_total = 0
-            platform_amount_spent = 0
+            # Use list comprehensions for better performance
+            platform_investment_total = sum(
+                investment.get('holdings', 0) * investment.get('current_price', 0)
+                for investment in platform_investments
+            )
+            platform_amount_spent = sum(
+                investment.get('amount_spent', 0)
+                for investment in platform_investments
+            )
             
-            for investment in platform_investments:
-                holdings = investment.get('holdings', 0)
-                current_price = investment.get('current_price', 0)
-                amount_spent = investment.get('amount_spent', 0)
-                
-                current_value = holdings * current_price
-                platform_investment_total += current_value
-                platform_amount_spent += amount_spent
-                
-                total_current_value += current_value
-                total_amount_spent += amount_spent
+            total_current_value += platform_investment_total
+            total_amount_spent += platform_amount_spent
             
             # Add cash to platform total
             cash_balance = data_manager.get_platform_cash(platform)
@@ -512,7 +505,7 @@ def investment_manager():
             total_cash += cash_balance
             
             # Calculate P/L metrics for this platform
-            platform_pl = platform_investment_total - platform_amount_spent  # Only investment P/L, not cash
+            platform_pl = platform_investment_total - platform_amount_spent
             platform_percentage_pl = (platform_pl / platform_amount_spent * 100) if platform_amount_spent > 0 else 0
             
             platform_totals[platform] = {

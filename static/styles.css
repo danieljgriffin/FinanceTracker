@@ -10,31 +10,23 @@
 }
 
 .glass-dark {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Modern navigation */
+/* Modern navigation - simplified without backgrounds */
 .nav-link {
-    @apply inline-flex items-center px-4 py-2 mx-1 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 transition-all duration-300 ease-in-out;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    @apply inline-flex items-center px-4 py-2 mx-1 rounded-xl text-sm font-medium text-white/70 hover:text-white transition-all duration-300 ease-in-out;
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
 }
 
 .nav-link.active {
-    @apply text-white;
-    background: rgba(59, 130, 246, 0.8);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+    @apply text-white font-semibold;
 }
 
 /* Modern alert styles */
@@ -61,14 +53,31 @@
     border-color: rgba(59, 130, 246, 0.3);
 }
 
-/* Modern card styles with glass effect */
+/* Dark mode liquid glass card styles */
 .card {
     @apply rounded-2xl border-0;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Form styling with rounded corners */
+.form-input {
+    @apply rounded-xl border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20;
+}
+
+.form-select {
+    @apply rounded-xl border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20;
+}
+
+.btn-primary {
+    @apply rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 transition-all duration-200;
+}
+
+.btn-secondary {
+    @apply rounded-xl bg-gray-600 hover:bg-gray-700 text-white font-medium px-6 py-3 transition-all duration-200;
 }
 
 /* Quick action hover effects - only for buttons and interactive elements */

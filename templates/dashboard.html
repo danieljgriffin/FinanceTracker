@@ -18,8 +18,8 @@
         <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 mb-2">Current Net Worth</p>
-                    <p class="text-3xl font-bold text-gray-900">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                    <p class="text-sm font-medium text-gray-300 mb-2">Current Net Worth</p>
+                    <p class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</p>
                 </div>
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
                     <i class="fas fa-chart-line text-white text-2xl"></i>
@@ -31,7 +31,7 @@
         <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 mb-2">Month-on-Month</p>
+                    <p class="text-sm font-medium text-gray-300 mb-2">Month-on-Month</p>
                     <p class="text-3xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                         {{ "{:+.1f}".format(mom_change) }}%
                     </p>
@@ -46,7 +46,7 @@
         <div class="card p-8">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 mb-2">Yearly Net Worth Increase</p>
+                    <p class="text-sm font-medium text-gray-300 mb-2">Yearly Net Worth Increase</p>
                     <p class="text-3xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
                         {{ "{:+.1f}".format(yearly_increase) }}%
                     </p>
@@ -60,8 +60,8 @@
 
     <!-- Platform Allocation -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Platform Allocation</h2>
+        <div class="px-8 py-6 border-b border-gray-600/30">
+            <h2 class="text-xl font-semibold text-white">Platform Allocation</h2>
         </div>
         <div class="p-8">
             {% if platform_allocations %}
@@ -70,14 +70,14 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                <span class="font-medium text-gray-900">{{ platform }}</span>
+                                <span class="font-medium text-white">{{ platform }}</span>
                             </div>
                             <div class="text-right">
-                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(amount) }}</div>
-                                <div class="text-sm text-gray-500">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}%</div>
+                                <div class="font-medium text-white">£{{ "{:,.2f}".format(amount) }}</div>
+                                <div class="text-sm text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}%</div>
                             </div>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="w-full bg-gray-700 rounded-full h-2">
                             <div class="h-2 rounded-full" 
                                  style="width: {{ platform_percentages.get(platform, 0) }}%; background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
                         </div>
@@ -86,8 +86,8 @@
             {% else %}
                 <div class="text-center py-8">
                     <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
-                    <p class="text-gray-500">No allocation data available</p>
-                    <p class="text-sm text-gray-400">Add investments to see platform allocation</p>
+                    <p class="text-gray-400">No allocation data available</p>
+                    <p class="text-sm text-gray-500">Add investments to see platform allocation</p>
                 </div>
             {% endif %}
         </div>
@@ -95,8 +95,8 @@
 
     <!-- Quick Actions -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Quick Actions</h2>
+        <div class="px-8 py-6 border-b border-gray-600/30">
+            <h2 class="text-xl font-semibold text-white">Quick Actions</h2>
         </div>
         <div class="p-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -107,8 +107,8 @@
                         <i class="fas fa-plus text-white text-lg"></i>
                     </div>
                     <div>
-                        <div class="font-semibold text-gray-900">Add Investment</div>
-                        <div class="text-sm text-gray-600">Manage investments</div>
+                        <div class="font-semibold text-white">Add Investment</div>
+                        <div class="text-sm text-gray-400">Manage investments</div>
                     </div>
                 </a>
                 
