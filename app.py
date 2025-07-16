@@ -144,7 +144,7 @@ def monthly_breakdown():
         # Get data for current month
         income_data = data_manager.get_income_data()
         expenses_data = data_manager.get_expenses_data()
-        investments_data = data_manager.get_investments_data()
+        contributions_data = data_manager.get_monthly_contributions_data()
         
         # Calculate monthly income
         monthly_income = 0
@@ -163,16 +163,16 @@ def monthly_breakdown():
         platform_investments = {}
         total_monthly_investments = 0
         
-        for platform, investments in investments_data.items():
+        for platform, contributions in contributions_data.items():
             platform_total = 0
             platform_investments[platform] = {
-                'investments': investments,
+                'investments': contributions,
                 'color': PLATFORM_COLORS.get(platform, '#6b7280'),
                 'total': 0
             }
             
-            for investment in investments:
-                monthly_amount = investment.get('monthly_amount', 0)
+            for contribution in contributions:
+                monthly_amount = contribution.get('monthly_amount', 0)
                 platform_total += monthly_amount
                 total_monthly_investments += monthly_amount
             
@@ -233,7 +233,7 @@ def add_investment():
     try:
         platform = request.form.get('platform')
         name = request.form.get('name')
-        monthly_amount = float(request.form.get('monthly_amount', 0))
+        current_value = float(request.form.get('current_value', 0))
         symbol = request.form.get('symbol', '')
         
         if not platform or not name:
@@ -241,7 +241,7 @@ def add_investment():
             return redirect(url_for('investment_manager'))
         
         # Add investment to data
-        data_manager.add_investment(platform, name, monthly_amount, symbol)
+        data_manager.add_investment(platform, name, current_value, symbol)
         flash(f'Investment {name} added successfully', 'success')
         
     except Exception as e:

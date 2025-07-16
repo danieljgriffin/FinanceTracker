@@ -49,6 +49,20 @@ class DataManager:
         expenses_file = os.path.join(self.data_dir, 'expenses.json')
         if not os.path.exists(expenses_file):
             self.save_json_file(expenses_file, {})
+        
+        # Initialize monthly contributions data
+        contributions_file = os.path.join(self.data_dir, 'monthly_contributions.json')
+        if not os.path.exists(contributions_file):
+            initial_contributions = {
+                'Degiro': [],
+                'Trading212 ISA': [],
+                'EQ (GSK shares)': [],
+                'InvestEngine ISA': [],
+                'Crypto': [],
+                'HL Stocks & Shares LISA': [],
+                'Cash': []
+            }
+            self.save_json_file(contributions_file, initial_contributions)
     
     def load_json_file(self, filepath: str) -> Dict[str, Any]:
         """Load JSON data from file"""
@@ -102,7 +116,7 @@ class DataManager:
         """Save expenses data"""
         self.save_json_file(os.path.join(self.data_dir, 'expenses.json'), data)
     
-    def add_investment(self, platform: str, name: str, monthly_amount: float, symbol: str = ''):
+    def add_investment(self, platform: str, name: str, current_value: float, symbol: str = ''):
         """Add a new investment"""
         investments_data = self.get_investments_data()
         
@@ -111,7 +125,7 @@ class DataManager:
         
         investment = {
             'name': name,
-            'monthly_amount': monthly_amount,
+            'current_value': current_value,
             'symbol': symbol,
             'created_at': datetime.now().isoformat()
         }
@@ -135,3 +149,28 @@ class DataManager:
         if platform in investments_data and 0 <= investment_index < len(investments_data[platform]):
             del investments_data[platform][investment_index]
             self.save_investments_data(investments_data)
+    
+    def get_monthly_contributions_data(self) -> Dict[str, Any]:
+        """Get monthly contributions data"""
+        return self.load_json_file(os.path.join(self.data_dir, 'monthly_contributions.json'))
+    
+    def save_monthly_contributions_data(self, data: Dict[str, Any]):
+        """Save monthly contributions data"""
+        self.save_json_file(os.path.join(self.data_dir, 'monthly_contributions.json'), data)
+    
+    def add_monthly_contribution(self, platform: str, name: str, monthly_amount: float, symbol: str = ''):
+        """Add a new monthly contribution"""
+        contributions_data = self.get_monthly_contributions_data()
+        
+        if platform not in contributions_data:
+            contributions_data[platform] = []
+        
+        contribution = {
+            'name': name,
+            'monthly_amount': monthly_amount,
+            'symbol': symbol,
+            'created_at': datetime.now().isoformat()
+        }
+        
+        contributions_data[platform].append(contribution)
+        self.save_monthly_contributions_data(contributions_data)
