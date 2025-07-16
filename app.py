@@ -265,7 +265,7 @@ def investment_manager():
         
         # Calculate overall portfolio metrics (investments + cash)
         total_portfolio_value = total_current_value + total_cash
-        total_portfolio_pl = total_current_value - total_amount_spent  # P/L from investments only
+        total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
         # Get unique investment names for dropdown
