@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Monthly Breakdown - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Monthly Breakdown</h1>
+        <div class="flex items-center space-x-4">
+            <select class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-700">
+                <option value="{{ current_month }}" selected>{{ current_month }}</option>
+                <option value="January">January</option>
+                <option value="February">February</option>
+                <option value="March">March</option>
+                <option value="April">April</option>
+                <option value="May">May</option>
+                <option value="June">June</option>
+                <option value="July">July</option>
+                <option value="August">August</option>
+                <option value="September">September</option>
+                <option value="October">October</option>
+                <option value="November">November</option>
+                <option value="December">December</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Free Cash Summary -->
+    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg text-white p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-bold mb-2">Free Cash Available</h2>
+                <p class="text-blue-100">Income - (Expenses + Investments)</p>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold">£{{ "{:,.2f}".format(free_cash_monthly) }}</div>
+                <div class="text-blue-100">Monthly</div>
+            </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-blue-400">
+            <div class="flex justify-between items-center">
+                <span class="text-blue-100">Annual Free Cash</span>
+                <span class="text-xl font-bold">£{{ "{:,.2f}".format(free_cash_annual) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Income</h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">£{{ "{:,.2f}".format(monthly_income) }}</div>
+                    <div class="text-sm text-green-800">Monthly Take-Home</div>
+                </div>
+                <div class="text-center p-4 bg-green-50 rounded-lg">
+                    <div class="text-2xl font-bold text-green-600">£{{ "{:,.2f}".format(annual_income) }}</div>
+                    <div class="text-sm text-green-800">Annual Take-Home</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expenses Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Expenses</h2>
+        </div>
+        <div class="overflow-x-auto">
+            {% if monthly_expenses %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Expense
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Monthly
+                            </th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Annual
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for expense in monthly_expenses %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ expense.name }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <div class="text-sm text-gray-900">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <div class="text-sm text-gray-900">£{{ "{:,.2f}".format(expense.monthly_amount * 12) }}</div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        <tr class="bg-gray-50 font-medium border-t-2 border-gray-300">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-bold text-gray-900">Total Expenses</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(total_monthly_expenses) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(total_annual_expenses) }}</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No expense data available</p>
+                    <p class="text-sm text-gray-400">Add expenses to track your monthly spending</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Investments Section -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Investments</h2>
+        </div>
+        <div class="p-6">
+            {% if platform_investments %}
+                <div class="space-y-6">
+                    {% for platform, data in platform_investments.items() %}
+                        <div class="border rounded-lg overflow-hidden">
+                            <div class="px-4 py-3 border-b" style="background-color: {{ data.color }}20;">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ data.color }}"></div>
+                                        <h3 class="font-semibold text-gray-900">{{ platform }}</h3>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(data.total) }}</div>
+                                        <div class="text-sm text-gray-500">Monthly</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if data.investments %}
+                                <div class="divide-y divide-gray-200">
+                                    {% for investment in data.investments %}
+                                        <div class="px-4 py-3 flex items-center justify-between">
+                                            <div class="flex-1">
+                                                <div class="text-sm font-medium text-gray-900">{{ investment.name }}</div>
+                                                {% if investment.monthly_amount > 0 and monthly_income > 0 %}
+                                                    <div class="text-xs text-gray-500">
+                                                        {{ "{:.1f}".format((investment.monthly_amount / monthly_income) * 100) }}% of income
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="text-sm font-medium text-gray-900">
+                                                    £{{ "{:,.2f}".format(investment.monthly_amount) }}
+                                                </div>
+                                                <div class="text-xs text-gray-500">
+                                                    £{{ "{:,.2f}".format(investment.monthly_amount * 12) }} annual
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Total Investments Summary -->
+                <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="text-sm font-medium text-gray-500">Total Monthly Investments</div>
+                            <div class="text-xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_monthly_investments) }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-500">Total Annual Investments</div>
+                            <div class="text-xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_annual_investments) }}</div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No investment data available</p>
+                    <p class="text-sm text-gray-400 mb-6">Add investments to track your monthly contributions</p>
+                    <a href="{{ url_for('investment_manager') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Investments
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Expense Ratio</p>
+                    <p class="text-xl font-bold text-red-600">
+                        {% if monthly_income > 0 %}
+                            {{ "{:.1f}".format((total_monthly_expenses / monthly_income) * 100) }}%
+                        {% else %}
+                            0.0%
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-receipt text-red-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Investment Rate</p>
+                    <p class="text-xl font-bold text-blue-600">
+                        {% if monthly_income > 0 %}
+                            {{ "{:.1f}".format((total_monthly_investments / monthly_income) * 100) }}%
+                        {% else %}
+                            0.0%
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Savings Rate</p>
+                    <p class="text-xl font-bold text-green-600">
+                        {% if monthly_income > 0 %}
+                            {{ "{:.1f}".format((free_cash_monthly / monthly_income) * 100) }}%
+                        {% else %}
+                            0.0%
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-piggy-bank text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Active Platforms</p>
+                    <p class="text-xl font-bold text-purple-600">{{ platform_investments|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

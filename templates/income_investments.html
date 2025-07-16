@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Income vs Investments - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">Income vs Investments</h1>
+        <div class="text-sm text-gray-500">
+            Yearly summary (2017-2025)
+        </div>
+    </div>
+
+    <!-- Yearly Summary Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Investment Rate by Year</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Year
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Take Home Income
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount Invested
+                        </th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            % of Income Invested
+                        </th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Investment Rate
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% set total_income = 0 %}
+                    {% set total_invested = 0 %}
+                    
+                    {% for year in years %}
+                        {% set year_data = income_data.get(year|string, {}) %}
+                        {% set take_home = year_data.get('take_home_income', 0) %}
+                        {% set invested = year_data.get('amount_invested', 0) %}
+                        {% set percentage = (invested / take_home * 100) if take_home > 0 else 0 %}
+                        
+                        {% set total_income = total_income + take_home %}
+                        {% set total_invested = total_invested + invested %}
+                        
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ year }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm text-gray-900">
+                                    {% if take_home > 0 %}
+                                        £{{ "{:,.0f}".format(take_home) }}
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm text-gray-900">
+                                    {% if invested > 0 %}
+                                        £{{ "{:,.0f}".format(invested) }}
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {% if percentage > 0 %}
+                                        {{ "{:.1f}".format(percentage) }}%
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                {% if percentage > 0 %}
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                             style="width: {{ percentage }}%"></div>
+                                    </div>
+                                {% else %}
+                                    <span class="text-gray-400">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    
+                    <!-- Total Row -->
+                    <tr class="bg-gray-50 font-medium border-t-2 border-gray-300">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-bold text-gray-900">Total</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm font-bold text-gray-900">
+                                £{{ "{:,.0f}".format(total_income) }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm font-bold text-gray-900">
+                                £{{ "{:,.0f}".format(total_invested) }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm font-bold text-gray-900">
+                                {% if total_income > 0 %}
+                                    {{ "{:.1f}".format((total_invested / total_income) * 100) }}%
+                                {% else %}
+                                    0.0%
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if total_income > 0 %}
+                                <div class="w-full bg-gray-300 rounded-full h-3">
+                                    <div class="bg-green-600 h-3 rounded-full transition-all duration-300" 
+                                         style="width: {{ (total_invested / total_income) * 100 }}%"></div>
+                                </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Income</p>
+                    <p class="text-2xl font-bold text-gray-900">£{{ "{:,.0f}".format(total_income) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-money-bill-wave text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Invested</p>
+                    <p class="text-2xl font-bold text-gray-900">£{{ "{:,.0f}".format(total_invested) }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Overall Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">
+                        {% if total_income > 0 %}
+                            {{ "{:.1f}".format((total_invested / total_income) * 100) }}%
+                        {% else %}
+                            0.0%
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-percentage text-purple-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Years Tracked</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ years|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-calendar-alt text-orange-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    {% if not income_data %}
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <i class="fas fa-chart-bar text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500 text-lg mb-2">No income data available</p>
+            <p class="text-sm text-gray-400 mb-6">Add yearly income and investment data to track your investment rate</p>
+            <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus mr-2"></i>
+                Add Income Data
+            </button>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

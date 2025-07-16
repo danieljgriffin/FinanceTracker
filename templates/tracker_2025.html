@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}2025 Tracker - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold text-gray-900">2025 Tracker</h1>
+        <div class="text-sm text-gray-500">
+            Monthly investment and net worth tracking
+        </div>
+    </div>
+
+    <!-- Monthly Tracker Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Monthly Investment Values</h2>
+        </div>
+        <div class="overflow-x-auto">
+            {% if investments %}
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Investment
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Platform
+                            </th>
+                            {% for month in months %}
+                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    {{ month[:3] }}
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for investment in investments %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full mr-3" style="background-color: {{ investment.color }}"></div>
+                                        <div class="text-sm font-medium text-gray-900">{{ investment.name }}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                          style="background-color: {{ investment.color }}20; color: {{ investment.color }}">
+                                        {{ investment.platform }}
+                                    </span>
+                                </td>
+                                {% for month in months %}
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <div class="text-sm text-gray-900">
+                                            {% if networth_data.get(month) and networth_data[month].get(investment.name) %}
+                                                £{{ "{:,.0f}".format(networth_data[month][investment.name]) }}
+                                            {% else %}
+                                                <span class="text-gray-400">-</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                        
+                        <!-- Total Net Worth Row -->
+                        <tr class="bg-gray-50 font-medium">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900" colspan="2">
+                                Total Net Worth
+                            </td>
+                            {% for month in months %}
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="text-sm font-bold text-gray-900">
+                                        {% if networth_data.get(month) and networth_data[month].get('total_net_worth') %}
+                                            £{{ "{:,.0f}".format(networth_data[month]['total_net_worth']) }}
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        
+                        <!-- Monthly Change Row -->
+                        <tr class="bg-blue-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-900" colspan="2">
+                                Monthly Change %
+                            </td>
+                            {% for month in months %}
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="text-sm font-medium">
+                                        {% if networth_data.get(month) and networth_data[month].get('monthly_change') %}
+                                            <span class="{% if networth_data[month]['monthly_change'] >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                                {{ "{:+.1f}".format(networth_data[month]['monthly_change']) }}%
+                                            </span>
+                                        {% else %}
+                                            <span class="text-gray-400">-</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-chart-bar text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500 text-lg">No investment data available</p>
+                    <p class="text-sm text-gray-400 mb-6">Add investments to start tracking your 2025 progress</p>
+                    <a href="{{ url_for('investment_manager') }}" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>
+                        Add Investments
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    {% if networth_data %}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Highest Month</p>
+                        <p class="text-xl font-bold text-green-600">
+                            {% set highest_month = networth_data.keys() | list | first %}
+                            {% set highest_value = 0 %}
+                            {% for month, data in networth_data.items() %}
+                                {% if data.get('total_net_worth', 0) > highest_value %}
+                                    {% set highest_value = data.total_net_worth %}
+                                    {% set highest_month = month %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ highest_month }}
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-up text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Best Growth Month</p>
+                        <p class="text-xl font-bold text-blue-600">
+                            {% set best_month = "N/A" %}
+                            {% set best_growth = 0 %}
+                            {% for month, data in networth_data.items() %}
+                                {% if data.get('monthly_change', 0) > best_growth %}
+                                    {% set best_growth = data.monthly_change %}
+                                    {% set best_month = month %}
+                                {% endif %}
+                            {% endfor %}
+                            {{ best_month }}
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">YTD Growth</p>
+                        <p class="text-xl font-bold text-purple-600">
+                            {% set jan_value = networth_data.get('January', {}).get('total_net_worth', 0) %}
+                            {% set current_value = networth_data.get('December', {}).get('total_net_worth', jan_value) %}
+                            {% if jan_value > 0 %}
+                                {{ "{:+.1f}".format(((current_value - jan_value) / jan_value) * 100) }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-calendar text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
