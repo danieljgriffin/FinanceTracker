@@ -65,8 +65,36 @@ def dashboard():
             for platform, amount in platform_allocations.items():
                 platform_percentages[platform] = (amount / total_allocation) * 100
         
-        # Calculate month-on-month change (simplified for demo)
-        mom_change = 5.2  # Placeholder for demo - would need historical data tracking
+        # Calculate month-on-month change (current net worth vs current month's 1st day)
+        mom_change = 0
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = data_manager.get_networth_data(current_year)
+            
+            # Get current month's 1st day data
+            month_start_data = current_year_data.get(current_month_name, {})
+            month_start_total = 0
+            
+            # Calculate month start total
+            for platform, value in month_start_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    month_start_total += value
+            
+            # Calculate percentage change
+            if month_start_total > 0:
+                mom_change = ((current_net_worth - month_start_total) / month_start_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            mom_change = 0
         
         # Calculate yearly net worth increase (current live portfolio vs 1st Jan current year)
         yearly_increase = 0
