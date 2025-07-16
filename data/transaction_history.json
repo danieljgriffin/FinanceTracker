@@ -118,5 +118,20 @@
     "new_holdings": 420.0,
     "old_amount_spent": null,
     "new_amount_spent": 1705.21
+  },
+  {
+    "transaction_id": "txn_20250716_174041",
+    "timestamp": "2025-07-16T17:40:41.629173",
+    "action": "CREATE",
+    "platform": "EQ (GSK shares)",
+    "investment_name": "Haleon Shares PLC",
+    "holdings_change": 47.0,
+    "amount_spent_change": 91.6,
+    "average_buy_price": 1.9489361702127659,
+    "symbol": "HLN",
+    "old_holdings": null,
+    "new_holdings": 47.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 91.6
   }
 ]

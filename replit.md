@@ -118,6 +118,11 @@ Preferred communication style: Simple, everyday language.
 - **Total P/L Display Fix**: Removed £ symbol from Total P/L column to fix alignment issues
   - Values now display as "+1,024.95" instead of "£+1,024.95"
   - Improved readability and consistent alignment for all profit/loss values
+- **GSK and Haleon Share Price Fix**: Added pence-to-pounds conversion for UK stocks
+  - GSK.L: Correctly displays £14.2150 (converted from 1421.5 pence)
+  - HLN.L: Correctly displays £3.6000 (converted from 360.0 pence)
+  - Added automatic detection of Yahoo Finance "GBp" currency code for UK stocks
+  - EQ platform now shows correct total: £6,139.50 (GSK £5,970.30 + Haleon £169.20)
 
 ## Deployment Strategy
 

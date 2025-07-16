@@ -77,6 +77,13 @@ class PriceFetcher:
                             self.logger.debug(f"Converted {price} USD to {gbp_price} GBP")
                             return gbp_price
                     
+                    # Convert pence to pounds for UK stocks
+                    if symbol.endswith('.L') and currency == 'GBp':
+                        # UK stocks on Yahoo Finance are typically in pence (GBp)
+                        pounds_price = price / 100
+                        self.logger.debug(f"Converted {price} pence to {pounds_price} GBP for UK stock {symbol}")
+                        return pounds_price
+                    
                     return price
             
             # If info doesn't work, try history
@@ -92,6 +99,13 @@ class PriceFetcher:
                     if gbp_price:
                         self.logger.debug(f"Converted {price} USD to {gbp_price} GBP")
                         return gbp_price
+                
+                # Convert pence to pounds for UK stocks
+                if symbol.endswith('.L') and currency == 'GBp':
+                    # UK stocks on Yahoo Finance are typically in pence (GBp)
+                    pounds_price = price / 100
+                    self.logger.debug(f"Converted {price} pence to {pounds_price} GBP for UK stock {symbol}")
+                    return pounds_price
                 
                 return price
                 
