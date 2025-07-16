@@ -1,0 +1,148 @@
+Net Worth Tracker With Monthly Breakdown
+I want to build a full-featured web app on Replit to replace my detailed Google Sheets net worth and finance tracker. The app will log my net worth over time, track investments, and include a monthly breakdown of income, expenses, and investments — with automatic calculations and consistent formatting.
+
+🧩 Modules Required in the App
+1. Dashboard
+Shows:
+
+Current net worth
+
+Percentage allocation across platforms
+
+Month-on-month % change
+
+Year-on-year growth
+
+2. 2025 Tracker Page
+Table with:
+
+Each investment and cash value per month (Jan–Dec)
+
+Total actual net worth per month
+
+Monthly percentage change
+
+Yearly % increase at end
+
+3. Income vs Investment Tracker
+Yearly summary table (2017–2025):
+
+sql
+Copy
+Edit
+Year | Take Home Income | Amount Invested | % of Income Invested
+Includes a total row at the bottom
+
+4. Monthly Breakdown Page (based on uploaded image)
+Income Section:
+
+Monthly take-home income
+
+Annual take-home income (auto-calculated)
+
+Expenses Table:
+
+Columns: Expense, Monthly, Annual
+
+Auto-totalled monthly and annual expenses
+
+Investments Table:
+
+Grouped by platform (e.g., Crypto, Trading212, InvestEngine ISA, etc.)
+
+Each group contains individual investments (e.g., Bitcoin, Ether, Solana)
+
+Fields:
+
+% of income
+
+Monthly amount
+
+Annual amount
+
+Free Cash Summary (Top of Page):
+
+Free cash = Income − (Expenses + Investments)
+
+Display both monthly and annual free cash amounts
+
+5. Investment Manager
+Add, edit, or remove:
+
+Investment names
+
+Monthly contribution values
+
+Group/platform they belong to
+
+Color tags for visual consistency
+
+6. Live Price Updater
+Uses APIs like Yahoo Finance, Alpha Vantage, or similar to fetch:
+
+Stock, ETF, and crypto prices
+
+Mutual fund prices including:
+
+Baillie Gifford Positive Change B - Acc
+
+Fidelity Global Technology W - Acc
+
+Ninety One GSF Global Natural Resources I - Acc
+
+UBS S&P 500 Index C - Acc
+
+🎨 Investment Color Scheme
+Platform	Color
+Degiro	Dark Blue
+Trading212 ISA	Teal
+EQ (GSK shares)	Red
+InvestEngine ISA	Orange
+Crypto	Purple
+HL Stocks & Shares LISA	Baby Blue
+Cash	Green
+
+Use these consistently across tables and UI elements.
+
+⚙️ Suggested Stack
+Frontend: HTML + Tailwind CSS (for color coding and responsive layout)
+
+Backend: Python with Flask
+
+APIs: yfinance for stocks/crypto; another API or scraper for mutual funds
+
+Storage: JSON or SQLite to begin with
+
+Optional: Save data per month/year, export to CSV later
+
+📁 Suggested File Structure
+pgsql
+Copy
+Edit
+/networth-tracker/
+├── app.py
+├── templates/
+│   └── dashboard.html
+│   └── tracker_2025.html
+│   └── income_investments.html
+│   └── monthly_breakdown.html
+├── static/
+│   └── styles.css
+├── data/
+│   └── networth_2025.json
+│   └── income_tracker.json
+│   └── investments.json
+│   └── expenses.json
+├── utils/
+│   └── price_fetcher.py
+Please scaffold this project starting with:
+
+Monthly breakdown UI
+
+Income vs Investment tracker
+
+Net worth table per month
+
+Live price fetching
+
+Let me know when I can add in pie charts, exports, or visual dashboards.
