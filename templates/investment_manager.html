@@ -9,6 +9,13 @@
         <div>
             <h1 class="text-4xl font-bold text-white">Investment Portfolio</h1>
             <p class="text-white/80 mt-1">Manage your actual investment holdings and their current values</p>
+            <div class="text-sm text-white/60 mt-2" id="price-status">
+                {% if last_price_update %}
+                    Prices refreshed: {{ last_price_update.strftime('%H:%M:%S') }}
+                {% else %}
+                    Prices: Loading...
+                {% endif %}
+            </div>
         </div>
         <div class="flex space-x-3">
             <a href="{{ url_for('transaction_history') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
@@ -445,5 +452,30 @@ function deleteInvestment(platform, index, name) {
         form.submit();
     }
 }
+
+// Auto-refresh price status every 30 seconds
+function updatePriceStatus() {
+    fetch('/api/price-status')
+        .then(response => response.json())
+        .then(data => {
+            const statusElement = document.getElementById('price-status');
+            if (data.last_updated) {
+                const lastUpdated = new Date(data.last_updated);
+                const timeString = lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                statusElement.innerHTML = `Prices refreshed: ${timeString} (auto-refresh every 15m)`;
+            } else {
+                statusElement.innerHTML = 'Prices: Loading...';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching price status:', error);
+        });
+}
+
+// Update price status every 30 seconds
+setInterval(updatePriceStatus, 30000);
+
+// Initial update
+updatePriceStatus();
 </script>
 {% endblock %}

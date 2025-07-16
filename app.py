@@ -3,8 +3,10 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from utils.price_fetcher import PriceFetcher
 from utils.data_manager import DataManager
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
+import threading
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -15,6 +17,11 @@ app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 # Initialize utilities
 price_fetcher = PriceFetcher()
 data_manager = DataManager()
+
+# Price refresh settings
+PRICE_REFRESH_INTERVAL = 900  # 15 minutes in seconds
+last_price_update = None
+price_update_thread = None
 
 # Investment platform color scheme
 PLATFORM_COLORS = {
@@ -34,6 +41,21 @@ def dashboard():
         # Get current net worth data
         networth_data = data_manager.get_networth_data()
         investments_data = data_manager.get_investments_data()
+        
+        # Get last price update time
+        global last_price_update
+        if not last_price_update:
+            # Check if we have any investment with last_updated timestamp
+            for platform, investments in investments_data.items():
+                if not platform.endswith('_cash') and isinstance(investments, list):
+                    for investment in investments:
+                        if investment.get('last_updated'):
+                            try:
+                                update_time = datetime.fromisoformat(investment['last_updated'])
+                                if not last_price_update or update_time > last_price_update:
+                                    last_price_update = update_time
+                            except:
+                                pass
         
         # Calculate current net worth and platform allocations using live investment values
         current_net_worth = 0
@@ -126,7 +148,8 @@ def dashboard():
                              mom_change=mom_change,
                              yearly_increase=yearly_increase,
                              platform_colors=PLATFORM_COLORS,
-                             current_date=datetime.now().strftime('%B %d, %Y'))
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             last_price_update=last_price_update)
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
@@ -137,7 +160,8 @@ def dashboard():
                              mom_change=0,
                              yearly_increase=0,
                              platform_colors=PLATFORM_COLORS,
-                             current_date=datetime.now().strftime('%B %d, %Y'))
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             last_price_update=None)
 
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
@@ -536,7 +560,8 @@ def investment_manager():
                              total_portfolio_pl=total_portfolio_pl,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl,
                              unique_names=unique_names,
-                             data_manager=data_manager)
+                             data_manager=data_manager,
+                             last_price_update=last_price_update)
     except Exception as e:
         logging.error(f"Error in investment manager: {str(e)}")
         flash(f'Error loading investment manager: {str(e)}', 'error')
@@ -650,9 +675,9 @@ def transaction_history():
                              history_data=[],
                              platform_colors=PLATFORM_COLORS)
 
-@app.route('/update-prices')
-def update_prices():
-    """Update live prices for all investments"""
+def update_all_prices():
+    """Update live prices for all investments - background function"""
+    global last_price_update
     try:
         investments_data = data_manager.get_investments_data()
         updated_count = 0
@@ -675,6 +700,30 @@ def update_prices():
         
         # Save updated data
         data_manager.save_investments_data(investments_data)
+        last_price_update = datetime.now()
+        logging.info(f'Background price update completed: {updated_count} investments updated')
+        
+        return updated_count
+        
+    except Exception as e:
+        logging.error(f"Error updating prices: {str(e)}")
+        return 0
+
+def background_price_updater():
+    """Background thread function to update prices every 15 minutes"""
+    while True:
+        try:
+            time.sleep(PRICE_REFRESH_INTERVAL)
+            update_all_prices()
+        except Exception as e:
+            logging.error(f"Error in background price updater: {str(e)}")
+            time.sleep(60)  # Wait 1 minute before retrying
+
+@app.route('/update-prices')
+def update_prices():
+    """Update live prices for all investments - manual trigger"""
+    try:
+        updated_count = update_all_prices()
         flash(f'Updated prices for {updated_count} investments', 'success')
         
     except Exception as e:
@@ -682,6 +731,27 @@ def update_prices():
         flash(f'Error updating prices: {str(e)}', 'error')
     
     return redirect(url_for('investment_manager'))
+
+@app.route('/api/price-status')
+def price_status():
+    """API endpoint to check when prices were last updated"""
+    global last_price_update
+    return jsonify({
+        'last_updated': last_price_update.isoformat() if last_price_update else None,
+        'next_update_in': PRICE_REFRESH_INTERVAL - int((datetime.now() - last_price_update).total_seconds()) if last_price_update else PRICE_REFRESH_INTERVAL
+    })
+
+# Initialize background price updater thread
+def start_background_updater():
+    """Start the background price updater thread"""
+    global price_update_thread
+    if price_update_thread is None or not price_update_thread.is_alive():
+        price_update_thread = threading.Thread(target=background_price_updater, daemon=True)
+        price_update_thread.start()
+        logging.info("Background price updater started")
+
+# Start background updater when app starts
+start_background_updater()
 
 @app.route('/edit-investment/<platform>/<int:index>')
 def edit_investment(platform, index):
