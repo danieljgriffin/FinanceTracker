@@ -94,24 +94,23 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
-- **Collapsible Left Sidebar Navigation**: Added modern collapsible navigation functionality
-  - **Hamburger Toggle**: Click toggle button to collapse sidebar to 80px width (icon-only mode)
-  - **Smooth Transitions**: 300ms CSS animations for all elements during collapse/expand
-  - **Responsive Content**: Main content area automatically adjusts margin (ml-72 ↔ ml-20)
-  - **Text Fade Effects**: Navigation text labels fade in/out smoothly during state changes
-  - **Icon Animation**: Toggle icon changes from bars to chevron-right when collapsed
-  - **Full Page Coverage**: Flash messages, footer, and all content properly adjusts to sidebar state
+- **Fixed Sidebar Navigation**: Removed collapsible sidebar functionality per user preference
+  - **Stable Layout**: Reverted to fixed 288px width sidebar for consistent navigation
+  - **No Animation Complexity**: Eliminated toggle functionality for cleaner user experience
+  - **Reliable Positioning**: All content areas maintain fixed margins (ml-72)
 - **Income vs Investments Totals Fix**: Corrected broken totals calculation in yearly tracker
   - **JavaScript Calculation**: Replaced broken Jinja template calculation with dynamic JavaScript
   - **Real-time Updates**: Totals update automatically when editing income or investment values
   - **Proper Summation**: All years from 2017-2030 correctly included in totals calculation
   - **Page Load Calculation**: Totals display correct values immediately on page load
-- **Comprehensive Rounded Corners**: Applied consistent rounded styling to all UI elements
-  - **All Cards**: Every card throughout the application uses rounded-xl corners
-  - **Transaction History**: Updated dark theme with rounded corners and proper color scheme
-  - **Monthly Breakdown**: Table styling updated with rounded corners and dark theme consistency
-  - **Form Elements**: All input fields, buttons, and selects use rounded-lg styling
-  - **No Straight Corners**: Eliminated all straight-cornered boxes throughout the application
+- **Comprehensive Rounded Corners Implementation**: Applied consistent rounded styling to all UI elements
+  - **All Cards**: Every card throughout the application uses rounded-xl (16px) corners
+  - **Form Elements**: All input fields, buttons, and selects use rounded-lg (12px) styling
+  - **Modal and Alerts**: All popups and notifications use rounded-2xl (16px) corners
+  - **Table Containers**: All table wrappers use rounded-xl (12px) corners
+  - **Universal Coverage**: CSS rules with !important ensure no element has straight corners
+  - **Button Styling**: All buttons (submit, cancel, action) have consistent rounded corners
+  - **Input Fields**: All text inputs, number inputs, and select dropdowns have rounded corners
 - **Automatic Price Refresh System**: Implemented background price updates for real-time data
   - **Background Updates**: Prices refresh automatically every 15 minutes using background threads
   - **Price Status Display**: Shows last refresh time and next update countdown on dashboard and investment manager

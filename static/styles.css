@@ -1,5 +1,30 @@
 /* Custom CSS for Net Worth Tracker - Modern Glass UI */
 
+/* Force rounded corners on all common elements */
+.card, .modal, .alert, .btn, .form-input, .form-select, .form-textarea, .table-rounded,
+input, select, textarea, button {
+    border-radius: 12px !important;
+}
+
+.card {
+    border-radius: 16px !important;
+}
+
+.modal, .alert {
+    border-radius: 16px !important;
+}
+
+/* Ensure all input elements have rounded corners */
+input[type="text"], input[type="number"], input[type="email"], input[type="password"], 
+input[type="search"], input[type="tel"], input[type="url"], select, textarea {
+    border-radius: 12px !important;
+}
+
+/* Ensure all buttons have rounded corners */
+button, .btn, input[type="submit"], input[type="button"] {
+    border-radius: 12px !important;
+}
+
 /* Glass morphism base */
 .glass {
     background: rgba(255, 255, 255, 0.25);
@@ -7,6 +32,7 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border-radius: 12px !important;
 }
 
 .glass-dark {
@@ -14,6 +40,7 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px !important;
 }
 
 /* Clean navigation without backgrounds */
@@ -41,6 +68,7 @@
 .alert {
     @apply flex items-center rounded-2xl px-6 py-4 backdrop-blur-20;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px !important;
 }
 
 .alert-error {
@@ -69,16 +97,19 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border-radius: 16px !important;
 }
 
 /* Form styling with rounded corners */
 .form-input {
     @apply rounded-xl border-0 bg-gray-800/50 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:bg-gray-700/50;
+    border-radius: 12px !important;
 }
 
 /* Button styling with rounded corners */
 .btn {
     @apply rounded-xl transition-all duration-300 ease-in-out transform hover:scale-105;
+    border-radius: 12px !important;
 }
 
 .btn-primary {
@@ -109,6 +140,7 @@
 /* Table styling with rounded corners */
 .table-rounded {
     @apply rounded-xl overflow-hidden;
+    border-radius: 12px !important;
 }
 
 .table-rounded th {
@@ -122,6 +154,7 @@
 /* Modal styling with rounded corners */
 .modal {
     @apply rounded-2xl bg-gray-800/90 backdrop-blur-md border border-gray-600/30;
+    border-radius: 16px !important;
 }
 
 /* Additional form styling */
