@@ -5,6 +5,7 @@ import re
 from typing import Optional
 import trafilatura
 from datetime import datetime
+import time
 
 class PriceFetcher:
     """Handles fetching live prices from various sources"""
@@ -13,6 +14,51 @@ class PriceFetcher:
         self.logger = logging.getLogger(__name__)
         self.usd_to_gbp_rate = None
         self.last_rate_update = None
+        
+        # CoinGecko cryptocurrency mappings
+        self.crypto_mappings = {
+            'BTC': 'bitcoin',
+            'ETH': 'ethereum',
+            'SOL': 'solana',
+            'FET': 'fetch-ai',
+            'TRX': 'tron',
+            'ADA': 'cardano',
+            'DOT': 'polkadot',
+            'LINK': 'chainlink',
+            'MATIC': 'polygon',
+            'AVAX': 'avalanche-2',
+            'ATOM': 'cosmos',
+            'XRP': 'ripple',
+            'LTC': 'litecoin',
+            'BCH': 'bitcoin-cash',
+            'UNI': 'uniswap',
+            'AAVE': 'aave',
+            'COMP': 'compound-governance-token',
+            'SUSHI': 'sushi',
+            'YFI': 'yearn-finance',
+            'MKR': 'maker',
+            'SNX': 'synthetix-network-token',
+            'CRV': 'curve-dao-token',
+            'BAL': 'balancer',
+            'LUNA': 'terra-luna-2',
+            'ALGO': 'algorand',
+            'VET': 'vechain',
+            'FTM': 'fantom',
+            'NEAR': 'near',
+            'HBAR': 'hedera-hashgraph',
+            'ICP': 'internet-computer',
+            'THETA': 'theta-token',
+            'XTZ': 'tezos',
+            'EOS': 'eos',
+            'FLOW': 'flow',
+            'FIL': 'filecoin',
+            'MANA': 'decentraland',
+            'SAND': 'the-sandbox',
+            'AXS': 'axie-infinity',
+            'CRO': 'crypto-com-chain',
+            'SHIB': 'shiba-inu',
+            'DOGE': 'dogecoin'
+        }
         
         # Special fund mappings for funds that don't work with yfinance
         self.special_funds = {
@@ -39,6 +85,71 @@ class PriceFetcher:
             }
         }
     
+    def get_crypto_price_from_coingecko(self, symbol: str) -> Optional[float]:
+        """
+        Fetch cryptocurrency price from CoinGecko API
+        
+        Args:
+            symbol: Crypto symbol (e.g., BTC, ETH, SOL)
+            
+        Returns:
+            Current price in GBP or None if not found
+        """
+        try:
+            # Remove any -USD suffix and convert to uppercase
+            clean_symbol = symbol.replace('-USD', '').upper()
+            
+            # Check if we have a mapping for this symbol
+            if clean_symbol not in self.crypto_mappings:
+                self.logger.warning(f"No CoinGecko mapping found for {clean_symbol}")
+                return None
+                
+            coin_id = self.crypto_mappings[clean_symbol]
+            
+            # CoinGecko API endpoint for price in GBP
+            url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=gbp"
+            
+            # Add retry mechanism for rate limiting
+            for attempt in range(3):
+                try:
+                    # Add delay between requests to avoid rate limiting
+                    if attempt > 0:
+                        time.sleep(1)
+                    
+                    headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    }
+                    
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        if coin_id in data and 'gbp' in data[coin_id]:
+                            price_gbp = float(data[coin_id]['gbp'])
+                            self.logger.info(f"CoinGecko price for {symbol} ({coin_id}): £{price_gbp}")
+                            return price_gbp
+                        else:
+                            self.logger.error(f"Price data not found in CoinGecko response for {coin_id}")
+                    elif response.status_code == 429:
+                        self.logger.warning(f"Rate limit hit for {symbol}, attempt {attempt + 1}")
+                        if attempt < 2:  # Don't sleep on last attempt
+                            time.sleep(2 ** attempt)  # Exponential backoff
+                        continue
+                    else:
+                        self.logger.error(f"CoinGecko API request failed with status {response.status_code}")
+                        
+                except requests.exceptions.RequestException as e:
+                    self.logger.error(f"Request error for {symbol}: {str(e)}")
+                    if attempt < 2:
+                        time.sleep(1)
+                        continue
+                    
+                break
+                
+        except Exception as e:
+            self.logger.error(f"Error fetching CoinGecko price for {symbol}: {str(e)}")
+            
+        return None
+
     def get_price(self, symbol: str) -> Optional[float]:
         """
         Fetch current price for a given symbol
@@ -52,6 +163,15 @@ class PriceFetcher:
         try:
             if not symbol:
                 return None
+            
+            # Check if this is a cryptocurrency symbol
+            clean_symbol = symbol.replace('-USD', '').upper()
+            if clean_symbol in self.crypto_mappings:
+                crypto_price = self.get_crypto_price_from_coingecko(symbol)
+                if crypto_price:
+                    return crypto_price
+                # If CoinGecko fails, fall back to yfinance
+                self.logger.warning(f"CoinGecko failed for {symbol}, falling back to yfinance")
             
             # Check if this is a special fund that needs web scraping
             if symbol in self.special_funds:

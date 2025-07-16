@@ -152,6 +152,13 @@ Preferred communication style: Simple, everyday language.
   - Both add investment and edit investment forms now support any decimal precision
   - Successfully tested with 0.15146765 holdings value
   - Resolves browser validation issues that prevented precise decimal input
+- **CoinGecko Integration**: Implemented proper cryptocurrency price fetching
+  - Added comprehensive CoinGecko API integration with 40+ cryptocurrency mappings
+  - Crypto prices now fetched directly in GBP from CoinGecko API
+  - Includes rate limiting protection with retry mechanisms and exponential backoff
+  - Fallback to Yahoo Finance if CoinGecko fails
+  - Fixed crypto pricing: BTC (£89,071), ETH (£2,491.80), SOL (£129.02), FET (£0.58), TRX (£0.23)
+  - Total crypto portfolio value accurately calculated at £22,615.41
 
 ## Deployment Strategy
 
