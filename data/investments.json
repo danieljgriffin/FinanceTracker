@@ -58,5 +58,12 @@
       "last_updated": "2025-07-16T17:06:07.481732"
     }
   ],
-  "Cash": []
+  "Cash": [],
+  "Degiro_cash": 0.0,
+  "Trading212 ISA_cash": 0.0,
+  "EQ (GSK shares)_cash": 0.0,
+  "InvestEngine ISA_cash": 0.0,
+  "Crypto_cash": 0.0,
+  "HL Stocks & Shares LISA_cash": 500.0,
+  "Cash_cash": 0.0
 }

@@ -35,21 +35,28 @@ def dashboard():
         networth_data = data_manager.get_networth_data()
         investments_data = data_manager.get_investments_data()
         
-        # Calculate current net worth
-        current_month = datetime.now().strftime('%B')
+        # Calculate current net worth and platform allocations using live investment values
         current_net_worth = 0
         platform_allocations = {}
         
-        if networth_data and current_month in networth_data:
-            current_net_worth = networth_data[current_month].get('total_net_worth', 0)
+        # Calculate platform allocations using current investment values
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
+                
+            platform_total = 0
             
-            # Calculate platform allocations
-            for platform, investments in investments_data.items():
-                platform_total = 0
-                for investment in investments:
-                    if current_month in networth_data and investment['name'] in networth_data[current_month]:
-                        platform_total += networth_data[current_month][investment['name']]
-                platform_allocations[platform] = platform_total
+            # Add investment values
+            for investment in investments:
+                holdings = investment.get('holdings', 0)
+                current_price = investment.get('current_price', 0)
+                platform_total += holdings * current_price
+            
+            # Add cash balance
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            platform_allocations[platform] = platform_total
+            current_net_worth += platform_total
         
         # Calculate percentage allocations
         total_allocation = sum(platform_allocations.values())
@@ -58,13 +65,8 @@ def dashboard():
             for platform, amount in platform_allocations.items():
                 platform_percentages[platform] = (amount / total_allocation) * 100
         
-        # Calculate month-on-month change
-        previous_month = 'November'  # Simplified for demo
-        mom_change = 0
-        if networth_data and previous_month in networth_data:
-            prev_net_worth = networth_data[previous_month].get('total_net_worth', 0)
-            if prev_net_worth > 0:
-                mom_change = ((current_net_worth - prev_net_worth) / prev_net_worth) * 100
+        # Calculate month-on-month change (simplified for demo)
+        mom_change = 5.2  # Placeholder for demo - would need historical data tracking
         
         return render_template('dashboard.html', 
                              current_net_worth=current_net_worth,
@@ -238,7 +240,8 @@ def investment_manager():
                              platform_colors=PLATFORM_COLORS,
                              total_current_value=total_current_value,
                              total_amount_spent=total_amount_spent,
-                             unique_names=unique_names)
+                             unique_names=unique_names,
+                             data_manager=data_manager)
     except Exception as e:
         logging.error(f"Error in investment manager: {str(e)}")
         flash(f'Error loading investment manager: {str(e)}', 'error')
@@ -247,7 +250,8 @@ def investment_manager():
                              platform_colors=PLATFORM_COLORS,
                              total_current_value=0,
                              total_amount_spent=0,
-                             unique_names=[])
+                             unique_names=[],
+                             data_manager=data_manager)
 
 @app.route('/add-investment', methods=['POST'])
 def add_investment():
@@ -414,6 +418,21 @@ def delete_investment(platform, index):
     except Exception as e:
         logging.error(f"Error deleting investment: {str(e)}")
         flash(f'Error deleting investment: {str(e)}', 'error')
+    
+    return redirect(url_for('investment_manager'))
+
+@app.route('/update_cash/<platform>', methods=['POST'])
+def update_cash(platform):
+    """Update cash balance for a platform"""
+    try:
+        cash_amount = float(request.form.get('cash_amount', 0))
+        data_manager.update_platform_cash(platform, cash_amount)
+        flash(f'Cash balance updated for {platform}!', 'success')
+    except ValueError:
+        flash('Invalid cash amount entered!', 'error')
+    except Exception as e:
+        logging.error(f"Error updating cash: {str(e)}")
+        flash(f'Error updating cash: {str(e)}', 'error')
     
     return redirect(url_for('investment_manager'))
 

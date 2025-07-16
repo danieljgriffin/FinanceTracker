@@ -43,6 +43,10 @@ class DataManager:
                 'HL Stocks & Shares LISA': [],
                 'Cash': []
             }
+            # Initialize cash balances
+            for platform in initial_investments.keys():
+                if platform != 'Cash':
+                    initial_investments[platform + '_cash'] = 0.0
             self.save_json_file(investments_file, initial_investments)
         
         # Initialize expenses data
@@ -287,3 +291,16 @@ class DataManager:
     def save_transaction_history(self, data: List[Dict[str, Any]]):
         """Save transaction history data"""
         self.save_json_file(os.path.join(self.data_dir, 'transaction_history.json'), data)
+    
+    def get_platform_cash(self, platform: str) -> float:
+        """Get cash balance for a platform"""
+        investments = self.get_investments_data()
+        cash_key = platform + '_cash'
+        return investments.get(cash_key, 0.0)
+    
+    def update_platform_cash(self, platform: str, amount: float):
+        """Update cash balance for a platform"""
+        investments = self.get_investments_data()
+        cash_key = platform + '_cash'
+        investments[cash_key] = amount
+        self.save_investments_data(investments)
