@@ -68,8 +68,33 @@ def dashboard():
         # Calculate month-on-month change (simplified for demo)
         mom_change = 5.2  # Placeholder for demo - would need historical data tracking
         
-        # Calculate yearly net worth increase
-        yearly_increase = data_manager.get_yearly_net_worth_increase(2025)
+        # Calculate yearly net worth increase (current live portfolio vs previous year end)
+        yearly_increase = 0
+        try:
+            current_year = datetime.now().year
+            previous_year = current_year - 1
+            
+            # Get previous year's December 31st data
+            previous_year_data = data_manager.get_networth_data(previous_year)
+            previous_year_total = 0
+            
+            # Try 31st Dec, then 1st Dec as fallback
+            dec_data = previous_year_data.get('31st Dec', {})
+            if not dec_data:
+                dec_data = previous_year_data.get('1st Dec', {})
+            
+            # Calculate previous year total
+            for platform, value in dec_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    previous_year_total += value
+            
+            # Calculate percentage increase
+            if previous_year_total > 0:
+                yearly_increase = ((current_net_worth - previous_year_total) / previous_year_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating yearly increase: {str(e)}")
+            yearly_increase = 0
         
         return render_template('dashboard.html', 
                              current_net_worth=current_net_worth,

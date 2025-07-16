@@ -1,0 +1,107 @@
+{
+  "1st Jan": {
+    "Degiro": 12043.27,
+    "EQ (GSK shares)": 37054.2,
+    "InvestEngine ISA": 5590.51,
+    "Crypto": 894.22,
+    "HL Stocks & Shares LISA": 14706.13,
+    "Cash": 414.0
+  },
+  "1st Feb": {
+    "Degiro": 12382.87,
+    "EQ (GSK shares)": 40622.86,
+    "InvestEngine ISA": 6313.03,
+    "Crypto": 838.4,
+    "HL Stocks & Shares LISA": 15074.75,
+    "Cash": 672.0
+  },
+  "1st Mar": {
+    "Degiro": 13148.68,
+    "EQ (GSK shares)": 42474.62,
+    "InvestEngine ISA": 7188.36,
+    "Crypto": 1705.01,
+    "HL Stocks & Shares LISA": 15959.41,
+    "Cash": 50.0
+  },
+  "1st Apr": {
+    "Degiro": 13350.83,
+    "EQ (GSK shares)": 43543.64,
+    "InvestEngine ISA": 7805.23,
+    "Crypto": 2433.22,
+    "HL Stocks & Shares LISA": 17320.78,
+    "Cash": 1600.0
+  },
+  "1st May": {
+    "Degiro": 13224.98,
+    "EQ (GSK shares)": 44941.96,
+    "InvestEngine ISA": 8187.44,
+    "Crypto": 2400.89,
+    "HL Stocks & Shares LISA": 17538.02,
+    "Cash": 1526.0
+  },
+  "1st Jun": {
+    "Degiro": 13275.43,
+    "EQ (GSK shares)": 42728.35,
+    "InvestEngine ISA": 8925.36,
+    "Crypto": 2865.47,
+    "HL Stocks & Shares LISA": 18126.51,
+    "Cash": 1258.0
+  },
+  "1st Jul": {
+    "Degiro": 13902.1,
+    "EQ (GSK shares)": 41637.38,
+    "InvestEngine ISA": 10132.2,
+    "Crypto": 2823.9,
+    "HL Stocks & Shares LISA": 19036.58,
+    "Cash": 936.0
+  },
+  "1st Aug": {
+    "Degiro": 14098.86,
+    "EQ (GSK shares)": 43472.41,
+    "InvestEngine ISA": 10310.54,
+    "Crypto": 3291.89,
+    "HL Stocks & Shares LISA": 19133.95,
+    "Cash": 211.0
+  },
+  "1st Sep": {
+    "Degiro": 14475.38,
+    "EQ (GSK shares)": 46910.47,
+    "InvestEngine ISA": 10706.97,
+    "Crypto": 2567.03,
+    "HL Stocks & Shares LISA": 19529.95,
+    "Cash": 465.0
+  },
+  "1st Oct": {
+    "Degiro": 14641.76,
+    "EQ (GSK shares)": 44980.35,
+    "InvestEngine ISA": 11240.49,
+    "Crypto": 3144.68,
+    "HL Stocks & Shares LISA": 20092.61,
+    "Cash": 80.0
+  },
+  "1st Nov": {
+    "Degiro": 14994.0,
+    "EQ (GSK shares)": 43288.18,
+    "InvestEngine ISA": 12214.29,
+    "Crypto": 3382.91,
+    "HL Stocks & Shares LISA": 21159.77,
+    "Cash": 559.0
+  },
+  "1st Dec": {
+    "Degiro": 16056.78,
+    "EQ (GSK shares)": 41972.76,
+    "InvestEngine ISA": 13535.29,
+    "Crypto": 5414.59,
+    "HL Stocks & Shares LISA": 22504.89,
+    "Cash": 100.0
+  },
+  "31st Dec": {
+    "Degiro": 16072.81,
+    "EQ (GSK shares)": 26778.2,
+    "InvestEngine ISA": 14367.73,
+    "Crypto": 14775.05,
+    "HL Stocks & Shares LISA": 22739.9,
+    "Cash": 6159.0,
+    "Trading212 ISA": 200.95
+  }
+}
