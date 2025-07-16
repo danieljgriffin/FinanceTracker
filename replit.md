@@ -94,6 +94,23 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
+- **UI/UX Improvements**: Refined hover effects throughout the application
+  - **Card Hover Removal**: Removed hover effects from regular content cards to prevent unwanted highlighting
+  - **Table Row Hovers**: Maintained hover effects on table rows for better data navigation
+  - **Quick Action Hovers**: Preserved scale and shadow effects on quick action buttons for interactive feedback
+  - **Navigation Hovers**: Kept navigation link hover effects for better user experience
+  - **Consistent Interaction**: Only interactive elements now have hover effects, improving UI clarity
+- **Edit/Save Mode Enhancement**: Implemented edit/save functionality for yearly tracker
+  - **No Page Refresh**: Removed immediate form submission that caused white screen flashes
+  - **Batch Updates**: Edit mode allows multiple changes before saving all at once
+  - **Visual Feedback**: Clear edit/save button states and input field styling
+  - **Better UX**: Prevents accidental refreshes and provides controlled editing experience
+- **Yearly Increase Calculation Fix**: Corrected dashboard yearly net worth calculation
+  - **Proper Baseline**: Now compares current live portfolio to 1st January current year values
+  - **Automatic Updates**: Calculation updates automatically based on current year
+  - **Accurate Reporting**: Shows true year-to-date performance growth
+
+## Recent Changes (July 16, 2025) - Previous
 - **Yearly Tracker System**: Completely redesigned 2025 tracker into a comprehensive yearly tracking system
   - **Multi-Year Support**: Can now track 2023, 2024, 2025 and create new years (e.g., 2026)
   - **Enhanced Data Structure**: Monthly tracking with both 1st of month and 31st December entries

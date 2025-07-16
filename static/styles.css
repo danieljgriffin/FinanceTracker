@@ -63,7 +63,7 @@
 
 /* Modern card styles with glass effect */
 .card {
-    @apply rounded-2xl border-0 transition-all duration-300 ease-in-out;
+    @apply rounded-2xl border-0;
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -71,10 +71,14 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-.card:hover {
-    @apply transform -translate-y-2;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
-    background: rgba(255, 255, 255, 0.8);
+/* Quick action hover effects - only for buttons and interactive elements */
+.quick-action {
+    @apply transition-all duration-300 ease-in-out;
+}
+
+.quick-action:hover {
+    @apply transform scale-105;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .card-gradient {
