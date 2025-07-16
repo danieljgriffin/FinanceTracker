@@ -107,7 +107,7 @@
                                 <div class="text-sm font-medium text-gray-900">
                                     {% set platform_data = platform_totals.get(platform, {}) %}
                                     {% if platform_data and platform_data.get('total_value') %}
-                                        £{{ "{:,.2f}".format(platform_data.total_value) }}
+                                        £{{ "{:,.2f}".format(platform_data['total_value']) }}
                                     {% else %}
                                         £0.00
                                     {% endif %}
@@ -228,22 +228,22 @@
                                             <div class="text-sm text-gray-500">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data.investment_value) }}</div>
+                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data['investment_value']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm text-gray-500">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data.amount_spent) }}</div>
+                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data['amount_spent']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data.percentage_pl > 0 else 'text-red-600' if platform_data.percentage_pl < 0 else 'text-gray-900' }}">
-                                                {{ "{:+.2f}".format(platform_data.percentage_pl) }}%
+                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data['percentage_pl'] > 0 else 'text-red-600' if platform_data['percentage_pl'] < 0 else 'text-gray-900' }}">
+                                                {{ "{:+.2f}".format(platform_data['percentage_pl']) }}%
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data.total_pl > 0 else 'text-red-600' if platform_data.total_pl < 0 else 'text-gray-900' }}">
-                                                {{ "{:+,.2f}".format(platform_data.total_pl) }}
+                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data['total_pl'] > 0 else 'text-red-600' if platform_data['total_pl'] < 0 else 'text-gray-900' }}">
+                                                {{ "{:+,.2f}".format(platform_data['total_pl']) }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
