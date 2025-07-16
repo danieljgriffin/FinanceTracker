@@ -93,7 +93,7 @@
         <div class="space-y-6">
             {% for platform, investments in investments_data.items() %}
                 {% if not platform.endswith('_cash') %}
-                <div class="card overflow-hidden">
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
                     <div class="px-6 py-4 border-b border-gray-200" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -121,8 +121,8 @@
                     </div>
                     
                     {% if investments %}
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
+                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
                                 <thead>
                                     <tr class="border-b border-gray-200">
                                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
