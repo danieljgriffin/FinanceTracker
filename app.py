@@ -131,10 +131,38 @@ def yearly_tracker(year=None):
                     'color': PLATFORM_COLORS.get(platform, '#6b7280')
                 })
         
+        # Calculate monthly totals and month-on-month changes
+        monthly_totals = {}
+        monthly_changes = {}
+        previous_total = 0
+        
+        for month in months:
+            month_data = networth_data.get(month, {})
+            total = 0
+            
+            for platform in all_platforms:
+                platform_value = month_data.get(platform['name'], 0)
+                if platform_value and isinstance(platform_value, (int, float)):
+                    total += platform_value
+            
+            monthly_totals[month] = total
+            
+            # Calculate month-on-month change
+            if total > 0 and previous_total > 0:
+                change_percent = ((total - previous_total) / previous_total) * 100
+                monthly_changes[month] = change_percent
+            else:
+                monthly_changes[month] = None
+            
+            if total > 0:
+                previous_total = total
+        
         return render_template('yearly_tracker.html', 
                              networth_data=networth_data,
                              platforms=all_platforms,
                              months=months,
+                             monthly_totals=monthly_totals,
+                             monthly_changes=monthly_changes,
                              current_year=year,
                              available_years=available_years,
                              platform_colors=PLATFORM_COLORS)
@@ -145,6 +173,8 @@ def yearly_tracker(year=None):
                              networth_data={},
                              platforms=[],
                              months=[],
+                             monthly_totals={},
+                             monthly_changes={},
                              current_year=2025,
                              available_years=[2025],
                              platform_colors=PLATFORM_COLORS)
