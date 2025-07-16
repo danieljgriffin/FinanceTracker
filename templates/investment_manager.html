@@ -11,6 +11,9 @@
             <p class="text-white/80 mt-1">Manage your actual investment holdings and their current values</p>
         </div>
         <div class="flex space-x-3">
+            <a href="{{ url_for('transaction_history') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
+                <i class="fas fa-history mr-2"></i>History
+            </a>
             <a href="{{ url_for('update_prices') }}" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
                 <i class="fas fa-sync mr-2"></i>Update Prices
             </a>
@@ -51,8 +54,21 @@
                 </div>
                 
                 <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Input Type</label>
+                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="amount_spent">Amount Spent</option>
+                        <option value="average_buy_price">Average Buy Price</option>
+                    </select>
+                </div>
+                
+                <div id="amount_spent_input">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Spent (£)</label>
-                    <input type="number" step="0.01" name="amount_spent" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                </div>
+                
+                <div id="average_buy_price_input" style="display: none;">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Average Buy Price (£)</label>
+                    <input type="number" step="0.0001" name="average_buy_price" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
                 </div>
                 
                 <div class="md:col-span-2">
@@ -87,13 +103,13 @@
                                 </span>
                             </div>
                             <div class="text-right">
-                                {% set platform_total = namespace(value=0) %}
+                                {% set platform_total = 0 %}
                                 {% for investment in investments %}
                                     {% set current_value = investment.get('holdings', 0) * investment.get('current_price', 0) %}
-                                    {% set _ = platform_total.update({'value': platform_total.value + current_value}) %}
+                                    {% set platform_total = platform_total + current_value %}
                                 {% endfor %}
                                 <div class="text-sm font-medium text-gray-900">
-                                    £{{ "{:,.2f}".format(platform_total.value) }}
+                                    £{{ "{:,.2f}".format(platform_total) }}
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     Total Value
@@ -277,12 +293,12 @@
             <div class="space-y-4">
                 {% for platform, investments in investments_data.items() %}
                     {% if investments %}
-                        {% set platform_total = namespace(value=0) %}
+                        {% set platform_total = 0 %}
                         {% for investment in investments %}
                             {% set current_value = investment.get('holdings', 0) * investment.get('current_price', 0) %}
-                            {% set _ = platform_total.update({'value': platform_total.value + current_value}) %}
+                            {% set platform_total = platform_total + current_value %}
                         {% endfor %}
-                        {% set percentage = (platform_total.value / total_current_value * 100) if total_current_value > 0 else 0 %}
+                        {% set percentage = (platform_total / total_current_value * 100) if total_current_value > 0 else 0 %}
                         
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -290,7 +306,7 @@
                                 <span class="font-medium text-gray-900">{{ platform }}</span>
                             </div>
                             <div class="text-right">
-                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(platform_total.value) }}</div>
+                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(platform_total) }}</div>
                                 <div class="text-sm text-gray-500">{{ "{:.1f}".format(percentage) }}%</div>
                             </div>
                         </div>
@@ -310,5 +326,28 @@ function toggleAddForm() {
     const form = document.getElementById('addForm');
     form.classList.toggle('hidden');
 }
+
+function toggleInputType() {
+    const inputType = document.getElementById('input_type').value;
+    const amountSpentInput = document.getElementById('amount_spent_input');
+    const averageBuyPriceInput = document.getElementById('average_buy_price_input');
+    
+    if (inputType === 'amount_spent') {
+        amountSpentInput.style.display = 'block';
+        averageBuyPriceInput.style.display = 'none';
+        document.querySelector('input[name="amount_spent"]').required = true;
+        document.querySelector('input[name="average_buy_price"]').required = false;
+    } else {
+        amountSpentInput.style.display = 'none';
+        averageBuyPriceInput.style.display = 'block';
+        document.querySelector('input[name="amount_spent"]').required = false;
+        document.querySelector('input[name="average_buy_price"]').required = true;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleInputType();
+});
 </script>
 {% endblock %}

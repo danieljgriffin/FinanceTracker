@@ -1,7 +1,7 @@
 import json
 import os
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from datetime import datetime
 
 class DataManager:
@@ -63,6 +63,11 @@ class DataManager:
                 'Cash': []
             }
             self.save_json_file(contributions_file, initial_contributions)
+        
+        # Initialize transaction history data
+        history_file = os.path.join(self.data_dir, 'transaction_history.json')
+        if not os.path.exists(history_file):
+            self.save_json_file(history_file, [])
     
     def load_json_file(self, filepath: str) -> Dict[str, Any]:
         """Load JSON data from file"""
@@ -116,12 +121,20 @@ class DataManager:
         """Save expenses data"""
         self.save_json_file(os.path.join(self.data_dir, 'expenses.json'), data)
     
-    def add_investment(self, platform: str, name: str, holdings: float, amount_spent: float, symbol: str = ''):
+    def add_investment(self, platform: str, name: str, holdings: float, amount_spent: float = None, average_buy_price: float = None, symbol: str = ''):
         """Add a new investment transaction"""
         investments_data = self.get_investments_data()
         
         if platform not in investments_data:
             investments_data[platform] = []
+        
+        # Calculate missing value (amount_spent or average_buy_price)
+        if amount_spent is None and average_buy_price is not None:
+            amount_spent = holdings * average_buy_price
+        elif average_buy_price is None and amount_spent is not None:
+            average_buy_price = amount_spent / holdings if holdings > 0 else 0
+        elif amount_spent is None and average_buy_price is None:
+            raise ValueError("Either amount_spent or average_buy_price must be provided")
         
         # Check if this investment already exists
         existing_investment = None
@@ -130,25 +143,61 @@ class DataManager:
                 existing_investment = investment
                 break
         
+        transaction_id = f"txn_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
         if existing_investment:
+            # Record transaction history
+            old_holdings = existing_investment['holdings']
+            old_amount_spent = existing_investment['amount_spent']
+            
             # Update existing investment
             existing_investment['holdings'] += holdings
             existing_investment['amount_spent'] += amount_spent
             existing_investment['average_buy_price'] = existing_investment['amount_spent'] / existing_investment['holdings']
             existing_investment['last_updated'] = datetime.now().isoformat()
+            
+            # Log transaction
+            self.log_transaction(
+                transaction_id=transaction_id,
+                action="ADD",
+                platform=platform,
+                investment_name=name,
+                holdings=holdings,
+                amount_spent=amount_spent,
+                average_buy_price=average_buy_price,
+                symbol=symbol,
+                old_holdings=old_holdings,
+                new_holdings=existing_investment['holdings'],
+                old_amount_spent=old_amount_spent,
+                new_amount_spent=existing_investment['amount_spent']
+            )
         else:
             # Create new investment
             investment = {
                 'name': name,
                 'holdings': holdings,
                 'amount_spent': amount_spent,
-                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'average_buy_price': average_buy_price,
                 'symbol': symbol,
                 'current_price': 0,  # Will be updated by price fetcher
                 'created_at': datetime.now().isoformat(),
                 'last_updated': datetime.now().isoformat()
             }
             investments_data[platform].append(investment)
+            
+            # Log transaction
+            self.log_transaction(
+                transaction_id=transaction_id,
+                action="CREATE",
+                platform=platform,
+                investment_name=name,
+                holdings=holdings,
+                amount_spent=amount_spent,
+                average_buy_price=average_buy_price,
+                symbol=symbol,
+                new_holdings=holdings,
+                new_amount_spent=amount_spent
+            )
         
         self.save_investments_data(investments_data)
     
@@ -204,3 +253,37 @@ class DataManager:
         
         contributions_data[platform].append(contribution)
         self.save_monthly_contributions_data(contributions_data)
+    
+    def log_transaction(self, transaction_id: str, action: str, platform: str, investment_name: str, 
+                       holdings: float = None, amount_spent: float = None, average_buy_price: float = None,
+                       symbol: str = '', old_holdings: float = None, new_holdings: float = None,
+                       old_amount_spent: float = None, new_amount_spent: float = None):
+        """Log a transaction to the history"""
+        history_data = self.get_transaction_history()
+        
+        transaction = {
+            'transaction_id': transaction_id,
+            'timestamp': datetime.now().isoformat(),
+            'action': action,  # CREATE, ADD, UPDATE, REMOVE
+            'platform': platform,
+            'investment_name': investment_name,
+            'holdings_change': holdings,
+            'amount_spent_change': amount_spent,
+            'average_buy_price': average_buy_price,
+            'symbol': symbol,
+            'old_holdings': old_holdings,
+            'new_holdings': new_holdings,
+            'old_amount_spent': old_amount_spent,
+            'new_amount_spent': new_amount_spent
+        }
+        
+        history_data.append(transaction)
+        self.save_transaction_history(history_data)
+    
+    def get_transaction_history(self) -> List[Dict[str, Any]]:
+        """Get transaction history data"""
+        return self.load_json_file(os.path.join(self.data_dir, 'transaction_history.json'))
+    
+    def save_transaction_history(self, data: List[Dict[str, Any]]):
+        """Save transaction history data"""
+        self.save_json_file(os.path.join(self.data_dir, 'transaction_history.json'), data)

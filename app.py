@@ -256,15 +256,30 @@ def add_investment():
         platform = request.form.get('platform')
         name = request.form.get('name')
         holdings = float(request.form.get('holdings', 0))
-        amount_spent = float(request.form.get('amount_spent', 0))
+        input_type = request.form.get('input_type', 'amount_spent')
         symbol = request.form.get('symbol', '')
         
-        if not platform or not name or holdings <= 0 or amount_spent <= 0:
-            flash('Platform, investment name, holdings, and amount spent are required', 'error')
+        if not platform or not name or holdings <= 0:
+            flash('Platform, investment name, and holdings are required', 'error')
             return redirect(url_for('investment_manager'))
         
-        # Add investment to data
-        data_manager.add_investment(platform, name, holdings, amount_spent, symbol)
+        # Handle different input types
+        if input_type == 'amount_spent':
+            amount_spent = float(request.form.get('amount_spent', 0))
+            if amount_spent <= 0:
+                flash('Amount spent must be greater than 0', 'error')
+                return redirect(url_for('investment_manager'))
+            data_manager.add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
+        elif input_type == 'average_buy_price':
+            average_buy_price = float(request.form.get('average_buy_price', 0))
+            if average_buy_price <= 0:
+                flash('Average buy price must be greater than 0', 'error')
+                return redirect(url_for('investment_manager'))
+            data_manager.add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
+        else:
+            flash('Invalid input type', 'error')
+            return redirect(url_for('investment_manager'))
+        
         flash(f'Investment {name} added successfully', 'success')
         
     except Exception as e:
@@ -272,6 +287,24 @@ def add_investment():
         flash(f'Error adding investment: {str(e)}', 'error')
     
     return redirect(url_for('investment_manager'))
+
+@app.route('/transaction-history')
+def transaction_history():
+    """View transaction history"""
+    try:
+        history_data = data_manager.get_transaction_history()
+        # Sort by timestamp descending (most recent first)
+        history_data.sort(key=lambda x: x['timestamp'], reverse=True)
+        
+        return render_template('transaction_history.html',
+                             history_data=history_data,
+                             platform_colors=PLATFORM_COLORS)
+    except Exception as e:
+        logging.error(f"Error in transaction history: {str(e)}")
+        flash(f'Error loading transaction history: {str(e)}', 'error')
+        return render_template('transaction_history.html',
+                             history_data=[],
+                             platform_colors=PLATFORM_COLORS)
 
 @app.route('/update-prices')
 def update_prices():
