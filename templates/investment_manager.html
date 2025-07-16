@@ -92,6 +92,7 @@
     {% if investments_data %}
         <div class="space-y-6">
             {% for platform, investments in investments_data.items() %}
+                {% if not platform.endswith('_cash') %}
                 <div class="card overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-200" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
                         <div class="flex items-center justify-between">
@@ -243,6 +244,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
             {% endfor %}
         </div>
     {% endif %}
@@ -258,7 +260,9 @@
                     <div class="text-2xl font-bold text-gray-900">
                         {% set total_investments = 0 %}
                         {% for platform, investments in investments_data.items() %}
-                            {% set total_investments = total_investments + investments|length %}
+                            {% if not platform.endswith('_cash') %}
+                                {% set total_investments = total_investments + investments|length %}
+                            {% endif %}
                         {% endfor %}
                         {{ total_investments }}
                     </div>
@@ -267,7 +271,13 @@
                 
                 <div class="text-center">
                     <div class="text-2xl font-bold text-gray-900">
-                        {{ investments_data.keys()|length }}
+                        {% set platform_count = 0 %}
+                        {% for platform in investments_data.keys() %}
+                            {% if not platform.endswith('_cash') %}
+                                {% set platform_count = platform_count + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                        {{ platform_count }}
                     </div>
                     <div class="text-sm text-gray-500">Active Platforms</div>
                 </div>
@@ -290,11 +300,13 @@
                     <div class="text-2xl font-bold text-gray-900">
                         {% set investments_with_symbols = 0 %}
                         {% for platform, investments in investments_data.items() %}
-                            {% for investment in investments %}
-                                {% if investment.get('symbol') %}
-                                    {% set investments_with_symbols = investments_with_symbols + 1 %}
-                                {% endif %}
-                            {% endfor %}
+                            {% if not platform.endswith('_cash') %}
+                                {% for investment in investments %}
+                                    {% if investment.get('symbol') %}
+                                        {% set investments_with_symbols = investments_with_symbols + 1 %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
                         {% endfor %}
                         {{ investments_with_symbols }}
                     </div>
