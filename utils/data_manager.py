@@ -116,22 +116,52 @@ class DataManager:
         """Save expenses data"""
         self.save_json_file(os.path.join(self.data_dir, 'expenses.json'), data)
     
-    def add_investment(self, platform: str, name: str, current_value: float, symbol: str = ''):
-        """Add a new investment"""
+    def add_investment(self, platform: str, name: str, holdings: float, amount_spent: float, symbol: str = ''):
+        """Add a new investment transaction"""
         investments_data = self.get_investments_data()
         
         if platform not in investments_data:
             investments_data[platform] = []
         
-        investment = {
-            'name': name,
-            'current_value': current_value,
-            'symbol': symbol,
-            'created_at': datetime.now().isoformat()
-        }
+        # Check if this investment already exists
+        existing_investment = None
+        for investment in investments_data[platform]:
+            if investment['name'] == name:
+                existing_investment = investment
+                break
         
-        investments_data[platform].append(investment)
+        if existing_investment:
+            # Update existing investment
+            existing_investment['holdings'] += holdings
+            existing_investment['amount_spent'] += amount_spent
+            existing_investment['average_buy_price'] = existing_investment['amount_spent'] / existing_investment['holdings']
+            existing_investment['last_updated'] = datetime.now().isoformat()
+        else:
+            # Create new investment
+            investment = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': amount_spent,
+                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'symbol': symbol,
+                'current_price': 0,  # Will be updated by price fetcher
+                'created_at': datetime.now().isoformat(),
+                'last_updated': datetime.now().isoformat()
+            }
+            investments_data[platform].append(investment)
+        
         self.save_investments_data(investments_data)
+    
+    def get_unique_investment_names(self) -> list:
+        """Get list of unique investment names across all platforms"""
+        investments_data = self.get_investments_data()
+        names = set()
+        
+        for platform, investments in investments_data.items():
+            for investment in investments:
+                names.add(investment['name'])
+        
+        return sorted(list(names))
     
     def update_investment(self, platform: str, investment_index: int, updates: Dict[str, Any]):
         """Update an existing investment"""

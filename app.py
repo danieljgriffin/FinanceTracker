@@ -217,15 +217,37 @@ def investment_manager():
     """Investment manager for CRUD operations"""
     try:
         investments_data = data_manager.get_investments_data()
+        
+        # Calculate totals and metrics from live data
+        total_current_value = 0
+        total_amount_spent = 0
+        
+        for platform_investments in investments_data.values():
+            for investment in platform_investments:
+                holdings = investment.get('holdings', 0)
+                current_price = investment.get('current_price', 0)
+                current_value = holdings * current_price
+                total_current_value += current_value
+                total_amount_spent += investment.get('amount_spent', 0)
+        
+        # Get unique investment names for dropdown
+        unique_names = data_manager.get_unique_investment_names()
+        
         return render_template('investment_manager.html',
                              investments_data=investments_data,
-                             platform_colors=PLATFORM_COLORS)
+                             platform_colors=PLATFORM_COLORS,
+                             total_current_value=total_current_value,
+                             total_amount_spent=total_amount_spent,
+                             unique_names=unique_names)
     except Exception as e:
         logging.error(f"Error in investment manager: {str(e)}")
         flash(f'Error loading investment manager: {str(e)}', 'error')
         return render_template('investment_manager.html',
                              investments_data={},
-                             platform_colors=PLATFORM_COLORS)
+                             platform_colors=PLATFORM_COLORS,
+                             total_current_value=0,
+                             total_amount_spent=0,
+                             unique_names=[])
 
 @app.route('/add-investment', methods=['POST'])
 def add_investment():
@@ -233,15 +255,16 @@ def add_investment():
     try:
         platform = request.form.get('platform')
         name = request.form.get('name')
-        current_value = float(request.form.get('current_value', 0))
+        holdings = float(request.form.get('holdings', 0))
+        amount_spent = float(request.form.get('amount_spent', 0))
         symbol = request.form.get('symbol', '')
         
-        if not platform or not name:
-            flash('Platform and investment name are required', 'error')
+        if not platform or not name or holdings <= 0 or amount_spent <= 0:
+            flash('Platform, investment name, holdings, and amount spent are required', 'error')
             return redirect(url_for('investment_manager'))
         
         # Add investment to data
-        data_manager.add_investment(platform, name, current_value, symbol)
+        data_manager.add_investment(platform, name, holdings, amount_spent, symbol)
         flash(f'Investment {name} added successfully', 'success')
         
     except Exception as e:
