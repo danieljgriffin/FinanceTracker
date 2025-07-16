@@ -190,7 +190,7 @@
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium {{ 'text-green-600' if total_pl > 0 else 'text-red-600' if total_pl < 0 else 'text-gray-900' }}">
                                                 {% if current_value > 0 %}
-                                                    £{{ "{:+,.2f}".format(total_pl) }}
+                                                    {# No £ symbol in Total P/L #}{{ "{:+,.2f}".format(total_pl) }}
                                                 {% else %}
                                                     <span class="text-gray-400">-</span>
                                                 {% endif %}

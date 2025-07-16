@@ -103,5 +103,20 @@
     "new_holdings": 53.922,
     "old_amount_spent": null,
     "new_amount_spent": 2274.0
+  },
+  {
+    "transaction_id": "txn_20250716_173818",
+    "timestamp": "2025-07-16T17:38:18.682350",
+    "action": "CREATE",
+    "platform": "EQ (GSK shares)",
+    "investment_name": "GSK Shares Reward",
+    "holdings_change": 420.0,
+    "amount_spent_change": 1705.21,
+    "average_buy_price": 4.06002380952381,
+    "symbol": "GSK",
+    "old_holdings": null,
+    "new_holdings": 420.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 1705.21
   }
 ]

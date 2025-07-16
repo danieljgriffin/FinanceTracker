@@ -12,7 +12,18 @@
     }
   ],
   "Trading212 ISA": [],
-  "EQ (GSK shares)": [],
+  "EQ (GSK shares)": [
+    {
+      "name": "GSK Shares Reward",
+      "holdings": 420.0,
+      "amount_spent": 1705.21,
+      "average_buy_price": 4.06002380952381,
+      "symbol": "GSK",
+      "current_price": 0,
+      "created_at": "2025-07-16T17:38:18.681613",
+      "last_updated": "2025-07-16T17:38:18.681620"
+    }
+  ],
   "InvestEngine ISA": [],
   "Crypto": [],
   "HL Stocks & Shares LISA": [

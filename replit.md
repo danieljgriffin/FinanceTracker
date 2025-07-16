@@ -115,6 +115,9 @@ Preferred communication style: Simple, everyday language.
   - HL LISA: £27,903.88 (£27,546.88 investments + £357.00 cash)
   - Degiro: £2,098.11 (META investment value)
   - All other platforms showing appropriate totals or £0.00 when empty
+- **Total P/L Display Fix**: Removed £ symbol from Total P/L column to fix alignment issues
+  - Values now display as "+1,024.95" instead of "£+1,024.95"
+  - Improved readability and consistent alignment for all profit/loss values
 
 ## Deployment Strategy
 
