@@ -4,12 +4,15 @@ import requests
 import re
 from typing import Optional
 import trafilatura
+from datetime import datetime
 
 class PriceFetcher:
     """Handles fetching live prices from various sources"""
     
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.usd_to_gbp_rate = None
+        self.last_rate_update = None
         
         # Special fund mappings for funds that don't work with yfinance
         self.special_funds = {
@@ -30,8 +33,9 @@ class PriceFetcher:
             },
             'GB00BMN91T34': {
                 'name': 'UBS S&P 500 Index Class C - Acc',
-                'morningstar_id': 'F00000YXJK',
-                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/u/ubs-s-p-500-index-class-c-accumulation'
+                'morningstar_id': 'F00000UE1Z',
+                'hl_url': 'https://www.hl.co.uk/funds/fund-discounts,-prices--and--factsheets/search-results/u/ubs-s-and-p-500-index-accumulation',
+                'yahoo_symbol': 'GB00BMN91T34.L'
             }
         }
     
@@ -64,6 +68,15 @@ class PriceFetcher:
                 if field in info and info[field]:
                     price = float(info[field])
                     self.logger.debug(f"Price for {symbol}: {price}")
+                    
+                    # Convert USD to GBP if needed
+                    currency = info.get('currency', 'USD')
+                    if currency == 'USD':
+                        gbp_price = self.convert_usd_to_gbp(price)
+                        if gbp_price:
+                            self.logger.debug(f"Converted {price} USD to {gbp_price} GBP")
+                            return gbp_price
+                    
                     return price
             
             # If info doesn't work, try history
@@ -71,6 +84,15 @@ class PriceFetcher:
             if not hist.empty:
                 price = float(hist['Close'].iloc[-1])
                 self.logger.debug(f"Price for {symbol} from history: {price}")
+                
+                # Convert USD to GBP if needed (assume USD if not specified)
+                currency = info.get('currency', 'USD')
+                if currency == 'USD':
+                    gbp_price = self.convert_usd_to_gbp(price)
+                    if gbp_price:
+                        self.logger.debug(f"Converted {price} USD to {gbp_price} GBP")
+                        return gbp_price
+                
                 return price
                 
         except Exception as e:
@@ -97,10 +119,42 @@ class PriceFetcher:
             'GB00BYVGKV59': 3.5510,  # Baillie Gifford Positive Change (355.10p)
             'LU1033663649': 15.50,   # Fidelity Global Technology (estimate)
             'LU0345781172': 8.25,    # Ninety One Natural Resources (estimate)
-            'GB00BMN91T34': 7.80     # UBS S&P 500 (estimate)
+            'GB00BMN91T34': 0.81     # UBS S&P 500 (81.00p)
         }
         
-        # Try web scraping first
+        # Try Yahoo Finance first for UBS fund
+        if 'yahoo_symbol' in fund_info:
+            try:
+                self.logger.info(f"Trying to fetch price for {fund_info['name']} from Yahoo Finance")
+                ticker = yf.Ticker(fund_info['yahoo_symbol'])
+                info = ticker.info
+                
+                # Try different price fields
+                price_fields = ['regularMarketPrice', 'price', 'lastPrice', 'bid', 'ask']
+                
+                for field in price_fields:
+                    if field in info and info[field]:
+                        price = float(info[field])
+                        # Convert pence to pounds for UK funds if needed
+                        if isin.startswith('GB') and price > 10:  # Likely in pence
+                            price = price / 100
+                        self.logger.info(f"Successfully fetched price {price} for {fund_info['name']} from Yahoo Finance")
+                        return price
+                
+                # Try history if info doesn't work
+                hist = ticker.history(period='1d')
+                if not hist.empty:
+                    price = float(hist['Close'].iloc[-1])
+                    # Convert pence to pounds for UK funds if needed
+                    if isin.startswith('GB') and price > 10:  # Likely in pence
+                        price = price / 100
+                    self.logger.info(f"Successfully fetched price {price} for {fund_info['name']} from Yahoo Finance history")
+                    return price
+                    
+            except Exception as e:
+                self.logger.error(f"Error fetching from Yahoo Finance: {str(e)}")
+        
+        # Try web scraping
         sources = [
             ('Hargreaves Lansdown', self.scrape_hl_price, fund_info['hl_url']),
             ('FT Markets', self.scrape_ft_price, isin)
@@ -259,6 +313,58 @@ class PriceFetcher:
                 prices[symbol] = price
                 
         return prices
+    
+    def get_usd_to_gbp_rate(self) -> Optional[float]:
+        """Get current USD to GBP exchange rate"""
+        try:
+            # Check if we have a recent rate (within 1 hour)
+            if (self.usd_to_gbp_rate and self.last_rate_update and 
+                (datetime.now() - self.last_rate_update).seconds < 3600):
+                return self.usd_to_gbp_rate
+            
+            # Fetch new rate from Yahoo Finance
+            ticker = yf.Ticker('GBPUSD=X')
+            info = ticker.info
+            
+            # Try different price fields
+            price_fields = ['regularMarketPrice', 'price', 'lastPrice', 'bid', 'ask']
+            
+            for field in price_fields:
+                if field in info and info[field]:
+                    # This gives us GBP per USD, but we want USD per GBP
+                    gbp_per_usd = float(info[field])
+                    usd_per_gbp = 1 / gbp_per_usd
+                    
+                    self.usd_to_gbp_rate = gbp_per_usd
+                    self.last_rate_update = datetime.now()
+                    self.logger.debug(f"Updated USD/GBP rate: {self.usd_to_gbp_rate}")
+                    return self.usd_to_gbp_rate
+            
+            # Try history if info doesn't work
+            hist = ticker.history(period='1d')
+            if not hist.empty:
+                gbp_per_usd = float(hist['Close'].iloc[-1])
+                self.usd_to_gbp_rate = gbp_per_usd
+                self.last_rate_update = datetime.now()
+                self.logger.debug(f"Updated USD/GBP rate from history: {self.usd_to_gbp_rate}")
+                return self.usd_to_gbp_rate
+                
+        except Exception as e:
+            self.logger.error(f"Error fetching USD/GBP rate: {str(e)}")
+            
+        # Fallback rate if all else fails
+        return 0.79  # Approximate USD to GBP rate
+    
+    def convert_usd_to_gbp(self, usd_price: float) -> Optional[float]:
+        """Convert USD price to GBP"""
+        try:
+            rate = self.get_usd_to_gbp_rate()
+            if rate:
+                gbp_price = usd_price * rate
+                return gbp_price
+        except Exception as e:
+            self.logger.error(f"Error converting USD to GBP: {str(e)}")
+        return None
     
     def get_mutual_fund_price(self, fund_name: str) -> Optional[float]:
         """

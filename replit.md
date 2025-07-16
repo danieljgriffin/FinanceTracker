@@ -49,6 +49,10 @@ Preferred communication style: Simple, everyday language.
 ### Price Fetching (`utils/price_fetcher.py`)
 - Live price fetching using yfinance library
 - Support for stocks and cryptocurrency symbols
+- **USD to GBP currency conversion** for US stocks
+- **Custom web scraping** for 4 specific HL LISA funds (GB00BYVGKV59, LU1033663649, LU0345781172, GB00BMN91T34)
+- **Multi-source fallback** (Yahoo Finance, Hargreaves Lansdown, FT Markets, cached prices)
+- **Pence to pounds conversion** for UK funds
 - Error handling for missing or invalid symbols
 - Multiple price field fallback strategy
 
@@ -86,8 +90,16 @@ Preferred communication style: Simple, everyday language.
 - EQ (GSK shares)
 - InvestEngine ISA
 - Crypto
-- HL Stocks & Shares LISA
+- HL Stocks & Shares LISA (with specialized fund price fetching)
 - Cash
+
+## Recent Changes (July 16, 2025)
+- **Fixed Edit/Delete Functionality**: Investment edit and delete buttons now fully functional
+- **Enhanced Price Fetching**: Added USD to GBP currency conversion for all US stocks
+- **HL LISA Fund Support**: Custom web scraping for 4 specific funds that don't work with yfinance
+- **Live Price Updates**: Successfully fetching real-time prices for Baillie Gifford and UBS S&P 500 funds
+- **Transaction History**: Complete audit trail of all investment changes with timestamps
+- **Flexible Input Options**: Support for both "Amount Spent" and "Average Buy Price" input methods
 
 ## Deployment Strategy
 

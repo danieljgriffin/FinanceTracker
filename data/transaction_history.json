@@ -13,5 +13,35 @@
     "new_holdings": 8970.3043,
     "old_amount_spent": 7665.5,
     "new_amount_spent": 15331.0
+  },
+  {
+    "transaction_id": "txn_20250716_164223",
+    "timestamp": "2025-07-16T16:42:23.559676",
+    "action": "CREATE",
+    "platform": "HL Stocks & Shares LISA",
+    "investment_name": "UBS S&P 500 Index Class C - Acc",
+    "holdings_change": 4485.15,
+    "amount_spent_change": 7665.5,
+    "average_buy_price": 1.7090844230404783,
+    "symbol": "",
+    "old_holdings": null,
+    "new_holdings": 4485.15,
+    "old_amount_spent": null,
+    "new_amount_spent": 7665.5
+  },
+  {
+    "transaction_id": "txn_20250716_164323",
+    "timestamp": "2025-07-16T16:43:23.549043",
+    "action": "CREATE",
+    "platform": "Degiro",
+    "investment_name": "Meta",
+    "holdings_change": 4.0,
+    "amount_spent_change": 1073.16,
+    "average_buy_price": 268.29,
+    "symbol": "META",
+    "old_holdings": null,
+    "new_holdings": 4.0,
+    "old_amount_spent": null,
+    "new_amount_spent": 1073.16
   }
 ]
