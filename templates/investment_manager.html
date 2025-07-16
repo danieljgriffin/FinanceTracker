@@ -25,12 +25,12 @@
 
     <!-- Add Investment Form -->
     <div id="addForm" class="card p-8 hidden">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Add New Investment to Portfolio</h2>
+        <h2 class="text-xl font-semibold text-white mb-6">Add New Investment to Portfolio</h2>
         <form method="POST" action="{{ url_for('add_investment') }}" class="space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Platform</label>
-                    <select name="platform" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-semibold text-white mb-2">Platform</label>
+                    <select name="platform" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="">Select Platform</option>
                         {% for platform in platform_colors.keys() %}
                             <option value="{{ platform }}">{{ platform }}</option>
@@ -39,8 +39,8 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Investment Name</label>
-                    <input type="text" name="name" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Tesla Stock" list="investment-names">
+                    <label class="block text-sm font-semibold text-white mb-2">Investment Name</label>
+                    <input type="text" name="name" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Tesla Stock" list="investment-names">
                     <datalist id="investment-names">
                         {% for name in unique_names %}
                         <option value="{{ name }}">
@@ -49,36 +49,36 @@
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Holdings (Quantity)</label>
-                    <input type="number" step="any" name="holdings" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 15.5521236 shares or 0.5 BTC">
+                    <label class="block text-sm font-semibold text-white mb-2">Holdings (Quantity)</label>
+                    <input type="number" step="any" name="holdings" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 15.5521236 shares or 0.5 BTC">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Input Type</label>
-                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label class="block text-sm font-semibold text-white mb-2">Input Type</label>
+                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <option value="amount_spent">Amount Spent</option>
                         <option value="average_buy_price">Average Buy Price</option>
                     </select>
                 </div>
                 
                 <div id="amount_spent_input">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Spent (£)</label>
-                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
+                    <label class="block text-sm font-semibold text-white mb-2">Amount Spent (£)</label>
+                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
                 </div>
                 
                 <div id="average_buy_price_input" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Average Buy Price (£)</label>
-                    <input type="number" step="any" name="average_buy_price" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
+                    <label class="block text-sm font-semibold text-white mb-2">Average Buy Price (£)</label>
+                    <input type="number" step="any" name="average_buy_price" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
                 </div>
                 
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Symbol (Optional - for live price updates)</label>
-                    <input type="text" name="symbol" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., TSLA, BTC-USD, ^GSPC">
+                    <label class="block text-sm font-semibold text-white mb-2">Symbol (Optional - for live price updates)</label>
+                    <input type="text" name="symbol" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., TSLA, BTC-USD, ^GSPC">
                 </div>
             </div>
             
             <div class="flex justify-end space-x-4">
-                <button type="button" onclick="toggleAddForm()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
+                <button type="button" onclick="toggleAddForm()" class="px-6 py-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
                     Cancel
                 </button>
                 <button type="submit" class="px-6 py-3 text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
@@ -101,29 +101,29 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">{{ platform }}</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <h2 class="text-lg font-semibold text-white">{{ platform }}</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-gray-300">
                                     Cash Holdings
                                 </span>
                             </div>
                             <div class="text-right">
-                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</div>
-                                <div class="text-sm text-gray-500">Current Balance</div>
+                                <div class="font-medium text-white">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</div>
+                                <div class="text-sm text-gray-400">Current Balance</div>
                             </div>
                         </div>
                         
                         <!-- Cash update form -->
-                        <div class="mt-4 pt-4 border-t border-gray-200">
+                        <div class="mt-4 pt-4 border-t border-gray-600/30">
                             <form method="POST" action="{{ url_for('update_cash', platform=platform) }}" class="flex items-center justify-between">
                                 <div class="flex items-center space-x-3">
                                     <i class="fas fa-wallet text-gray-400"></i>
-                                    <label class="text-sm font-medium text-gray-700">Update Cash Balance:</label>
+                                    <label class="text-sm font-medium text-white">Update Cash Balance:</label>
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <div class="relative">
-                                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
+                                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">£</span>
                                         <input type="number" step="0.01" name="cash_amount" value="{{ data_manager.get_platform_cash(platform) }}" 
-                                               class="w-32 pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                               class="w-32 pl-7 pr-3 py-2 text-sm border border-gray-600 bg-gray-800 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                                                placeholder="0.00">
                                     </div>
                                     <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, {{ platform_colors.get(platform, '#6b7280') }}, {{ platform_colors.get(platform, '#6b7280') }}dd);">
@@ -138,17 +138,17 @@
                 {% else %}
                 <!-- Regular investment platform section -->
                 <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
+                    <div class="px-6 py-4 border-b border-gray-600/30" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">{{ platform }}</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <h2 class="text-lg font-semibold text-white">{{ platform }}</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-800 text-gray-300">
                                     {{ investments|length }} investment{{ 's' if investments|length != 1 else '' }}
                                 </span>
                             </div>
                             <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
+                                <div class="text-sm font-medium text-white">
                                     {% set platform_data = platform_totals.get(platform, {}) %}
                                     {% if platform_data and platform_data.get('total_value') %}
                                         £{{ "{:,.2f}".format(platform_data['total_value']) }}
@@ -156,7 +156,7 @@
                                         £0.00
                                     {% endif %}
                                 </div>
-                                <div class="text-xs text-gray-500">
+                                <div class="text-xs text-gray-400">
                                     Total Value (incl. cash)
                                 </div>
                             </div>
@@ -167,19 +167,19 @@
                         <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
                             <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
                                 <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    <tr class="border-b border-gray-600/30">
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Name</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Current Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Holdings</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Current Value</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Average Buy Price</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Amount Spent</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Percentage P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Total P/L</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200">
+                                <tbody class="divide-y divide-gray-600/30">
                                     {% for investment in investments %}
                                     {% set holdings = investment.get('holdings', 0) %}
                                     {% set current_price = investment.get('current_price', 0) %}
@@ -189,19 +189,19 @@
                                     {% set percentage_pl = (total_pl / amount_spent * 100) if amount_spent > 0 else 0 %}
                                     {% set average_buy_price = investment.get('average_buy_price', 0) %}
                                     
-                                    <tr class="hover:bg-gray-50">
+                                    <tr class="hover:bg-gray-800/30">
                                         <td class="px-6 py-4">
                                             <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">{{ investment.name }}</div>
+                                                <div class="text-sm font-medium text-white">{{ investment.name }}</div>
                                                 {% if investment.get('symbol') %}
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-900 text-blue-200">
                                                         {{ investment.symbol }}
                                                     </span>
                                                 {% endif %}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
+                                            <div class="text-sm text-white">
                                                 {% if current_price > 0 %}
                                                     £{{ "{:,.4f}".format(current_price) }}
                                                 {% else %}
@@ -210,10 +210,10 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">{{ "{:,.7f}".format(holdings) }}</div>
+                                            <div class="text-sm text-white">{{ "{:,.7f}".format(holdings) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
+                                            <div class="text-sm font-medium text-white">
                                                 {% if current_value > 0 %}
                                                     £{{ "{:,.2f}".format(current_value) }}
                                                 {% else %}
@@ -222,13 +222,13 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£{{ "{:,.4f}".format(average_buy_price) }}</div>
+                                            <div class="text-sm text-white">£{{ "{:,.4f}".format(average_buy_price) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£{{ "{:,.2f}".format(amount_spent) }}</div>
+                                            <div class="text-sm text-white">£{{ "{:,.2f}".format(amount_spent) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-medium {{ 'text-green-600' if percentage_pl > 0 else 'text-red-600' if percentage_pl < 0 else 'text-gray-900' }}">
+                                            <div class="text-sm font-medium {{ 'text-green-400' if percentage_pl > 0 else 'text-red-400' if percentage_pl < 0 else 'text-white' }}">
                                                 {% if current_value > 0 %}
                                                     {{ "{:+.2f}".format(percentage_pl) }}%
                                                 {% else %}
@@ -237,7 +237,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-medium {{ 'text-green-600' if total_pl > 0 else 'text-red-600' if total_pl < 0 else 'text-gray-900' }}">
+                                            <div class="text-sm font-medium {{ 'text-green-400' if total_pl > 0 else 'text-red-400' if total_pl < 0 else 'text-white' }}">
                                                 {% if current_value > 0 %}
                                                     {# No £ symbol in Total P/L #}{{ "{:+,.2f}".format(total_pl) }}
                                                 {% else %}
@@ -247,10 +247,10 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('{{ platform }}', {{ loop.index0 }})" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                                <button onclick="editInvestment('{{ platform }}', {{ loop.index0 }})" class="text-gray-400 hover:text-blue-400 transition-colors">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button onclick="deleteInvestment('{{ platform }}', {{ loop.index0 }}, '{{ investment.name }}')" class="text-gray-400 hover:text-red-600 transition-colors">
+                                                <button onclick="deleteInvestment('{{ platform }}', {{ loop.index0 }}, '{{ investment.name }}')" class="text-gray-400 hover:text-red-400 transition-colors">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -261,37 +261,37 @@
                                     <!-- Platform Totals Row -->
                                     {% if investments and platform_totals.get(platform) %}
                                     {% set platform_data = platform_totals.get(platform) %}
-                                    <tr class="border-t-2 border-gray-300 bg-gray-50">
+                                    <tr class="border-t-2 border-gray-600/50 bg-gray-800/50">
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">Total</div>
+                                            <div class="text-sm font-bold text-white">Total</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500">-</div>
+                                            <div class="text-sm text-gray-400">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500">-</div>
+                                            <div class="text-sm text-gray-400">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data['investment_value']) }}</div>
+                                            <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(platform_data['investment_value']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500">-</div>
+                                            <div class="text-sm text-gray-400">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(platform_data['amount_spent']) }}</div>
+                                            <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(platform_data['amount_spent']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data['percentage_pl'] > 0 else 'text-red-600' if platform_data['percentage_pl'] < 0 else 'text-gray-900' }}">
+                                            <div class="text-sm font-bold {{ 'text-green-400' if platform_data['percentage_pl'] > 0 else 'text-red-400' if platform_data['percentage_pl'] < 0 else 'text-white' }}">
                                                 {{ "{:+.2f}".format(platform_data['percentage_pl']) }}%
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold {{ 'text-green-600' if platform_data['total_pl'] > 0 else 'text-red-600' if platform_data['total_pl'] < 0 else 'text-gray-900' }}">
+                                            <div class="text-sm font-bold {{ 'text-green-400' if platform_data['total_pl'] > 0 else 'text-red-400' if platform_data['total_pl'] < 0 else 'text-white' }}">
                                                 {{ "{:+,.2f}".format(platform_data['total_pl']) }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-500">-</div>
+                                            <div class="text-sm text-gray-400">-</div>
                                         </td>
                                     </tr>
                                     {% endif %}
@@ -301,22 +301,22 @@
                     {% else %}
                         <div class="px-6 py-8 text-center">
                             <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
-                            <p class="text-gray-500">No investments in this platform</p>
+                            <p class="text-gray-300">No investments in this platform</p>
                             <p class="text-sm text-gray-400">Add your first investment to get started</p>
                         </div>
                     {% endif %}
                     
                     <!-- Cash Balance Section for regular platforms -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div class="px-6 py-4 bg-gray-800/50 border-t border-gray-600/30">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</span>
+                                <span class="text-sm font-medium text-white">Cash Balance:</span>
+                                <span class="ml-2 text-sm font-semibold text-white">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</span>
                             </div>
                             <form method="POST" action="{{ url_for('update_cash', platform=platform) }}" class="flex items-center space-x-2">
                                 <input type="number" step="0.01" name="cash_amount" value="{{ data_manager.get_platform_cash(platform) }}" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                       class="w-24 px-2 py-1 text-sm border border-gray-600 bg-gray-800 text-white rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
                                        placeholder="0.00">
                                 <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
                                     Update
@@ -333,33 +333,33 @@
 
     <!-- Summary Statistics -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Investment Summary</h2>
+        <div class="px-8 py-6 border-b border-gray-600/30">
+            <h2 class="text-xl font-semibold text-white">Investment Summary</h2>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_portfolio_value) }}</div>
-                    <div class="text-sm text-gray-500">Total Portfolio Value</div>
+                    <div class="text-2xl font-bold text-white">£{{ "{:,.2f}".format(total_portfolio_value) }}</div>
+                    <div class="text-sm text-gray-400">Total Portfolio Value</div>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_amount_spent) }}</div>
-                    <div class="text-sm text-gray-500">Total Amount Spent</div>
+                    <div class="text-2xl font-bold text-white">£{{ "{:,.2f}".format(total_amount_spent) }}</div>
+                    <div class="text-sm text-gray-400">Total Amount Spent</div>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-2xl font-bold {{ 'text-green-600' if total_portfolio_percentage_pl > 0 else 'text-red-600' if total_portfolio_percentage_pl < 0 else 'text-gray-900' }}">
+                    <div class="text-2xl font-bold {{ 'text-green-400' if total_portfolio_percentage_pl > 0 else 'text-red-400' if total_portfolio_percentage_pl < 0 else 'text-white' }}">
                         {{ "{:+.2f}".format(total_portfolio_percentage_pl) }}%
                     </div>
-                    <div class="text-sm text-gray-500">Percentage Profit/Loss</div>
+                    <div class="text-sm text-gray-400">Percentage Profit/Loss</div>
                 </div>
                 
                 <div class="text-center">
-                    <div class="text-2xl font-bold {{ 'text-green-600' if total_portfolio_pl > 0 else 'text-red-600' if total_portfolio_pl < 0 else 'text-gray-900' }}">
+                    <div class="text-2xl font-bold {{ 'text-green-400' if total_portfolio_pl > 0 else 'text-red-400' if total_portfolio_pl < 0 else 'text-white' }}">
                         £{{ "{:+,.2f}".format(total_portfolio_pl) }}
                     </div>
-                    <div class="text-sm text-gray-500">Total Profit/Loss</div>
+                    <div class="text-sm text-gray-400">Total Profit/Loss</div>
                 </div>
             </div>
         </div>
@@ -367,8 +367,8 @@
 
     <!-- Platform Distribution -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Platform Distribution</h2>
+        <div class="px-8 py-6 border-b border-gray-600/30">
+            <h2 class="text-xl font-semibold text-white">Platform Distribution</h2>
         </div>
         <div class="p-6">
             <div class="space-y-4">
@@ -382,14 +382,14 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                    <span class="font-medium text-gray-900">{{ platform }}</span>
+                                    <span class="font-medium text-white">{{ platform }}</span>
                                 </div>
                                 <div class="text-right">
-                                    <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(platform_total_value) }}</div>
-                                    <div class="text-sm text-gray-500">{{ "{:.1f}".format(percentage) }}%</div>
+                                    <div class="font-medium text-white">£{{ "{:,.2f}".format(platform_total_value) }}</div>
+                                    <div class="text-sm text-gray-400">{{ "{:.1f}".format(percentage) }}%</div>
                                 </div>
                             </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="w-full bg-gray-700 rounded-full h-2">
                                 <div class="h-2 rounded-full transition-all duration-300" 
                                      style="width: {{ percentage }}%; background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
                             </div>
