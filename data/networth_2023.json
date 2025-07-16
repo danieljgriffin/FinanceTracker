@@ -18,74 +18,85 @@
     "EQ (GSK shares)": 30500.46,
     "Crypto": 274.11,
     "HL Stocks & Shares LISA": 5386.04,
-    "Cash": 2800.0
+    "Cash": 2800.0,
+    "InvestEngine ISA": 200.0
   },
   "1st Apr": {
     "Degiro": 11930.4,
     "EQ (GSK shares)": 31458.31,
     "Crypto": 274.21,
     "HL Stocks & Shares LISA": 9331.73,
-    "Cash": 1600.0
+    "Cash": 1600.0,
+    "InvestEngine ISA": 207.58
   },
   "1st May": {
     "Degiro": 11727.34,
     "EQ (GSK shares)": 33103.25,
     "Crypto": 252.04,
     "HL Stocks & Shares LISA": 10547.0,
-    "Cash": 1709.0
+    "Cash": 1709.0,
+    "InvestEngine ISA": 1005.62
   },
   "1st Jun": {
     "Degiro": 11586.87,
     "EQ (GSK shares)": 31485.19,
     "Crypto": 247.22,
     "HL Stocks & Shares LISA": 10984.01,
-    "Cash": 550.0
+    "Cash": 550.0,
+    "InvestEngine ISA": 1532.71
   },
   "1st Jul": {
     "Degiro": 11531.66,
     "EQ (GSK shares)": 31218.69,
     "Crypto": 15.79,
     "HL Stocks & Shares LISA": 11249.06,
-    "Cash": 352.0
+    "Cash": 352.0,
+    "InvestEngine ISA": 2087.38
   },
   "1st Aug": {
     "Degiro": 11719.86,
     "EQ (GSK shares)": 32495.15,
     "Crypto": 200.31,
     "HL Stocks & Shares LISA": 12251.72,
-    "Cash": 307.0
+    "Cash": 307.0,
+    "InvestEngine ISA": 2634.04
   },
   "1st Sep": {
     "Degiro": 11611.45,
     "EQ (GSK shares)": 33100.68,
     "HL Stocks & Shares LISA": 12203.39,
-    "Cash": 500.0
+    "Cash": 500.0,
+    "InvestEngine ISA": 3211.87
   },
   "1st Oct": {
     "Degiro": 11490.94,
     "EQ (GSK shares)": 36175.18,
     "HL Stocks & Shares LISA": 12543.89,
-    "Cash": 1470.0
+    "Cash": 1470.0,
+    "InvestEngine ISA": 3656.91
   },
   "1st Nov": {
     "Degiro": 11109.05,
     "EQ (GSK shares)": 35904.81,
     "Crypto": 346.2,
     "HL Stocks & Shares LISA": 12871.17,
-    "Cash": 1100.0
+    "Cash": 1100.0,
+    "InvestEngine ISA": 4087.59
   },
   "1st Dec": {
     "Degiro": 11645.92,
     "EQ (GSK shares)": 36651.18,
     "Crypto": 718.01,
     "HL Stocks & Shares LISA": 13653.38,
-    "Cash": 486.0
+    "Cash": 486.0,
+    "InvestEngine ISA": 4864.74
   },
   "31st Dec": {
     "Degiro": 11645.92,
     "EQ (GSK shares)": 36651.18,
     "Crypto": 718.01,
     "HL Stocks & Shares LISA": 13653.38,
-    "Cash": 486.0
+    "Cash": 486.0,
+    "InvestEngine ISA": 4864.74
   }
 }

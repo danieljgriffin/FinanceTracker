@@ -157,12 +157,65 @@ def yearly_tracker(year=None):
             if total > 0:
                 previous_total = total
         
+        # Calculate yearly net worth increase percentage
+        yearly_increase_percent = 0
+        current_year_int = datetime.now().year
+        
+        if year == current_year_int:
+            # For current year, compare current live portfolio value to previous year's end
+            try:
+                from utils.price_fetcher import PriceFetcher
+                price_fetcher = PriceFetcher()
+                
+                # Get live portfolio value (from dashboard calculation)
+                current_net_worth = 0
+                for platform, investments in investments_data.items():
+                    if not platform.endswith('_cash'):
+                        platform_total = 0
+                        for investment in investments:
+                            if investment.get('symbol'):
+                                live_price = price_fetcher.get_price(investment['symbol'])
+                                if live_price:
+                                    platform_total += investment['holdings'] * live_price
+                        
+                        # Add cash balance
+                        cash_balance = data_manager.get_platform_cash(platform)
+                        platform_total += cash_balance
+                        current_net_worth += platform_total
+                
+                # Get previous year's end value
+                previous_year_data = data_manager.get_networth_data(year - 1)
+                previous_year_total = 0
+                dec_data = previous_year_data.get('31st Dec', {})
+                if not dec_data:
+                    dec_data = previous_year_data.get('1st Dec', {})
+                
+                for platform in all_platforms:
+                    platform_value = dec_data.get(platform['name'], 0)
+                    if platform_value and isinstance(platform_value, (int, float)):
+                        previous_year_total += platform_value
+                
+                if previous_year_total > 0:
+                    yearly_increase_percent = ((current_net_worth - previous_year_total) / previous_year_total) * 100
+                
+            except Exception as e:
+                logging.error(f"Error calculating live yearly increase: {str(e)}")
+                yearly_increase_percent = 0
+        else:
+            # For historical years, compare 31st Dec to 1st Jan of same year
+            jan_total = monthly_totals.get('1st Jan', 0)
+            dec_total = monthly_totals.get('31st Dec', 0)
+            
+            if jan_total > 0 and dec_total > 0:
+                yearly_increase_percent = ((dec_total - jan_total) / jan_total) * 100
+        
         return render_template('yearly_tracker.html', 
                              networth_data=networth_data,
                              platforms=all_platforms,
                              months=months,
                              monthly_totals=monthly_totals,
                              monthly_changes=monthly_changes,
+                             yearly_increase_percent=yearly_increase_percent,
                              current_year=year,
                              available_years=available_years,
                              platform_colors=PLATFORM_COLORS)
@@ -175,6 +228,7 @@ def yearly_tracker(year=None):
                              months=[],
                              monthly_totals={},
                              monthly_changes={},
+                             yearly_increase_percent=0,
                              current_year=2025,
                              available_years=[2025],
                              platform_colors=PLATFORM_COLORS)
@@ -200,15 +254,34 @@ def create_year():
 
 @app.route('/update-monthly-value', methods=['POST'])
 def update_monthly_value():
-    """Update monthly networth value"""
+    """Update monthly networth value(s)"""
     try:
-        year = int(request.form.get('year'))
-        month = request.form.get('month')
-        platform = request.form.get('platform')
-        value = float(request.form.get('value', 0))
-        
-        data_manager.update_monthly_networth(year, month, platform, value)
-        flash(f'Updated {platform} for {month} {year}', 'success')
+        # Check if it's a batch update
+        changes_json = request.form.get('changes')
+        if changes_json:
+            import json
+            changes = json.loads(changes_json)
+            year = None
+            
+            for change in changes:
+                change_year = int(change['year'])
+                change_month = change['month']
+                change_platform = change['platform']
+                change_value = float(change['value'])
+                
+                data_manager.update_monthly_networth(change_year, change_month, change_platform, change_value)
+                year = change_year  # Store for redirect
+            
+            flash(f'Updated {len(changes)} values successfully', 'success')
+        else:
+            # Single update (legacy support)
+            year = int(request.form.get('year'))
+            month = request.form.get('month')
+            platform = request.form.get('platform')
+            value = float(request.form.get('value', 0))
+            
+            data_manager.update_monthly_networth(year, month, platform, value)
+            flash(f'Updated {platform} for {month} {year}', 'success')
     except (ValueError, TypeError) as e:
         flash(f'Error updating value: {str(e)}', 'error')
     
