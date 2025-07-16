@@ -93,6 +93,50 @@
         <div class="space-y-6">
             {% for platform, investments in investments_data.items() %}
                 {% if not platform.endswith('_cash') %}
+                
+                {% if platform == 'Cash' %}
+                <!-- Special compact Cash section -->
+                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
+                    <div class="px-6 py-4" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                <h2 class="text-lg font-semibold text-gray-900">{{ platform }}</h2>
+                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    Cash Holdings
+                                </span>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</div>
+                                <div class="text-sm text-gray-500">Current Balance</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Cash update form -->
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <form method="POST" action="{{ url_for('update_cash', platform=platform) }}" class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fas fa-wallet text-gray-400"></i>
+                                    <label class="text-sm font-medium text-gray-700">Update Cash Balance:</label>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">£</span>
+                                        <input type="number" step="0.01" name="cash_amount" value="{{ data_manager.get_platform_cash(platform) }}" 
+                                               class="w-32 pl-7 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                               placeholder="0.00">
+                                    </div>
+                                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, {{ platform_colors.get(platform, '#6b7280') }}, {{ platform_colors.get(platform, '#6b7280') }}dd);">
+                                        <i class="fas fa-save mr-1"></i>Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                {% else %}
+                <!-- Regular investment platform section -->
                 <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
                     <div class="px-6 py-4 border-b border-gray-200" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}20;">
                         <div class="flex items-center justify-between">
@@ -262,7 +306,7 @@
                         </div>
                     {% endif %}
                     
-                    <!-- Cash Balance Section -->
+                    <!-- Cash Balance Section for regular platforms -->
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -281,6 +325,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 {% endif %}
             {% endfor %}
         </div>
