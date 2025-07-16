@@ -72,43 +72,43 @@
         </div>
         <div class="overflow-x-auto">
             {% if monthly_expenses %}
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+                <table class="min-w-full divide-y divide-gray-600/30">
+                    <thead class="bg-gray-800/50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Expense
                             </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Monthly
                             </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
                                 Annual
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-600/30">
                         {% for expense in monthly_expenses %}
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-gray-800/30">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ expense.name }}</div>
+                                    <div class="text-sm font-medium text-white">{{ expense.name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm text-gray-900">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
+                                    <div class="text-sm text-gray-300">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm text-gray-900">£{{ "{:,.2f}".format(expense.monthly_amount * 12) }}</div>
+                                    <div class="text-sm text-gray-300">£{{ "{:,.2f}".format(expense.monthly_amount * 12) }}</div>
                                 </td>
                             </tr>
                         {% endfor %}
-                        <tr class="bg-gray-50 font-medium border-t-2 border-gray-300">
+                        <tr class="bg-gray-800/30 font-medium border-t-2 border-gray-600/50">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-bold text-gray-900">Total Expenses</div>
+                                <div class="text-sm font-bold text-white">Total Expenses</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(total_monthly_expenses) }}</div>
+                                <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(total_monthly_expenses) }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="text-sm font-bold text-gray-900">£{{ "{:,.2f}".format(total_annual_expenses) }}</div>
+                                <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(total_annual_expenses) }}</div>
                             </td>
                         </tr>
                     </tbody>
@@ -116,8 +116,8 @@
             {% else %}
                 <div class="text-center py-8">
                     <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
-                    <p class="text-gray-500">No expense data available</p>
-                    <p class="text-sm text-gray-400">Add expenses to track your monthly spending</p>
+                    <p class="text-gray-400">No expense data available</p>
+                    <p class="text-sm text-gray-500">Add expenses to track your monthly spending</p>
                 </div>
             {% endif %}
         </div>

@@ -94,6 +94,24 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 16, 2025)
+- **Collapsible Left Sidebar Navigation**: Added modern collapsible navigation functionality
+  - **Hamburger Toggle**: Click toggle button to collapse sidebar to 80px width (icon-only mode)
+  - **Smooth Transitions**: 300ms CSS animations for all elements during collapse/expand
+  - **Responsive Content**: Main content area automatically adjusts margin (ml-72 ↔ ml-20)
+  - **Text Fade Effects**: Navigation text labels fade in/out smoothly during state changes
+  - **Icon Animation**: Toggle icon changes from bars to chevron-right when collapsed
+  - **Full Page Coverage**: Flash messages, footer, and all content properly adjusts to sidebar state
+- **Income vs Investments Totals Fix**: Corrected broken totals calculation in yearly tracker
+  - **JavaScript Calculation**: Replaced broken Jinja template calculation with dynamic JavaScript
+  - **Real-time Updates**: Totals update automatically when editing income or investment values
+  - **Proper Summation**: All years from 2017-2030 correctly included in totals calculation
+  - **Page Load Calculation**: Totals display correct values immediately on page load
+- **Comprehensive Rounded Corners**: Applied consistent rounded styling to all UI elements
+  - **All Cards**: Every card throughout the application uses rounded-xl corners
+  - **Transaction History**: Updated dark theme with rounded corners and proper color scheme
+  - **Monthly Breakdown**: Table styling updated with rounded corners and dark theme consistency
+  - **Form Elements**: All input fields, buttons, and selects use rounded-lg styling
+  - **No Straight Corners**: Eliminated all straight-cornered boxes throughout the application
 - **Automatic Price Refresh System**: Implemented background price updates for real-time data
   - **Background Updates**: Prices refresh automatically every 15 minutes using background threads
   - **Price Status Display**: Shows last refresh time and next update countdown on dashboard and investment manager
