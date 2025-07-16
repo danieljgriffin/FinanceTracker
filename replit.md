@@ -107,6 +107,14 @@ Preferred communication style: Simple, everyday language.
   - Fidelity Global Technology: LU1033663649 (£9.3340)
   - Ninety One Natural Resources: LU0345781172 (£48.2400)
   - UBS S&P 500: GB00BMN91T34 (£2.1106)
+- **Investment Manager Display Fix**: Resolved template iteration errors and display issues
+- **Platform Total Calculation Fix**: Fixed platform totals to properly include both investment values and cash balances
+- **Cash Balance Integration**: Successfully integrated cash tracking with investment totals (e.g., HL LISA: £27,903.88 total)
+- **Template Optimization**: Moved complex calculations from Jinja2 templates to backend route for better reliability
+- **Backend Platform Totals**: Implemented server-side calculation of platform totals for accurate display:
+  - HL LISA: £27,903.88 (£27,546.88 investments + £357.00 cash)
+  - Degiro: £2,098.11 (META investment value)
+  - All other platforms showing appropriate totals or £0.00 when empty
 
 ## Deployment Strategy
 

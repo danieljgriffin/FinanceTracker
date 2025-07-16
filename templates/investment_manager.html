@@ -104,14 +104,8 @@
                                 </span>
                             </div>
                             <div class="text-right">
-                                {% set platform_total = 0 %}
-                                {% for investment in investments %}
-                                    {% set current_value = investment.get('holdings', 0) * investment.get('current_price', 0) %}
-                                    {% set platform_total = platform_total + current_value %}
-                                {% endfor %}
-                                {% set platform_total = platform_total + data_manager.get_platform_cash(platform) %}
                                 <div class="text-sm font-medium text-gray-900">
-                                    £{{ "{:,.2f}".format(platform_total) }}
+                                    £{{ "{:,.2f}".format(platform_totals.get(platform, 0)) }}
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     Total Value (incl. cash)

@@ -223,16 +223,24 @@ def investment_manager():
         # Calculate totals and metrics from live data
         total_current_value = 0
         total_amount_spent = 0
+        platform_totals = {}
         
         for platform, platform_investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys
+            
+            platform_investment_total = 0
             for investment in platform_investments:
                 holdings = investment.get('holdings', 0)
                 current_price = investment.get('current_price', 0)
                 current_value = holdings * current_price
+                platform_investment_total += current_value
                 total_current_value += current_value
                 total_amount_spent += investment.get('amount_spent', 0)
+            
+            # Add cash to platform total
+            cash_balance = data_manager.get_platform_cash(platform)
+            platform_totals[platform] = platform_investment_total + cash_balance
         
         # Get unique investment names for dropdown
         unique_names = data_manager.get_unique_investment_names()
@@ -240,6 +248,7 @@ def investment_manager():
         return render_template('investment_manager.html',
                              investments_data=investments_data,
                              platform_colors=PLATFORM_COLORS,
+                             platform_totals=platform_totals,
                              total_current_value=total_current_value,
                              total_amount_spent=total_amount_spent,
                              unique_names=unique_names,
@@ -250,6 +259,7 @@ def investment_manager():
         return render_template('investment_manager.html',
                              investments_data={},
                              platform_colors=PLATFORM_COLORS,
+                             platform_totals={},
                              total_current_value=0,
                              total_amount_spent=0,
                              unique_names=[],
