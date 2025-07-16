@@ -269,33 +269,13 @@
                 <tr class="border-t-2 border-gray-600/50 bg-gray-800/30">
                     <td class="py-4 text-white font-bold">Total</td>
                     <td class="py-4 text-right">
-                        <div class="text-lg font-bold text-green-400" id="total-income">
-                            {% set total_income = 0 %}
-                            {% for year in range(2017, 2031) %}
-                                {% set year_income = income_data.get(year|string, {}).get('take_home_income', 0) %}
-                                {% set total_income = total_income + year_income %}
-                            {% endfor %}
-                            £{{ "{:,.2f}".format(total_income) }}
-                        </div>
+                        <div class="text-lg font-bold text-green-400" id="total-income">£0.00</div>
                     </td>
                     <td class="py-4 text-right">
-                        <div class="text-lg font-bold text-blue-400" id="total-invested">
-                            {% set total_invested = 0 %}
-                            {% for year in range(2017, 2031) %}
-                                {% set year_invested = income_data.get(year|string, {}).get('amount_invested', 0) %}
-                                {% set total_invested = total_invested + year_invested %}
-                            {% endfor %}
-                            £{{ "{:,.2f}".format(total_invested) }}
-                        </div>
+                        <div class="text-lg font-bold text-blue-400" id="total-invested">£0.00</div>
                     </td>
                     <td class="py-4 text-right">
-                        <div class="text-lg font-bold text-purple-400" id="total-percentage">
-                            {% if total_income > 0 %}
-                                {{ "{:.1f}".format((total_invested / total_income) * 100) }}%
-                            {% else %}
-                                0.0%
-                            {% endif %}
-                        </div>
+                        <div class="text-lg font-bold text-purple-400" id="total-percentage">0.0%</div>
                     </td>
                 </tr>
             </tbody>
@@ -509,7 +489,8 @@ function updateTotals() {
 
 // Add event listeners for real-time updates
 document.addEventListener('DOMContentLoaded', function() {
-    // Existing code...
+    // Calculate and display initial totals
+    updateTotals();
     
     // Add event listeners to income inputs for real-time updates
     const incomeInputs = document.querySelectorAll('.income-input');
@@ -519,6 +500,12 @@ document.addEventListener('DOMContentLoaded', function() {
             updateIncomePercentage(year);
             updateTotals();
         });
+        
+        // Update percentage for each year on page load
+        const year = input.dataset.year;
+        if (year) {
+            updateIncomePercentage(year);
+        }
     });
 });
 
