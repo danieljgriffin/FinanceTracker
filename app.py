@@ -63,15 +63,19 @@ def dashboard():
         
         # Calculate platform allocations using current investment values - optimized
         for platform, investments in investments_data.items():
-            if platform.endswith('_cash') or platform == 'Cash':
-                continue  # Skip cash keys and cash platform
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys only
                 
-            platform_total = sum(
-                investment.get('holdings', 0) * investment.get('current_price', 0)
-                for investment in investments
-            )
+            platform_total = 0
             
-            # Add cash balance
+            # Calculate investment values (skip for Cash platform since it has no investments)
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            # Add cash balance (for all platforms including Cash)
             platform_total += data_manager.get_platform_cash(platform)
             
             if platform_total > 0:  # Only include platforms with value
