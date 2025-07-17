@@ -94,6 +94,20 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 17, 2025)
+- **Platform Allocation Renamed**: Changed "Platform Allocation" to "Net Worth Allocation" throughout the application
+  - **Dashboard Updates**: Updated both mobile and desktop dashboard sections to use "Net Worth Allocation"
+  - **Mobile Dashboard**: Updated mobile_dashboard.html template with new terminology
+  - **Consistent Terminology**: All references including empty state messages now use "net worth allocation"
+  - **User Experience**: Clearer terminology that better reflects the financial data being displayed
+- **Yearly Tracker First Month Fix**: Fixed first month comparison logic for proper month-on-month calculations
+  - **December 1st Comparison**: First month of year now compares against December 1st of previous year instead of December 31st
+  - **Accurate Calculations**: January 2025 now shows correct +1.29% increase from December 2024
+  - **Proper Logic**: All other months continue to compare against previous month as before
+- **Privacy Toggle and Mobile Navigation Improvements**: Enhanced privacy mode and mobile navigation UX
+  - **Simplified Privacy Toggle**: Removed background and text, now appears as clean eye icon only
+  - **Mobile Close Button**: Moved X button to top-right corner of mobile navigation overlay
+  - **Scrollbar Removal**: Fixed scrollbar appearing on privacy toggle button with CSS overflow rules
+  - **Mobile Layout**: Cleaner visual hierarchy with better spacing and positioning
 - **Custom iPhone Home Screen Icon**: Added custom financial app icon for iOS home screen shortcuts
   - **Professional Icon**: Green dollar sign icon with blue-to-green gradient background
   - **Apple Touch Icon**: Properly configured apple-touch-icon.png in static directory
