@@ -94,6 +94,11 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 17, 2025)
+- **Custom iPhone Home Screen Icon**: Added custom financial app icon for iOS home screen shortcuts
+  - **Professional Icon**: Green dollar sign icon with blue-to-green gradient background
+  - **Apple Touch Icon**: Properly configured apple-touch-icon.png in static directory
+  - **iOS Web App Meta Tags**: Added mobile web app capability tags for better iPhone experience
+  - **Home Screen Title**: Custom "Net Worth Tracker" title when added to home screen
 - **Investment Manager Modal System**: Implemented liquid glass modal system matching monthly breakdown page design
   - **Liquid Glass Modal Popups**: Replaced old form interface with professional modal dialogs
   - **Add Investment Modal**: Beautiful modal popup for adding new investments with all form fields
