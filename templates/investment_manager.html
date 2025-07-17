@@ -24,75 +24,30 @@
             <a href="{{ url_for('update_prices') }}" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
                 <i class="fas fa-sync mr-2"></i><span class="hidden sm:inline">Update Prices</span><span class="sm:hidden">Update Prices</span>
             </a>
-            <button onclick="toggleAddForm()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+            <button onclick="showAddInvestmentModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
                 <i class="fas fa-plus mr-2"></i><span class="hidden sm:inline">Add Investment</span><span class="sm:hidden">Add Investment</span>
             </button>
         </div>
     </div>
 
-    <!-- Add Investment Form -->
-    <div id="addForm" class="card p-4 sm:p-6 lg:p-8 hidden">
-        <h2 class="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Add New Investment to Portfolio</h2>
-        <form method="POST" action="{{ url_for('add_investment') }}" class="space-y-4 sm:space-y-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div>
-                    <label class="block text-sm font-semibold text-white mb-2">Platform</label>
-                    <select name="platform" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select Platform</option>
-                        {% for platform in platform_colors.keys() %}
-                            <option value="{{ platform }}">{{ platform }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-white mb-2">Investment Name</label>
-                    <input type="text" name="name" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Tesla Stock" list="investment-names">
-                    <datalist id="investment-names">
-                        {% for name in unique_names %}
-                        <option value="{{ name }}">
-                        {% endfor %}
-                    </datalist>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-white mb-2">Holdings (Quantity)</label>
-                    <input type="number" step="any" name="holdings" required class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 15.5521236 shares or 0.5 BTC">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-white mb-2">Input Type</label>
-                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="amount_spent">Amount Spent</option>
-                        <option value="average_buy_price">Average Buy Price</option>
-                    </select>
-                </div>
-                
-                <div id="amount_spent_input">
-                    <label class="block text-sm font-semibold text-white mb-2">Amount Spent (£)</label>
-                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
-                </div>
-                
-                <div id="average_buy_price_input" style="display: none;">
-                    <label class="block text-sm font-semibold text-white mb-2">Average Buy Price (£)</label>
-                    <input type="number" step="any" name="average_buy_price" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
-                </div>
-                
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-white mb-2">Symbol (Optional - for live price updates)</label>
-                    <input type="text" name="symbol" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., TSLA, BTC-USD, ^GSPC">
+    <!-- Custom Modal Dialog -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="card max-w-2xl w-full">
+                <div class="p-6">
+                    <h3 id="modalTitle" class="text-lg font-semibold text-white mb-4"></h3>
+                    <div id="modalContent" class="space-y-4"></div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors">
+                            Cancel
+                        </button>
+                        <button id="modalSubmit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                            Save
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div class="flex justify-end space-x-4">
-                <button type="button" onclick="toggleAddForm()" class="px-6 py-3 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors">
-                    Cancel
-                </button>
-                <button type="submit" class="px-6 py-3 text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
-                    Add Investment
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 
     <!-- Investment Platforms -->
@@ -409,37 +364,192 @@
 </div>
 
 <script>
-function toggleAddForm() {
-    const form = document.getElementById('addForm');
-    form.classList.toggle('hidden');
+function showAddInvestmentModal() {
+    const platforms = Object.keys({{ platform_colors|tojson }});
+    const platformOptions = platforms.map(p => `<option value="${p}">${p}</option>`).join('');
+    
+    document.getElementById('modalTitle').textContent = 'Add New Investment';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Platform</label>
+                <select id="investmentPlatform" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    ${platformOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Investment Name</label>
+                <input type="text" id="investmentName" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Tesla Stock" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Holdings (Quantity)</label>
+                <input type="number" step="any" id="investmentHoldings" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., 15.5521236" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Input Type</label>
+                <select id="inputType" onchange="toggleModalInputType()" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="amount_spent">Amount Spent</option>
+                    <option value="average_buy_price">Average Buy Price</option>
+                </select>
+            </div>
+            <div id="amountSpentInput">
+                <label class="block text-sm font-medium text-white mb-2">Amount Spent (£)</label>
+                <input type="number" step="0.01" id="amountSpent" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.00">
+            </div>
+            <div id="averageBuyPriceInput" style="display: none;">
+                <label class="block text-sm font-medium text-white mb-2">Average Buy Price (£)</label>
+                <input type="number" step="any" id="averageBuyPrice" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0.0000">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-white mb-2">Symbol (Optional)</label>
+                <input type="text" id="investmentSymbol" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., TSLA, BTC-USD">
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const platform = document.getElementById('investmentPlatform').value;
+        const name = document.getElementById('investmentName').value.trim();
+        const holdings = parseFloat(document.getElementById('investmentHoldings').value);
+        const inputType = document.getElementById('inputType').value;
+        const amountSpent = parseFloat(document.getElementById('amountSpent').value) || 0;
+        const averageBuyPrice = parseFloat(document.getElementById('averageBuyPrice').value) || 0;
+        const symbol = document.getElementById('investmentSymbol').value.trim();
+        
+        if (name && !isNaN(holdings) && holdings > 0) {
+            // Create form data
+            const formData = new FormData();
+            formData.append('platform', platform);
+            formData.append('name', name);
+            formData.append('holdings', holdings);
+            formData.append('input_type', inputType);
+            formData.append('amount_spent', amountSpent);
+            formData.append('average_buy_price', averageBuyPrice);
+            formData.append('symbol', symbol);
+            
+            // Submit the form
+            fetch('/add-investment', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error adding investment');
+                }
+            });
+            
+            closeModal();
+        } else {
+            alert('Please fill in all required fields with valid values.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
-function toggleInputType() {
-    const inputType = document.getElementById('input_type').value;
-    const amountSpentInput = document.getElementById('amount_spent_input');
-    const averageBuyPriceInput = document.getElementById('average_buy_price_input');
+function toggleModalInputType() {
+    const inputType = document.getElementById('inputType').value;
+    const amountSpentInput = document.getElementById('amountSpentInput');
+    const averageBuyPriceInput = document.getElementById('averageBuyPriceInput');
     
     if (inputType === 'amount_spent') {
         amountSpentInput.style.display = 'block';
         averageBuyPriceInput.style.display = 'none';
-        document.querySelector('input[name="amount_spent"]').required = true;
-        document.querySelector('input[name="average_buy_price"]').required = false;
     } else {
         amountSpentInput.style.display = 'none';
         averageBuyPriceInput.style.display = 'block';
-        document.querySelector('input[name="amount_spent"]').required = false;
-        document.querySelector('input[name="average_buy_price"]').required = true;
     }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    toggleInputType();
-});
-
 function editInvestment(platform, index) {
-    // For now, we'll use a simple approach - redirect to a form with pre-filled data
-    window.location.href = `/edit-investment/${platform}/${index}`;
+    // Get investment data from the page
+    const investments = {{ investments_data|tojson }};
+    const investment = investments[platform][index];
+    
+    const platforms = Object.keys({{ platform_colors|tojson }});
+    const platformOptions = platforms.map(p => `<option value="${p}" ${p === platform ? 'selected' : ''}>${p}</option>`).join('');
+    
+    document.getElementById('modalTitle').textContent = 'Edit Investment';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Platform</label>
+                <select id="investmentPlatform" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    ${platformOptions}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Investment Name</label>
+                <input type="text" id="investmentName" value="${investment.name}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Holdings (Quantity)</label>
+                <input type="number" step="any" id="investmentHoldings" value="${investment.holdings}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white mb-2">Input Type</label>
+                <select id="inputType" onchange="toggleModalInputType()" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="amount_spent">Amount Spent</option>
+                    <option value="average_buy_price">Average Buy Price</option>
+                </select>
+            </div>
+            <div id="amountSpentInput">
+                <label class="block text-sm font-medium text-white mb-2">Amount Spent (£)</label>
+                <input type="number" step="0.01" id="amountSpent" value="${investment.amount_spent || 0}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div id="averageBuyPriceInput" style="display: none;">
+                <label class="block text-sm font-medium text-white mb-2">Average Buy Price (£)</label>
+                <input type="number" step="any" id="averageBuyPrice" value="${investment.average_buy_price || 0}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-white mb-2">Symbol (Optional)</label>
+                <input type="text" id="investmentSymbol" value="${investment.symbol || ''}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const newPlatform = document.getElementById('investmentPlatform').value;
+        const name = document.getElementById('investmentName').value.trim();
+        const holdings = parseFloat(document.getElementById('investmentHoldings').value);
+        const inputType = document.getElementById('inputType').value;
+        const amountSpent = parseFloat(document.getElementById('amountSpent').value) || 0;
+        const averageBuyPrice = parseFloat(document.getElementById('averageBuyPrice').value) || 0;
+        const symbol = document.getElementById('investmentSymbol').value.trim();
+        
+        if (name && !isNaN(holdings) && holdings > 0) {
+            // Create form data
+            const formData = new FormData();
+            formData.append('platform', newPlatform);
+            formData.append('name', name);
+            formData.append('holdings', holdings);
+            formData.append('input_type', inputType);
+            formData.append('amount_spent', amountSpent);
+            formData.append('average_buy_price', averageBuyPrice);
+            formData.append('symbol', symbol);
+            
+            // Submit the form
+            fetch(`/edit-investment/${platform}/${index}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert('Error updating investment');
+                }
+            });
+            
+            closeModal();
+        } else {
+            alert('Please fill in all required fields with valid values.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
 function deleteInvestment(platform, index, name) {
@@ -452,6 +562,17 @@ function deleteInvestment(platform, index, name) {
         form.submit();
     }
 }
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('modalOverlay').onclick = function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+};
 
 // Auto-refresh price status every 30 seconds
 function updatePriceStatus() {
