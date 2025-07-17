@@ -45,20 +45,32 @@
     <!-- Left Sidebar Navigation -->
     <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
-            <!-- Logo/Title -->
-            <div class="flex items-center mb-12">
+            <!-- Mobile Header with Close Button -->
+            <div class="flex items-center justify-between mb-6 md:hidden">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                        <i class="fas fa-chart-line text-white text-lg"></i>
+                    </div>
+                    <span class="text-lg font-bold text-white">Net Worth</span>
+                </div>
+                <button id="mobile-close-button" class="text-gray-400 hover:text-white p-2 -mr-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Desktop Header -->
+            <div class="hidden md:flex items-center mb-12">
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-4">
                     <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
-                <span class="text-xl font-bold text-white hidden md:block">Net Worth Tracker</span>
-                <span class="text-lg font-bold text-white md:hidden">Net Worth</span>
-                <!-- Privacy Toggle Button -->
-                <button id="privacy-toggle" class="ml-auto mr-2 text-gray-400 hover:text-white transition-colors duration-200" title="Toggle privacy mode">
-                    <i class="fas fa-eye text-xl"></i>
-                </button>
-                <!-- Mobile Close Button -->
-                <button id="mobile-close-button" class="ml-auto md:hidden text-gray-400 hover:text-white">
-                    <i class="fas fa-times text-xl"></i>
+                <span class="text-xl font-bold text-white">Net Worth Tracker</span>
+            </div>
+            
+            <!-- Privacy Toggle (above navigation) -->
+            <div class="flex justify-center mb-6">
+                <button id="privacy-toggle" class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50 transition-all duration-200 border border-gray-600/30" title="Toggle privacy mode">
+                    <i class="fas fa-eye text-lg"></i>
+                    <span class="text-sm">Privacy Mode</span>
                 </button>
             </div>
             
