@@ -417,28 +417,24 @@ function addInvestmentToPlattform(platform) {
     showInvestmentModal(`Add Investment to ${platform}`, '', platform, '', (selectedPlatform, name, amount) => {
         fetch('/add-investment-commitment', {
             method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        platform: platform,
-                        name: name,
-                        monthly_amount: monthlyAmount
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error adding investment commitment: ' + data.message);
-                    }
-                });
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: selectedPlatform,
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
             } else {
-                alert('Please enter a valid positive number.');
+                alert('Error adding investment commitment: ' + data.message);
             }
-        }
-    }
+        });
+    });
 }
 
 function deleteInvestmentCommitment(platform, investmentName) {
