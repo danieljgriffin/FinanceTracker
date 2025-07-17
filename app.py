@@ -23,6 +23,33 @@ PRICE_REFRESH_INTERVAL = 900  # 15 minutes in seconds
 last_price_update = None
 price_update_thread = None
 
+def calculate_current_net_worth():
+    """Calculate current net worth using stored investment prices (consistent across dashboard and tracker)"""
+    investments_data = data_manager.get_investments_data()
+    current_net_worth = 0
+    
+    # Calculate platform allocations using current investment values
+    for platform, investments in investments_data.items():
+        if platform.endswith('_cash'):
+            continue  # Skip cash keys only
+            
+        platform_total = 0
+        
+        # Calculate investment values (skip for Cash platform since it has no investments)
+        if platform != 'Cash':
+            platform_total = sum(
+                investment.get('holdings', 0) * investment.get('current_price', 0)
+                for investment in investments
+            )
+        
+        # Add cash balance (for all platforms including Cash)
+        platform_total += data_manager.get_platform_cash(platform)
+        
+        if platform_total > 0:  # Only include platforms with value
+            current_net_worth += platform_total
+    
+    return current_net_worth
+
 # Investment platform color scheme
 PLATFORM_COLORS = {
     'Degiro': '#1e3a8a',  # Dark Blue
@@ -57,11 +84,11 @@ def dashboard():
                             except:
                                 pass
         
-        # Calculate current net worth and platform allocations using live investment values
-        current_net_worth = 0
-        platform_allocations = {}
+        # Calculate current net worth using shared function
+        current_net_worth = calculate_current_net_worth()
         
         # Calculate platform allocations using current investment values - optimized
+        platform_allocations = {}
         for platform, investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys only
@@ -80,7 +107,6 @@ def dashboard():
             
             if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
-                current_net_worth += platform_total
         
         # Calculate percentage allocations
         total_allocation = sum(platform_allocations.values())
@@ -235,26 +261,10 @@ def yearly_tracker(year=None):
         current_year_int = datetime.now().year
         
         if year == current_year_int:
-            # For current year, compare current live portfolio value to 1st Jan of current year (same as dashboard)
+            # For current year, compare current net worth to 1st Jan of current year (same as dashboard)
             try:
-                from utils.price_fetcher import PriceFetcher
-                price_fetcher = PriceFetcher()
-                
-                # Get live portfolio value (from dashboard calculation)
-                current_net_worth = 0
-                for platform, investments in investments_data.items():
-                    if not platform.endswith('_cash'):
-                        platform_total = 0
-                        for investment in investments:
-                            if investment.get('symbol'):
-                                live_price = price_fetcher.get_price(investment['symbol'])
-                                if live_price:
-                                    platform_total += investment['holdings'] * live_price
-                        
-                        # Add cash balance
-                        cash_balance = data_manager.get_platform_cash(platform)
-                        platform_total += cash_balance
-                        current_net_worth += platform_total
+                # Use the same shared function as dashboard for consistency
+                current_net_worth = calculate_current_net_worth()
                 
                 # Get current year's 1st Jan value (same as dashboard calculation)
                 current_year_data = data_manager.get_networth_data(year)
