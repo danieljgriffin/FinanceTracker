@@ -1,5 +1,16 @@
 /* Custom CSS for Net Worth Tracker - Modern Glass UI */
 
+/* Privacy toggle fixes */
+#privacy-toggle {
+    overflow: hidden !important;
+    scrollbar-width: none !important; /* Firefox */
+    -ms-overflow-style: none !important; /* Internet Explorer and Edge */
+}
+
+#privacy-toggle::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari, Opera */
+}
+
 /* Force rounded corners on all common elements */
 .card, .modal, .alert, .btn, .form-input, .form-select, .form-textarea, .table-rounded,
 input, select, textarea, button {
