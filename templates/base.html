@@ -28,8 +28,16 @@
 <body class="min-h-screen" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);">
     <!-- Dark mode background overlay for glass effect -->
     <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 lg:hidden bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-xl p-3 text-white">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden hidden"></div>
+
     <!-- Left Sidebar Navigation -->
-    <div class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50">
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
             <!-- Logo/Title -->
             <div class="flex items-center mb-12">
@@ -37,6 +45,10 @@
                     <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
                 <span class="text-xl font-bold text-white">Net Worth Tracker</span>
+                <!-- Mobile Close Button -->
+                <button id="mobile-close-button" class="ml-auto lg:hidden text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
             </div>
             
             <!-- Navigation Links -->
@@ -76,7 +88,7 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="ml-72 px-8 mt-4 relative z-10">
+            <div class="lg:ml-72 px-4 lg:px-8 mt-4 pt-16 lg:pt-4 relative z-10">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} mb-4">
                         {% if category == 'error' %}
@@ -94,17 +106,49 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="ml-72 px-8 py-8 relative z-10">
+    <main class="lg:ml-72 px-4 lg:px-8 py-4 lg:py-8 pt-16 lg:pt-8 relative z-10">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     <footer class="glass-dark mt-12 relative z-10">
-        <div class="ml-72 px-8 py-8">
+        <div class="lg:ml-72 px-4 lg:px-8 py-6 lg:py-8">
             <div class="text-center text-white/70 text-sm">
                 <p>&copy; 2025 Net Worth Tracker. Built with Flask and Tailwind CSS.</p>
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileCloseButton = document.getElementById('mobile-close-button');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const sidebar = document.getElementById('sidebar');
+            
+            function openMobileMenu() {
+                sidebar.classList.remove('-translate-x-full');
+                mobileOverlay.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeMobileMenu() {
+                sidebar.classList.add('-translate-x-full');
+                mobileOverlay.classList.add('hidden');
+                document.body.style.overflow = '';
+            }
+            
+            mobileMenuButton.addEventListener('click', openMobileMenu);
+            mobileCloseButton.addEventListener('click', closeMobileMenu);
+            mobileOverlay.addEventListener('click', closeMobileMenu);
+            
+            // Close mobile menu when clicking on a navigation link
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+        });
+    </script>
 </body>
 </html>

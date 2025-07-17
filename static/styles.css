@@ -25,6 +25,49 @@ button, .btn, input[type="submit"], input[type="button"] {
     border-radius: 12px !important;
 }
 
+/* Mobile responsiveness enhancements */
+@media (max-width: 768px) {
+    /* Ensure mobile tables scroll horizontally */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Mobile-friendly button sizing */
+    .btn {
+        min-height: 44px;
+        padding: 12px 16px;
+    }
+    
+    /* Mobile-friendly form inputs */
+    input, select, textarea {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Mobile-friendly card padding */
+    .card {
+        padding: 16px;
+    }
+    
+    /* Mobile navigation improvements */
+    .nav-link {
+        padding: 16px;
+        font-size: 16px;
+    }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+    .hover\:scale-105:hover {
+        transform: none;
+    }
+    
+    button:active, .btn:active {
+        transform: scale(0.95);
+    }
+}
+
 /* Glass morphism base */
 .glass {
     background: rgba(255, 255, 255, 0.25);

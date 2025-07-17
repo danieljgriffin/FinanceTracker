@@ -5,10 +5,10 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-white">Monthly Breakdown</h1>
-        <div class="flex items-center space-x-4">
-            <select class="bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white">Monthly Breakdown</h1>
+        <div class="flex items-center w-full sm:w-auto">
+            <select class="w-full sm:w-auto bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="{{ current_month }}" selected>{{ current_month }}</option>
                 <option value="January">January</option>
                 <option value="February">February</option>
@@ -27,32 +27,32 @@
     </div>
 
     <!-- Free Cash Summary -->
-    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg text-white p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-xl font-bold mb-2">Free Cash Available</h2>
-                <p class="text-blue-100">Income - (Expenses + Investments)</p>
+    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg text-white p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex-1">
+                <h2 class="text-lg sm:text-xl font-bold mb-2">Free Cash Available</h2>
+                <p class="text-blue-100 text-sm sm:text-base">Income - (Expenses + Investments)</p>
             </div>
-            <div class="text-right">
-                <div class="text-3xl font-bold">£{{ "{:,.2f}".format(free_cash_monthly) }}</div>
-                <div class="text-blue-100">Monthly</div>
+            <div class="text-left sm:text-right">
+                <div class="text-2xl sm:text-3xl font-bold">£{{ "{:,.2f}".format(free_cash_monthly) }}</div>
+                <div class="text-blue-100 text-sm">Monthly</div>
             </div>
         </div>
         <div class="mt-4 pt-4 border-t border-blue-400">
             <div class="flex justify-between items-center">
-                <span class="text-blue-100">Annual Free Cash</span>
-                <span class="text-xl font-bold">£{{ "{:,.2f}".format(free_cash_annual) }}</span>
+                <span class="text-blue-100 text-sm sm:text-base">Annual Free Cash</span>
+                <span class="text-lg sm:text-xl font-bold">£{{ "{:,.2f}".format(free_cash_annual) }}</span>
             </div>
         </div>
     </div>
 
     <!-- Income Section -->
     <div class="card">
-        <div class="px-6 py-4 border-b border-gray-600/30">
-            <h2 class="text-lg font-semibold text-white">Income</h2>
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <h2 class="text-base sm:text-lg font-semibold text-white">Income</h2>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="p-4 sm:p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
                     <div class="text-2xl font-bold text-green-400">£{{ "{:,.2f}".format(monthly_income) }}</div>
                     <div class="text-sm text-green-300">Monthly Take-Home</div>

@@ -5,9 +5,9 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-        <h1 class="text-4xl font-bold text-white">Dashboard</h1>
-        <div class="text-sm text-white/80">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Dashboard</h1>
+        <div class="text-xs sm:text-sm text-white/80">
             <div>Last updated: {{ current_date }}</div>
             <div id="price-status">
                 {% if last_price_update %}
@@ -20,46 +20,46 @@
     </div>
 
     <!-- Key Metrics -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Current Net Worth -->
-        <div class="card p-8">
+        <div class="card p-4 sm:p-6 lg:p-8">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-300 mb-2">Current Net Worth</p>
-                    <p class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-2">Current Net Worth</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-white truncate">£{{ "{:,.2f}".format(current_net_worth) }}</p>
                 </div>
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <i class="fas fa-chart-line text-white text-2xl"></i>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg ml-3">
+                    <i class="fas fa-chart-line text-white text-lg sm:text-xl lg:text-2xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Month-on-Month Change -->
-        <div class="card p-8">
+        <div class="card p-4 sm:p-6 lg:p-8">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-300 mb-2">Month-on-Month</p>
-                    <p class="text-3xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-2">Month-on-Month</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                         {{ "{:+.1f}".format(mom_change) }}%
                     </p>
                 </div>
-                <div class="w-16 h-16 {% if mom_change >= 0 %}bg-gradient-to-br from-green-500 to-green-600{% else %}bg-gradient-to-br from-red-500 to-red-600{% endif %} rounded-2xl flex items-center justify-center shadow-lg">
-                    <i class="fas {% if mom_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} text-white text-2xl"></i>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 {% if mom_change >= 0 %}bg-gradient-to-br from-green-500 to-green-600{% else %}bg-gradient-to-br from-red-500 to-red-600{% endif %} rounded-2xl flex items-center justify-center shadow-lg ml-3">
+                    <i class="fas {% if mom_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} text-white text-lg sm:text-xl lg:text-2xl"></i>
                 </div>
             </div>
         </div>
 
         <!-- Yearly Net Worth Increase -->
-        <div class="card p-8">
+        <div class="card p-4 sm:p-6 lg:p-8">
             <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-300 mb-2">Yearly Net Worth Increase</p>
-                    <p class="text-3xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-2">Yearly Net Worth Increase</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
                         {{ "{:+.1f}".format(yearly_increase) }}%
                     </p>
                 </div>
-                <div class="w-16 h-16 {% if yearly_increase > 0 %}bg-gradient-to-br from-green-500 to-green-600{% elif yearly_increase < 0 %}bg-gradient-to-br from-red-500 to-red-600{% else %}bg-gradient-to-br from-gray-500 to-gray-600{% endif %} rounded-2xl flex items-center justify-center shadow-lg">
-                    <i class="fas {% if yearly_increase > 0 %}fa-arrow-up{% elif yearly_increase < 0 %}fa-arrow-down{% else %}fa-minus{% endif %} text-white text-2xl"></i>
+                <div class="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 {% if yearly_increase > 0 %}bg-gradient-to-br from-green-500 to-green-600{% elif yearly_increase < 0 %}bg-gradient-to-br from-red-500 to-red-600{% else %}bg-gradient-to-br from-gray-500 to-gray-600{% endif %} rounded-2xl flex items-center justify-center shadow-lg ml-3">
+                    <i class="fas {% if yearly_increase > 0 %}fa-arrow-up{% elif yearly_increase < 0 %}fa-arrow-down{% else %}fa-minus{% endif %} text-white text-lg sm:text-xl lg:text-2xl"></i>
                 </div>
             </div>
         </div>
@@ -67,10 +67,10 @@
 
     <!-- Platform Allocation -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-600/30">
-            <h2 class="text-xl font-semibold text-white">Platform Allocation</h2>
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Platform Allocation</h2>
         </div>
-        <div class="p-8">
+        <div class="p-4 sm:p-6 lg:p-8">
             {% if platform_allocations %}
                 <div class="space-y-4">
                     {% for platform, amount in platform_allocations.items() %}
@@ -102,11 +102,11 @@
 
     <!-- Quick Actions -->
     <div class="card">
-        <div class="px-8 py-6 border-b border-gray-600/30">
-            <h2 class="text-xl font-semibold text-white">Quick Actions</h2>
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Quick Actions</h2>
         </div>
-        <div class="p-8">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="p-4 sm:p-6 lg:p-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 <a href="{{ url_for('investment_manager') }}" 
                    class="flex items-center p-6 rounded-2xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
                    style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));">
