@@ -94,6 +94,10 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 17, 2025)
+- **Enhanced Monthly Breakdown Page**: Added custom modal dialogs and edit functionality
+  - **Custom Modal Dialogs**: Replaced browser prompts with professional in-app modal dialogs
+  - **Edit Functionality**: Added blue edit buttons for expenses and investments with full update capability
+  - **Cash Platform Exclusion**: Removed Cash platform from monthly breakdown display while keeping it available for dashboard, yearly tracker, and investment manager
 - **Complete Mobile Responsiveness**: Implemented comprehensive mobile-first design for iPhone 13 Pro Max compatibility
   - **Mobile Navigation**: Hidden sidebar on mobile with hamburger menu overlay system
   - **Responsive Grid Layouts**: All grid layouts now stack properly on mobile devices
