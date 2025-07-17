@@ -765,8 +765,15 @@ def update_prices():
         logging.error(f"Error updating prices: {str(e)}")
         flash(f'Error updating prices: {str(e)}', 'error')
     
+    # Debug log the referrer
+    referrer = request.referrer
+    logging.info(f"Update prices called from: {referrer}")
+    
     # Redirect back to the referring page or dashboard if no referer
-    return redirect(request.referrer or url_for('dashboard'))
+    if referrer and '/update-prices' not in referrer:
+        return redirect(referrer)
+    else:
+        return redirect(url_for('dashboard'))
 
 @app.route('/api/price-status')
 def price_status():
