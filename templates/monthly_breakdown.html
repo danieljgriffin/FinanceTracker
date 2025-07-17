@@ -88,6 +88,9 @@
                                     <div class="font-bold text-red-400">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
                                     <div class="text-sm text-gray-400">monthly</div>
                                 </div>
+                                <button onclick="editExpense('{{ expense.name }}', {{ expense.monthly_amount }})" class="text-blue-400 hover:text-blue-300 transition-colors mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
                                 <button onclick="deleteExpense('{{ expense.name }}')" class="text-red-400 hover:text-red-300 transition-colors">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -177,6 +180,9 @@
                                                             £{{ "{:,.2f}".format(investment.monthly_amount * 12) }} annual
                                                         </div>
                                                     </div>
+                                                    <button onclick="editInvestmentCommitment('{{ platform }}', '{{ investment.name }}', {{ investment.monthly_amount }})" class="text-blue-400 hover:text-blue-300 transition-colors mr-2">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
                                                     <button onclick="deleteInvestmentCommitment('{{ platform }}', '{{ investment.name }}')" class="text-red-400 hover:text-red-300 transition-colors">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </button>
@@ -294,65 +300,70 @@
     </div>
 </div>
 
+<!-- Custom Modal Dialogs -->
+<div id="modalOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="card max-w-md w-full">
+            <div class="p-6">
+                <h3 id="modalTitle" class="text-lg font-semibold text-white mb-4"></h3>
+                <div id="modalContent" class="space-y-4"></div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="modalSubmit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                        Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 function editIncome() {
-    const monthlyIncome = prompt("Enter monthly take-home income:", "{{ "{:,.2f}".format(monthly_income) }}");
-    if (monthlyIncome !== null && monthlyIncome !== "") {
-        const amount = parseFloat(monthlyIncome.replace(/,/g, ''));
-        if (!isNaN(amount) && amount >= 0) {
-            fetch('/update-monthly-income', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    monthly_income: amount
-                })
+    showIncomeModal('Edit Monthly Income', {{ monthly_income }}, (amount) => {
+        fetch('/update-monthly-income', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                monthly_income: amount
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error updating income: ' + data.message);
-                }
-            });
-        } else {
-            alert('Please enter a valid positive number.');
-        }
-    }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating income: ' + data.message);
+            }
+        });
+    });
 }
 
 function addExpense() {
-    const name = prompt("Enter expense name:");
-    if (name !== null && name !== "") {
-        const amount = prompt("Enter monthly amount:");
-        if (amount !== null && amount !== "") {
-            const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
-            if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
-                fetch('/add-expense', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        monthly_amount: monthlyAmount
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        location.reload();
-                    } else {
-                        alert('Error adding expense: ' + data.message);
-                    }
-                });
+    showExpenseModal('Add Expense', '', '', (name, amount) => {
+        fetch('/add-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
             } else {
-                alert('Please enter a valid positive number.');
+                alert('Error adding expense: ' + data.message);
             }
-        }
-    }
+        });
+    });
 }
 
 function deleteExpense(expenseName) {
@@ -378,51 +389,34 @@ function deleteExpense(expenseName) {
 }
 
 function addInvestmentCommitment() {
-    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA', 'Cash'];
-    const platform = prompt("Enter platform name (options: " + platforms.join(', ') + "):");
-    if (platform !== null && platform !== "") {
-        const name = prompt("Enter investment name:");
-        if (name !== null && name !== "") {
-            const amount = prompt("Enter monthly commitment amount:");
-            if (amount !== null && amount !== "") {
-                const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
-                if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
-                    fetch('/add-investment-commitment', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            platform: platform,
-                            name: name,
-                            monthly_amount: monthlyAmount
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();
-                        } else {
-                            alert('Error adding investment commitment: ' + data.message);
-                        }
-                    });
-                } else {
-                    alert('Please enter a valid positive number.');
-                }
+    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA'];
+    showInvestmentModal('Add Investment Commitment', '', platforms[0], '', (platform, name, amount) => {
+        fetch('/add-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: platform,
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error adding investment commitment: ' + data.message);
             }
-        }
-    }
+        });
+    });
 }
 
 function addInvestmentToPlattform(platform) {
-    const name = prompt(`Enter investment name for ${platform}:`);
-    if (name !== null && name !== "") {
-        const amount = prompt("Enter monthly commitment amount:");
-        if (amount !== null && amount !== "") {
-            const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
-            if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
-                fetch('/add-investment-commitment', {
-                    method: 'POST',
+    showInvestmentModal(`Add Investment to ${platform}`, '', platform, '', (selectedPlatform, name, amount) => {
+        fetch('/add-investment-commitment', {
+            method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -469,5 +463,155 @@ function deleteInvestmentCommitment(platform, investmentName) {
         });
     }
 }
+
+function editExpense(name, currentAmount) {
+    showExpenseModal('Edit Expense', name, currentAmount, (newName, newAmount) => {
+        fetch('/update-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                old_name: name,
+                name: newName,
+                monthly_amount: newAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating expense: ' + data.message);
+            }
+        });
+    });
+}
+
+function editInvestmentCommitment(platform, name, currentAmount) {
+    showInvestmentModal('Edit Investment Commitment', name, platform, currentAmount, (newPlatform, newName, newAmount) => {
+        fetch('/update-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                old_platform: platform,
+                old_name: name,
+                platform: newPlatform,
+                name: newName,
+                monthly_amount: newAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating investment commitment: ' + data.message);
+            }
+        });
+    });
+}
+
+// Modal helper functions
+function showIncomeModal(title, currentAmount, callback) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Take-Home Income</label>
+            <input type="number" id="incomeAmount" step="0.01" min="0" value="${currentAmount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const amount = parseFloat(document.getElementById('incomeAmount').value);
+        if (!isNaN(amount) && amount >= 0) {
+            callback(amount);
+            closeModal();
+        } else {
+            alert('Please enter a valid positive number.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function showExpenseModal(title, name, amount, callback) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Expense Name</label>
+            <input type="text" id="expenseName" value="${name}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Amount</label>
+            <input type="number" id="expenseAmount" step="0.01" min="0" value="${amount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const expenseName = document.getElementById('expenseName').value.trim();
+        const expenseAmount = parseFloat(document.getElementById('expenseAmount').value);
+        
+        if (expenseName && !isNaN(expenseAmount) && expenseAmount >= 0) {
+            callback(expenseName, expenseAmount);
+            closeModal();
+        } else {
+            alert('Please enter a valid expense name and positive amount.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function showInvestmentModal(title, name, platform, amount, callback) {
+    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA'];
+    const platformOptions = platforms.map(p => `<option value="${p}" ${p === platform ? 'selected' : ''}>${p}</option>`).join('');
+    
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Platform</label>
+            <select id="investmentPlatform" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                ${platformOptions}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Investment Name</label>
+            <input type="text" id="investmentName" value="${name}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Amount</label>
+            <input type="number" id="investmentAmount" step="0.01" min="0" value="${amount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const investmentPlatform = document.getElementById('investmentPlatform').value;
+        const investmentName = document.getElementById('investmentName').value.trim();
+        const investmentAmount = parseFloat(document.getElementById('investmentAmount').value);
+        
+        if (investmentName && !isNaN(investmentAmount) && investmentAmount >= 0) {
+            callback(investmentPlatform, investmentName, investmentAmount);
+            closeModal();
+        } else {
+            alert('Please enter a valid investment name and positive amount.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('modalOverlay').onclick = function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+};
 </script>
 {% endblock %}

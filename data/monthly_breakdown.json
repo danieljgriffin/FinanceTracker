@@ -1,13 +1,99 @@
 {
-  "monthly_income": 0,
-  "expenses": [],
+  "monthly_income": 2353.0,
+  "expenses": [
+    {
+      "name": "Rent",
+      "monthly_amount": 150.0,
+      "created_at": "2025-07-17T11:14:26.275232"
+    },
+    {
+      "name": "Car",
+      "monthly_amount": 80.0,
+      "created_at": "2025-07-17T11:14:43.344803"
+    },
+    {
+      "name": "Spotify",
+      "monthly_amount": 9.99,
+      "created_at": "2025-07-17T11:14:55.434822"
+    },
+    {
+      "name": "Haircut",
+      "monthly_amount": 23.0,
+      "created_at": "2025-07-17T11:15:05.029143"
+    },
+    {
+      "name": "ChatGPT",
+      "monthly_amount": 20.0,
+      "created_at": "2025-07-17T11:15:17.237695"
+    },
+    {
+      "name": "Gym",
+      "monthly_amount": 20.0,
+      "created_at": "2025-07-17T11:15:25.360518"
+    }
+  ],
   "investment_commitments": {
     "Degiro": [],
-    "Trading212 ISA": [],
-    "EQ (GSK shares)": [],
-    "InvestEngine ISA": [],
-    "Crypto": [],
-    "HL Stocks & Shares LISA": [],
+    "Trading212 ISA": [
+      {
+        "name": "Cash",
+        "monthly_amount": 200.0,
+        "created_at": "2025-07-17T11:16:09.247150"
+      }
+    ],
+    "EQ (GSK shares)": [
+      {
+        "name": "Share Reward",
+        "monthly_amount": 125.0,
+        "created_at": "2025-07-17T11:16:29.897450"
+      }
+    ],
+    "InvestEngine ISA": [
+      {
+        "name": "iShares S&P 500 Information Technology",
+        "monthly_amount": 170.0,
+        "created_at": "2025-07-17T11:16:50.917447"
+      },
+      {
+        "name": "iShares NASDAQ 100",
+        "monthly_amount": 170.0,
+        "created_at": "2025-07-17T11:16:57.333207"
+      },
+      {
+        "name": "Vanguard S&P 500 (VUAG)",
+        "monthly_amount": 170.0,
+        "created_at": "2025-07-17T11:17:04.180499"
+      }
+    ],
+    "Crypto": [
+      {
+        "name": "Ether",
+        "monthly_amount": 50.0,
+        "created_at": "2025-07-17T11:17:35.048026"
+      },
+      {
+        "name": "Solana",
+        "monthly_amount": 100.0,
+        "created_at": "2025-07-17T11:18:10.131840"
+      },
+      {
+        "name": "Bitcoin",
+        "monthly_amount": 500.0,
+        "created_at": "2025-07-17T11:18:24.321734"
+      }
+    ],
+    "HL Stocks & Shares LISA": [
+      {
+        "name": "Fidelity Global Technology\nClass W - Accumulation (GBP)",
+        "monthly_amount": 170.0,
+        "created_at": "2025-07-17T11:18:42.605682"
+      },
+      {
+        "name": "UBS S&P 500 Index\nClass C - Accumulation (GBP)",
+        "monthly_amount": 170.0,
+        "created_at": "2025-07-17T11:18:53.058659"
+      }
+    ],
     "Cash": []
   }
 }

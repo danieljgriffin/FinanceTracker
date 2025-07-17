@@ -63,8 +63,8 @@ def dashboard():
         
         # Calculate platform allocations using current investment values - optimized
         for platform, investments in investments_data.items():
-            if platform.endswith('_cash'):
-                continue  # Skip cash keys
+            if platform.endswith('_cash') or platform == 'Cash':
+                continue  # Skip cash keys and cash platform
                 
             platform_total = sum(
                 investment.get('holdings', 0) * investment.get('current_price', 0)
@@ -971,6 +971,52 @@ def delete_investment_commitment():
         
     except Exception as e:
         logging.error(f"Error deleting investment commitment: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/update-expense', methods=['POST'])
+def update_expense():
+    """Update expense via API"""
+    try:
+        data = request.get_json()
+        old_name = data.get('old_name', '').strip()
+        new_name = data.get('name', '').strip()
+        monthly_amount = float(data.get('monthly_amount', 0))
+        
+        if not old_name or not new_name:
+            return jsonify({'success': False, 'message': 'Expense names are required'})
+        
+        if monthly_amount < 0:
+            return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
+        
+        data_manager.update_expense(old_name, new_name, monthly_amount)
+        return jsonify({'success': True, 'message': 'Expense updated successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error updating expense: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/update-investment-commitment', methods=['POST'])
+def update_investment_commitment():
+    """Update investment commitment via API"""
+    try:
+        data = request.get_json()
+        old_platform = data.get('old_platform', '').strip()
+        old_name = data.get('old_name', '').strip()
+        new_platform = data.get('platform', '').strip()
+        new_name = data.get('name', '').strip()
+        monthly_amount = float(data.get('monthly_amount', 0))
+        
+        if not old_platform or not old_name or not new_platform or not new_name:
+            return jsonify({'success': False, 'message': 'All fields are required'})
+        
+        if monthly_amount < 0:
+            return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
+        
+        data_manager.update_investment_commitment(old_platform, old_name, new_platform, new_name, monthly_amount)
+        return jsonify({'success': True, 'message': 'Investment commitment updated successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error updating investment commitment: {str(e)}")
         return jsonify({'success': False, 'message': str(e)})
 
 if __name__ == '__main__':

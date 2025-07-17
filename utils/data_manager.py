@@ -478,3 +478,45 @@ class DataManager:
                 if inv['name'] != name
             ]
         self.save_monthly_breakdown_data(data)
+
+    def update_expense(self, old_name: str, new_name: str, monthly_amount: float):
+        """Update an expense"""
+        data = self.get_monthly_breakdown_data()
+        
+        # Find and update the expense
+        for expense in data['expenses']:
+            if expense['name'] == old_name:
+                expense['name'] = new_name
+                expense['monthly_amount'] = monthly_amount
+                break
+        
+        self.save_monthly_breakdown_data(data)
+
+    def update_investment_commitment(self, old_platform: str, old_name: str, new_platform: str, new_name: str, monthly_amount: float):
+        """Update an investment commitment"""
+        data = self.get_monthly_breakdown_data()
+        
+        # Find the commitment to update
+        commitment_to_update = None
+        
+        if old_platform in data['investment_commitments']:
+            for i, commitment in enumerate(data['investment_commitments'][old_platform]):
+                if commitment['name'] == old_name:
+                    commitment_to_update = commitment
+                    data['investment_commitments'][old_platform].pop(i)
+                    break
+        
+        if not commitment_to_update:
+            return False
+        
+        # Update the commitment
+        commitment_to_update['name'] = new_name
+        commitment_to_update['monthly_amount'] = monthly_amount
+        
+        # Add to new platform (or same platform if not changed)
+        if new_platform not in data['investment_commitments']:
+            data['investment_commitments'][new_platform] = []
+        data['investment_commitments'][new_platform].append(commitment_to_update)
+        
+        self.save_monthly_breakdown_data(data)
+        return True
