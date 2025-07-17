@@ -6,9 +6,9 @@
       "amount_spent": 1073.16,
       "average_buy_price": 268.29,
       "symbol": "META",
-      "current_price": 524.3568067132232,
+      "current_price": 524.6661225762061,
       "created_at": "2025-07-16T16:43:23.548990",
-      "last_updated": "2025-07-17T09:22:58.810178"
+      "last_updated": "2025-07-17T10:12:02.900489"
     },
     {
       "name": "Vanguard S&P 500",
@@ -16,9 +16,9 @@
       "amount_spent": 3894.84,
       "average_buy_price": 62.82,
       "symbol": "VUSA.L",
-      "current_price": 88.62001,
+      "current_price": 88.64751,
       "created_at": "2025-07-16T18:01:41.930543",
-      "last_updated": "2025-07-17T09:22:58.989734"
+      "last_updated": "2025-07-17T10:12:03.020586"
     },
     {
       "name": "Xtrackers S&P 500 Equal Weight",
@@ -26,9 +26,9 @@
       "amount_spent": 2895.3,
       "average_buy_price": 64.34,
       "symbol": "XDEW.L",
-      "current_price": 74.70989770003175,
+      "current_price": 74.86593176138264,
       "created_at": "2025-07-16T18:02:12.537643",
-      "last_updated": "2025-07-17T09:22:59.163001"
+      "last_updated": "2025-07-17T10:12:03.148266"
     },
     {
       "name": "Abbvie Inc",
@@ -36,9 +36,9 @@
       "amount_spent": 205.62,
       "average_buy_price": 102.81,
       "symbol": "ABBV",
-      "current_price": 142.16886973212232,
+      "current_price": 142.25273454720144,
       "created_at": "2025-07-16T18:07:01.055715",
-      "last_updated": "2025-07-17T09:22:59.341543"
+      "last_updated": "2025-07-17T10:12:03.283056"
     },
     {
       "name": "Apple Inc",
@@ -46,9 +46,9 @@
       "amount_spent": 913.99,
       "average_buy_price": 130.57,
       "symbol": "AAPL",
-      "current_price": 156.77515826898323,
+      "current_price": 156.86763927190606,
       "created_at": "2025-07-16T18:07:24.790265",
-      "last_updated": "2025-07-17T09:22:59.517398"
+      "last_updated": "2025-07-17T10:12:03.410295"
     },
     {
       "name": "Eli Lilly",
@@ -56,9 +56,9 @@
       "amount_spent": 436.53,
       "average_buy_price": 436.53,
       "symbol": "LLY",
-      "current_price": 589.1750095205698,
+      "current_price": 589.5225613672982,
       "created_at": "2025-07-16T18:07:44.481243",
-      "last_updated": "2025-07-17T09:22:59.694422"
+      "last_updated": "2025-07-17T10:12:03.549680"
     },
     {
       "name": "Novo Nordisk A/S",
@@ -66,9 +66,9 @@
       "amount_spent": 338.52,
       "average_buy_price": 84.63,
       "symbol": "NVO",
-      "current_price": 50.010499668598385,
+      "current_price": 50.0400006508783,
       "created_at": "2025-07-16T18:08:01.668625",
-      "last_updated": "2025-07-17T09:22:59.874775"
+      "last_updated": "2025-07-17T10:12:03.694512"
     },
     {
       "name": "Coca-Cola",
@@ -76,9 +76,9 @@
       "amount_spent": 778.6199999999999,
       "average_buy_price": 40.98,
       "symbol": "KO",
-      "current_price": 51.67403508418571,
+      "current_price": 51.70451737897284,
       "created_at": "2025-07-16T18:08:19.229902",
-      "last_updated": "2025-07-17T09:23:00.061161"
+      "last_updated": "2025-07-17T10:12:03.819686"
     },
     {
       "name": "McDonalds Corp",
@@ -86,9 +86,9 @@
       "amount_spent": 409.46,
       "average_buy_price": 204.73,
       "symbol": "MCD",
-      "current_price": 222.973424089261,
+      "current_price": 223.1049551692649,
       "created_at": "2025-07-16T18:08:35.263922",
-      "last_updated": "2025-07-17T09:23:00.307793"
+      "last_updated": "2025-07-17T10:12:03.954794"
     },
     {
       "name": "ARCHER Aviation",
@@ -96,9 +96,9 @@
       "amount_spent": 79.18,
       "average_buy_price": 2.14,
       "symbol": "ACHR",
-      "current_price": 9.018898284507078,
+      "current_price": 9.024218494467759,
       "created_at": "2025-07-16T18:08:52.802010",
-      "last_updated": "2025-07-17T09:23:00.485874"
+      "last_updated": "2025-07-17T10:12:04.133196"
     },
     {
       "name": "Tesla",
@@ -106,9 +106,9 @@
       "amount_spent": 350.26,
       "average_buy_price": 175.13,
       "symbol": "TSLA",
-      "current_price": 239.95938884841948,
+      "current_price": 240.10093987720796,
       "created_at": "2025-07-16T18:09:15.088518",
-      "last_updated": "2025-07-17T09:23:00.663148"
+      "last_updated": "2025-07-17T10:12:04.253364"
     },
     {
       "name": "Nvidia",
@@ -116,9 +116,9 @@
       "amount_spent": 195.62,
       "average_buy_price": 97.81,
       "symbol": "NVDA",
-      "current_price": 127.83859379784764,
+      "current_price": 127.9140052437502,
       "created_at": "2025-07-16T18:09:32.941035",
-      "last_updated": "2025-07-17T09:23:00.844698"
+      "last_updated": "2025-07-17T10:12:04.376821"
     }
   ],
   "Trading212 ISA": [
@@ -128,9 +128,9 @@
       "amount_spent": 964.26197584,
       "average_buy_price": 225.62,
       "symbol": "TSLA",
-      "current_price": 239.95938884841948,
+      "current_price": 240.10093987720796,
       "created_at": "2025-07-16T18:10:41.102885",
-      "last_updated": "2025-07-17T09:23:00.877994"
+      "last_updated": "2025-07-17T10:12:04.410388"
     },
     {
       "name": "Nvidia",
@@ -138,9 +138,9 @@
       "amount_spent": 858.71327514,
       "average_buy_price": 85.89,
       "symbol": "NVDA",
-      "current_price": 127.83859379784764,
+      "current_price": 127.9140052437502,
       "created_at": "2025-07-16T18:11:06.570292",
-      "last_updated": "2025-07-17T09:23:00.910776"
+      "last_updated": "2025-07-17T10:12:04.443809"
     },
     {
       "name": "Meta",
@@ -148,9 +148,9 @@
       "amount_spent": 729.00183429,
       "average_buy_price": 415.81,
       "symbol": "Meta",
-      "current_price": 524.3568067132232,
+      "current_price": 524.6661225762061,
       "created_at": "2025-07-16T18:11:29.745275",
-      "last_updated": "2025-07-17T09:23:01.054589"
+      "last_updated": "2025-07-17T10:12:04.578652"
     },
     {
       "name": "Rolls Royce",
@@ -158,9 +158,9 @@
       "amount_spent": 99.5335872,
       "average_buy_price": 6.4,
       "symbol": "RR.L",
-      "current_price": 9.99,
+      "current_price": 9.983986,
       "created_at": "2025-07-16T18:11:56.765774",
-      "last_updated": "2025-07-17T09:23:01.243860"
+      "last_updated": "2025-07-17T10:12:04.702207"
     },
     {
       "name": "Palantir",
@@ -168,9 +168,9 @@
       "amount_spent": 199.69104739999997,
       "average_buy_price": 67.66,
       "symbol": "PLTR",
-      "current_price": 112.57584285483564,
+      "current_price": 112.64225086849706,
       "created_at": "2025-07-16T18:12:28.562323",
-      "last_updated": "2025-07-17T09:23:01.442849"
+      "last_updated": "2025-07-17T10:12:04.834399"
     }
   ],
   "EQ (GSK shares)": [
@@ -180,9 +180,9 @@
       "amount_spent": 1705.21,
       "average_buy_price": 4.06002380952381,
       "symbol": "GSK.L",
-      "current_price": 14.17,
+      "current_price": 14.185,
       "created_at": "2025-07-16T17:38:18.681613",
-      "last_updated": "2025-07-17T09:23:01.621177"
+      "last_updated": "2025-07-17T10:12:04.963497"
     },
     {
       "name": "Haleon Shares PLC",
@@ -190,9 +190,9 @@
       "amount_spent": 91.6,
       "average_buy_price": 1.9489361702127659,
       "symbol": "HLN.L",
-      "current_price": 3.5989999999999998,
+      "current_price": 3.6,
       "created_at": "2025-07-16T17:40:41.629074",
-      "last_updated": "2025-07-17T09:23:01.817363"
+      "last_updated": "2025-07-17T10:12:05.087849"
     }
   ],
   "InvestEngine ISA": [
@@ -202,9 +202,9 @@
       "amount_spent": 8328.093633999999,
       "average_buy_price": 80.71,
       "symbol": "VUAG.L",
-      "current_price": 89.41,
+      "current_price": 89.49,
       "created_at": "2025-07-16T18:52:33.812451",
-      "last_updated": "2025-07-17T09:23:01.995009"
+      "last_updated": "2025-07-17T10:12:05.205997"
     },
     {
       "name": "iShares NASDAQ 100",
@@ -212,9 +212,9 @@
       "amount_spent": 8176.29562368,
       "average_buy_price": 861.24,
       "symbol": "CNX1.L",
-      "current_price": 980.3,
+      "current_price": 981.1866,
       "created_at": "2025-07-16T18:52:59.496400",
-      "last_updated": "2025-07-17T09:23:02.169099"
+      "last_updated": "2025-07-17T10:12:05.325967"
     },
     {
       "name": "iShares S&P 500 Information Technology",
@@ -222,9 +222,9 @@
       "amount_spent": 8162.2182486,
       "average_buy_price": 23.14,
       "symbol": "IITU.L",
-      "current_price": 27.99,
+      "current_price": 28.02,
       "created_at": "2025-07-16T18:53:17.934890",
-      "last_updated": "2025-07-17T09:23:02.347596"
+      "last_updated": "2025-07-17T10:12:05.448789"
     }
   ],
   "Crypto": [
@@ -234,9 +234,9 @@
       "amount_spent": 4430.207610714,
       "average_buy_price": 2503.140014143152,
       "symbol": "ETH",
-      "current_price": 2576.82,
+      "current_price": 2584.0,
       "created_at": "2025-07-16T19:05:41.439013",
-      "last_updated": "2025-07-17T09:23:02.463304",
+      "last_updated": "2025-07-17T10:12:05.598810",
       "updated_at": "2025-07-16T19:17:01.216608"
     },
     {
@@ -245,9 +245,9 @@
       "amount_spent": 10989.321839065502,
       "average_buy_price": 72552.27,
       "symbol": "BTC",
-      "current_price": 88477.0,
+      "current_price": 88614.0,
       "created_at": "2025-07-16T19:09:48.718999",
-      "last_updated": "2025-07-17T09:23:02.581196"
+      "last_updated": "2025-07-17T10:12:05.704564"
     },
     {
       "name": "Solona",
@@ -255,9 +255,9 @@
       "amount_spent": 4945.58335887,
       "average_buy_price": 155.54,
       "symbol": "SOL",
-      "current_price": 130.6,
+      "current_price": 131.81,
       "created_at": "2025-07-16T19:10:22.454259",
-      "last_updated": "2025-07-17T09:23:02.743736"
+      "last_updated": "2025-07-17T10:12:05.839017"
     },
     {
       "name": "Fetch",
@@ -265,9 +265,9 @@
       "amount_spent": 1069.7593071200001,
       "average_buy_price": 1.12,
       "symbol": "FET",
-      "current_price": 0.57835,
+      "current_price": 0.58048,
       "created_at": "2025-07-16T19:10:47.728497",
-      "last_updated": "2025-07-17T09:23:02.917632"
+      "last_updated": "2025-07-17T10:12:05.980670"
     },
     {
       "name": "Tron",
@@ -275,9 +275,9 @@
       "amount_spent": 48.72830853,
       "average_buy_price": 0.187,
       "symbol": "TRX",
-      "current_price": 0.232457,
+      "current_price": 0.233201,
       "created_at": "2025-07-16T19:11:04.506481",
-      "last_updated": "2025-07-17T09:23:03.049226"
+      "last_updated": "2025-07-17T10:12:06.135107"
     }
   ],
   "HL Stocks & Shares LISA": [
@@ -289,7 +289,7 @@
       "symbol": "GB00BMN91T34",
       "current_price": 2.1106,
       "created_at": "2025-07-16T16:42:23.559630",
-      "last_updated": "2025-07-17T09:23:08.187657"
+      "last_updated": "2025-07-17T10:12:06.737371"
     },
     {
       "name": "Baillie Gifford Positive Change Class B - Accumulation (GBP)",
@@ -299,7 +299,7 @@
       "symbol": "GB00BYVGKV59",
       "current_price": 3.551,
       "created_at": "2025-07-16T16:59:50.427203",
-      "last_updated": "2025-07-17T09:23:13.342578",
+      "last_updated": "2025-07-17T10:12:07.052792",
       "updated_at": "2025-07-16T17:02:07.215532"
     },
     {
@@ -310,7 +310,7 @@
       "symbol": "LU1033663649",
       "current_price": 9.24,
       "created_at": "2025-07-16T17:00:14.327373",
-      "last_updated": "2025-07-17T09:23:13.916093"
+      "last_updated": "2025-07-17T10:12:07.642815"
     },
     {
       "name": "Ninety One GSF Global Natural Resources Class I - Accumulation - GBP",
@@ -320,7 +320,7 @@
       "symbol": "LU0345781172",
       "current_price": 48.24,
       "created_at": "2025-07-16T17:02:34.101124",
-      "last_updated": "2025-07-17T09:23:15.970317"
+      "last_updated": "2025-07-17T10:12:08.465566"
     }
   ],
   "Cash": [],

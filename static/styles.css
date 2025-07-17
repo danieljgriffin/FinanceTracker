@@ -26,6 +26,40 @@ button, .btn, input[type="submit"], input[type="button"] {
 }
 
 /* Mobile responsiveness enhancements */
+@media (max-width: 1024px) {
+    /* Force sidebar to be hidden on mobile */
+    #sidebar {
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    #sidebar.mobile-open {
+        transform: translateX(0) !important;
+    }
+    
+    /* Show mobile menu button */
+    #mobile-menu-button {
+        display: block !important;
+    }
+    
+    /* Hide desktop margins */
+    .lg\:ml-72 {
+        margin-left: 0 !important;
+    }
+    
+    /* Ensure main content uses full width on mobile */
+    main {
+        margin-left: 0 !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+    
+    /* Reset all left margins on mobile */
+    .ml-72 {
+        margin-left: 0 !important;
+    }
+}
+
 @media (max-width: 768px) {
     /* Ensure mobile tables scroll horizontally */
     .table-container {
