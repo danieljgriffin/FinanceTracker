@@ -25,25 +25,30 @@ button, .btn, input[type="submit"], input[type="button"] {
     border-radius: 12px !important;
 }
 
-/* Mobile responsiveness enhancements */
-@media (max-width: 1024px) {
-    /* Force sidebar to be hidden on mobile */
+/* Mobile responsiveness enhancements - Target iPhone 14 Pro Max dimensions and below */
+@media (max-width: 430px), (max-height: 932px) and (max-width: 768px) {
+    /* Force sidebar to be completely hidden on mobile */
     #sidebar {
+        display: none !important;
+        visibility: hidden !important;
         transform: translateX(-100%) !important;
         transition: transform 0.3s ease-in-out;
     }
     
     #sidebar.mobile-open {
+        display: block !important;
+        visibility: visible !important;
         transform: translateX(0) !important;
     }
     
     /* Show mobile menu button */
     #mobile-menu-button {
         display: block !important;
+        visibility: visible !important;
     }
     
-    /* Hide desktop margins */
-    .lg\:ml-72 {
+    /* Hide desktop margins and ensure full width */
+    .lg\:ml-72, .ml-72 {
         margin-left: 0 !important;
     }
     
@@ -52,11 +57,60 @@ button, .btn, input[type="submit"], input[type="button"] {
         margin-left: 0 !important;
         padding-left: 16px !important;
         padding-right: 16px !important;
+        width: 100% !important;
     }
     
-    /* Reset all left margins on mobile */
-    .ml-72 {
+    /* Footer adjustments */
+    footer div, .footer-content {
         margin-left: 0 !important;
+    }
+    
+    /* Flash messages adjustments */
+    .flash-messages {
+        margin-left: 0 !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+    
+    /* Additional mobile adjustments */
+    body {
+        overflow-x: hidden !important;
+    }
+}
+
+/* Fallback for smaller screens */
+@media (max-width: 768px) {
+    /* Force sidebar to be completely hidden on mobile */
+    #sidebar {
+        display: none !important;
+        visibility: hidden !important;
+        transform: translateX(-100%) !important;
+        transition: transform 0.3s ease-in-out;
+    }
+    
+    #sidebar.mobile-open {
+        display: block !important;
+        visibility: visible !important;
+        transform: translateX(0) !important;
+    }
+    
+    /* Show mobile menu button */
+    #mobile-menu-button {
+        display: block !important;
+        visibility: visible !important;
+    }
+    
+    /* Hide desktop margins */
+    .lg\:ml-72, .ml-72 {
+        margin-left: 0 !important;
+    }
+    
+    /* Ensure main content uses full width on mobile */
+    main {
+        margin-left: 0 !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        width: 100% !important;
     }
 }
 

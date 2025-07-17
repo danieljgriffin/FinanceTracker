@@ -89,7 +89,7 @@
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="lg:ml-72 px-4 lg:px-8 mt-4 pt-16 lg:pt-4 relative z-10">
+            <div class="lg:ml-72 px-4 lg:px-8 mt-4 pt-16 lg:pt-4 relative z-10 flash-messages">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }} mb-4">
                         {% if category == 'error' %}
@@ -113,7 +113,7 @@
 
     <!-- Footer -->
     <footer class="glass-dark mt-12 relative z-10">
-        <div class="lg:ml-72 px-4 lg:px-8 py-6 lg:py-8">
+        <div class="lg:ml-72 px-4 lg:px-8 py-6 lg:py-8 footer-content">
             <div class="text-center text-white/70 text-sm">
                 <p>&copy; 2025 Net Worth Tracker. Built with Flask and Tailwind CSS.</p>
             </div>
@@ -128,14 +128,16 @@
             const mobileOverlay = document.getElementById('mobile-overlay');
             const sidebar = document.getElementById('sidebar');
             
-            // Check if we're on mobile
+            // Check if we're on mobile - targeting iPhone 14 Pro Max dimensions and below
             function isMobile() {
-                return window.innerWidth <= 1024;
+                return window.innerWidth <= 768 || (window.innerWidth <= 430 && window.innerHeight <= 932);
             }
             
             function openMobileMenu() {
                 if (isMobile()) {
                     sidebar.classList.add('mobile-open');
+                    sidebar.style.display = 'block';
+                    sidebar.style.visibility = 'visible';
                     sidebar.style.transform = 'translateX(0)';
                     mobileOverlay.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
@@ -145,6 +147,8 @@
             function closeMobileMenu() {
                 if (isMobile()) {
                     sidebar.classList.remove('mobile-open');
+                    sidebar.style.display = 'none';
+                    sidebar.style.visibility = 'hidden';
                     sidebar.style.transform = 'translateX(-100%)';
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
@@ -154,11 +158,17 @@
             // Initialize mobile state
             function initializeMobile() {
                 if (isMobile()) {
+                    sidebar.style.display = 'none';
+                    sidebar.style.visibility = 'hidden';
                     sidebar.style.transform = 'translateX(-100%)';
                     mobileOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
                 } else {
+                    sidebar.style.display = 'block';
+                    sidebar.style.visibility = 'visible';
                     sidebar.style.transform = 'translateX(0)';
                     mobileOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
                 }
             }
             
