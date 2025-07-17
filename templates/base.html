@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Net Worth Tracker{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -29,25 +29,25 @@
     <!-- Dark mode background overlay for glass effect -->
     <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
     <!-- Mobile Menu Button -->
-    <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 lg:hidden bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-xl p-3 text-white">
+    <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 md:hidden bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-xl p-3 text-white">
         <i class="fas fa-bars text-xl"></i>
     </button>
 
     <!-- Mobile Overlay -->
-    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden hidden"></div>
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden hidden"></div>
 
     <!-- Left Sidebar Navigation -->
-    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out lg:transform-none">
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
             <!-- Logo/Title -->
             <div class="flex items-center mb-12">
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-4">
                     <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
-                <span class="text-xl font-bold text-white hidden lg:block">Net Worth Tracker</span>
-                <span class="text-lg font-bold text-white lg:hidden">Net Worth</span>
+                <span class="text-xl font-bold text-white hidden md:block">Net Worth Tracker</span>
+                <span class="text-lg font-bold text-white md:hidden">Net Worth</span>
                 <!-- Mobile Close Button -->
-                <button id="mobile-close-button" class="ml-auto lg:hidden text-gray-400 hover:text-white">
+                <button id="mobile-close-button" class="ml-auto md:hidden text-gray-400 hover:text-white">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -107,7 +107,7 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="lg:ml-72 px-4 lg:px-8 py-4 lg:py-8 pt-16 lg:pt-8 relative z-10" style="transition: margin-left 0.3s ease-in-out;">
+    <main class="md:ml-72 px-4 py-4 pt-16 md:pt-8 relative z-10 w-full" style="transition: margin-left 0.3s ease-in-out;">
         {% block content %}{% endblock %}
     </main>
 
@@ -128,20 +128,14 @@
             const mobileOverlay = document.getElementById('mobile-overlay');
             const sidebar = document.getElementById('sidebar');
             
-            // Check if we're on mobile - targeting iPhone 14 Pro Max dimensions and below
+            // Check if we're on mobile - using standard breakpoint
             function isMobile() {
-                return window.innerWidth <= 430 || (window.innerWidth <= 768 && window.innerHeight <= 932);
+                return window.innerWidth < 768;
             }
             
             function openMobileMenu() {
                 if (isMobile()) {
                     sidebar.classList.add('mobile-open');
-                    sidebar.style.display = 'block';
-                    sidebar.style.visibility = 'visible';
-                    sidebar.style.transform = 'translateX(0)';
-                    sidebar.style.left = '0';
-                    sidebar.style.opacity = '1';
-                    sidebar.style.pointerEvents = 'auto';
                     mobileOverlay.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
                 }
@@ -150,38 +144,20 @@
             function closeMobileMenu() {
                 if (isMobile()) {
                     sidebar.classList.remove('mobile-open');
-                    sidebar.style.display = 'none';
-                    sidebar.style.visibility = 'hidden';
-                    sidebar.style.transform = 'translateX(-100%)';
-                    sidebar.style.left = '-100%';
-                    sidebar.style.opacity = '0';
-                    sidebar.style.pointerEvents = 'none';
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
                 }
             }
             
-            // Initialize mobile state - CRITICAL function
+            // Initialize mobile state
             function initializeMobile() {
                 if (isMobile()) {
-                    // Force hide sidebar on mobile
-                    sidebar.style.display = 'none';
-                    sidebar.style.visibility = 'hidden';
-                    sidebar.style.transform = 'translateX(-100%)';
-                    sidebar.style.left = '-100%';
-                    sidebar.style.opacity = '0';
-                    sidebar.style.pointerEvents = 'none';
+                    // Ensure sidebar is hidden on mobile
                     sidebar.classList.remove('mobile-open');
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
                 } else {
-                    // Show sidebar on desktop
-                    sidebar.style.display = 'block';
-                    sidebar.style.visibility = 'visible';
-                    sidebar.style.transform = 'translateX(0)';
-                    sidebar.style.left = '0';
-                    sidebar.style.opacity = '1';
-                    sidebar.style.pointerEvents = 'auto';
+                    // Ensure sidebar is visible on desktop
                     sidebar.classList.remove('mobile-open');
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
