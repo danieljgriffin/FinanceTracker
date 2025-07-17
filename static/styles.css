@@ -311,6 +311,17 @@ h1, h2, h3, .text-2xl, .text-3xl, .text-lg, .text-xl {
     overflow: visible !important;
 }
 
+/* Force no scrollbars on price status elements */
+#price-status, #price-status div {
+    overflow: visible !important;
+    white-space: nowrap !important;
+}
+
+/* Remove scrollbars from any flex containers in headers */
+.flex.justify-between, .flex.items-center, .flex.gap-4 {
+    overflow: visible !important;
+}
+
 /* Ensure all content containers respect viewport width */
 .container, .card, .grid, .flex {
     max-width: 100%;
