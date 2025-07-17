@@ -301,11 +301,15 @@ html, body {
 @media (min-width: 768px) {
     main {
         max-width: calc(100vw - 288px); /* Account for 288px sidebar */
+        padding-left: 2rem;
+        padding-right: 2rem;
     }
     
     .desktop-layout {
-        max-width: 100%;
+        max-width: none;
         overflow-x: hidden;
+        margin: 0;
+        padding: 0;
     }
     
     /* Ensure grids don't overflow */
