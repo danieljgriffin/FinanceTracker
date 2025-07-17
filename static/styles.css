@@ -285,6 +285,32 @@ html, body {
     max-width: 100%;
 }
 
+/* Remove scrollbars from main containers */
+main {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+/* Prevent header elements from creating scrollbars */
+.header, .card, .space-y-6, .flex {
+    overflow: visible;
+}
+
+/* Specifically prevent header containers from scrolling */
+.card .flex, .card .justify-between, .card .items-center {
+    overflow: visible !important;
+}
+
+/* Remove any overflow from header text elements */
+h1, h2, h3, .text-2xl, .text-3xl, .text-lg, .text-xl {
+    overflow: visible !important;
+}
+
+/* Remove scrollbars from header right side elements */
+.text-xs, .text-sm, .text-white\\/80 {
+    overflow: visible !important;
+}
+
 /* Ensure all content containers respect viewport width */
 .container, .card, .grid, .flex {
     max-width: 100%;
