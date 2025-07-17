@@ -235,6 +235,19 @@ def yearly_tracker(year=None):
         monthly_changes = {}
         previous_total = 0
         
+        # Get December 31st data from previous year for first month comparison
+        previous_year_december_total = 0
+        if year > 2017:  # Only try to get previous year data if not the earliest year
+            try:
+                previous_year_data = data_manager.get_networth_data(year - 1)
+                december_data = previous_year_data.get('31st Dec', {})
+                for platform in all_platforms:
+                    platform_value = december_data.get(platform['name'], 0)
+                    if platform_value and isinstance(platform_value, (int, float)):
+                        previous_year_december_total += platform_value
+            except Exception:
+                previous_year_december_total = 0
+        
         for month in months:
             month_data = networth_data.get(month, {})
             total = 0
@@ -247,9 +260,17 @@ def yearly_tracker(year=None):
             monthly_totals[month] = total
             
             # Calculate month-on-month change
-            if total > 0 and previous_total > 0:
-                change_percent = ((total - previous_total) / previous_total) * 100
-                monthly_changes[month] = change_percent
+            if total > 0:
+                # For first month (1st Jan), compare against previous year's 31st Dec
+                if month == '1st Jan' and previous_year_december_total > 0:
+                    change_percent = ((total - previous_year_december_total) / previous_year_december_total) * 100
+                    monthly_changes[month] = change_percent
+                # For all other months, compare against previous month
+                elif previous_total > 0:
+                    change_percent = ((total - previous_total) / previous_total) * 100
+                    monthly_changes[month] = change_percent
+                else:
+                    monthly_changes[month] = None
             else:
                 monthly_changes[month] = None
             
