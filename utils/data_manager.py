@@ -80,8 +80,7 @@ class DataManager:
                     'EQ (GSK shares)': [],
                     'InvestEngine ISA': [],
                     'Crypto': [],
-                    'HL Stocks & Shares LISA': [],
-                    'Cash': []
+                    'HL Stocks & Shares LISA': []
                 }
             }
             self.save_json_file(breakdown_file, initial_breakdown)

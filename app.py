@@ -472,6 +472,8 @@ def monthly_breakdown():
         total_monthly_investments = 0
         
         for platform, investments in investment_commitments.items():
+            if platform == 'Cash':
+                continue  # Skip Cash platform
             platform_total = sum(inv['monthly_amount'] for inv in investments)
             platform_investments[platform] = {
                 'investments': investments,
