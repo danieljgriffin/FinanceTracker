@@ -130,7 +130,7 @@
             
             // Check if we're on mobile - targeting iPhone 14 Pro Max dimensions and below
             function isMobile() {
-                return window.innerWidth <= 768 || (window.innerWidth <= 430 && window.innerHeight <= 932);
+                return window.innerWidth <= 430 || (window.innerWidth <= 768 && window.innerHeight <= 932);
             }
             
             function openMobileMenu() {
@@ -139,6 +139,9 @@
                     sidebar.style.display = 'block';
                     sidebar.style.visibility = 'visible';
                     sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.left = '0';
+                    sidebar.style.opacity = '1';
+                    sidebar.style.pointerEvents = 'auto';
                     mobileOverlay.classList.remove('hidden');
                     document.body.style.overflow = 'hidden';
                 }
@@ -150,23 +153,36 @@
                     sidebar.style.display = 'none';
                     sidebar.style.visibility = 'hidden';
                     sidebar.style.transform = 'translateX(-100%)';
+                    sidebar.style.left = '-100%';
+                    sidebar.style.opacity = '0';
+                    sidebar.style.pointerEvents = 'none';
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
                 }
             }
             
-            // Initialize mobile state
+            // Initialize mobile state - CRITICAL function
             function initializeMobile() {
                 if (isMobile()) {
+                    // Force hide sidebar on mobile
                     sidebar.style.display = 'none';
                     sidebar.style.visibility = 'hidden';
                     sidebar.style.transform = 'translateX(-100%)';
+                    sidebar.style.left = '-100%';
+                    sidebar.style.opacity = '0';
+                    sidebar.style.pointerEvents = 'none';
+                    sidebar.classList.remove('mobile-open');
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
                 } else {
+                    // Show sidebar on desktop
                     sidebar.style.display = 'block';
                     sidebar.style.visibility = 'visible';
                     sidebar.style.transform = 'translateX(0)';
+                    sidebar.style.left = '0';
+                    sidebar.style.opacity = '1';
+                    sidebar.style.pointerEvents = 'auto';
+                    sidebar.classList.remove('mobile-open');
                     mobileOverlay.classList.add('hidden');
                     document.body.style.overflow = '';
                 }
@@ -192,8 +208,11 @@
             // Handle window resize
             window.addEventListener('resize', initializeMobile);
             
-            // Initialize on page load
+            // Initialize on page load immediately
             initializeMobile();
+            
+            // Force initialize after a short delay to ensure it works
+            setTimeout(initializeMobile, 100);
         });
     </script>
 </body>

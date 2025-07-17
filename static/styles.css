@@ -44,12 +44,14 @@ button, .btn, input[type="submit"], input[type="button"] {
         display: none !important;
     }
 
-/* Mobile responsiveness enhancements - Target iPhone 14 Pro Max dimensions and below */
-    /* Force sidebar to be completely hidden on mobile */
+    /* CRITICAL: Force sidebar to be completely hidden on mobile */
     #sidebar {
         display: none !important;
         visibility: hidden !important;
         transform: translateX(-100%) !important;
+        left: -100% !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
         transition: transform 0.3s ease-in-out;
     }
     
@@ -57,6 +59,9 @@ button, .btn, input[type="submit"], input[type="button"] {
         display: block !important;
         visibility: visible !important;
         transform: translateX(0) !important;
+        left: 0 !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
     }
     
     /* Show mobile menu button */
@@ -91,80 +96,6 @@ button, .btn, input[type="submit"], input[type="button"] {
         margin-left: 0 !important;
         padding-left: 12px !important;
         padding-right: 12px !important;
-    }
-    
-    /* Additional mobile adjustments */
-    body {
-        overflow-x: hidden !important;
-    }
-    
-    /* Mobile typography */
-    h1 {
-        font-size: 1.5rem !important;
-        line-height: 1.4 !important;
-    }
-    
-    h2 {
-        font-size: 1.25rem !important;
-        line-height: 1.4 !important;
-    }
-    
-    h3 {
-        font-size: 1.125rem !important;
-        line-height: 1.4 !important;
-    }
-    
-    /* Mobile grid overrides */
-    .grid {
-        grid-template-columns: 1fr !important;
-        gap: 12px !important;
-    }
-    
-    /* Mobile card spacing */
-    .card {
-        padding: 12px !important;
-        margin-bottom: 12px !important;
-    }
-    
-    /* Mobile button adjustments */
-    button, .btn {
-        padding: 10px 16px !important;
-        font-size: 14px !important;
-        min-height: 44px !important;
-    }
-    
-    /* Mobile input adjustments */
-    input, select, textarea {
-        font-size: 16px !important;
-        padding: 12px !important;
-        min-height: 44px !important;
-    }
-    
-    /* Mobile table adjustments */
-    table {
-        font-size: 12px !important;
-    }
-    
-    th, td {
-        padding: 8px 4px !important;
-    }
-    
-    /* Mobile space adjustments */
-    .space-y-6 > * + * {
-        margin-top: 12px !important;
-    }
-    
-    .space-y-4 > * + * {
-        margin-top: 8px !important;
-    }
-    
-    /* Mobile flex adjustments */
-    .flex {
-        flex-wrap: wrap !important;
-    }
-    
-    .justify-between {
-        justify-content: flex-start !important;
     }
 }
 
