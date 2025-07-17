@@ -456,51 +456,36 @@ def income_investments():
 def monthly_breakdown():
     """Monthly breakdown page with income, expenses, and investments"""
     try:
-        current_month = request.args.get('month', datetime.now().strftime('%B'))
+        # Get monthly breakdown data
+        breakdown_data = data_manager.get_monthly_breakdown_data()
         
-        # Get data for current month
-        income_data = data_manager.get_income_data()
-        expenses_data = data_manager.get_expenses_data()
-        contributions_data = data_manager.get_monthly_contributions_data()
-        
-        # Calculate monthly income
-        monthly_income = 0
-        if current_month in income_data:
-            monthly_income = income_data[current_month].get('take_home_income', 0)
+        # Extract data
+        monthly_income = breakdown_data.get('monthly_income', 0)
+        monthly_expenses = breakdown_data.get('expenses', [])
+        investment_commitments = breakdown_data.get('investment_commitments', {})
         
         # Calculate total expenses
-        total_monthly_expenses = 0
-        monthly_expenses = []
-        if current_month in expenses_data:
-            for expense in expenses_data[current_month]:
-                monthly_expenses.append(expense)
-                total_monthly_expenses += expense.get('monthly_amount', 0)
+        total_monthly_expenses = sum(expense['monthly_amount'] for expense in monthly_expenses)
         
         # Calculate investment totals by platform
         platform_investments = {}
         total_monthly_investments = 0
         
-        for platform, contributions in contributions_data.items():
-            platform_total = 0
+        for platform, investments in investment_commitments.items():
+            platform_total = sum(inv['monthly_amount'] for inv in investments)
             platform_investments[platform] = {
-                'investments': contributions,
+                'investments': investments,
                 'color': PLATFORM_COLORS.get(platform, '#6b7280'),
-                'total': 0
+                'total': platform_total
             }
-            
-            for contribution in contributions:
-                monthly_amount = contribution.get('monthly_amount', 0)
-                platform_total += monthly_amount
-                total_monthly_investments += monthly_amount
-            
-            platform_investments[platform]['total'] = platform_total
+            total_monthly_investments += platform_total
         
         # Calculate free cash
         free_cash_monthly = monthly_income - total_monthly_expenses - total_monthly_investments
         free_cash_annual = free_cash_monthly * 12
         
         return render_template('monthly_breakdown.html',
-                             current_month=current_month,
+                             current_month=datetime.now().strftime('%B'),
                              monthly_income=monthly_income,
                              annual_income=monthly_income * 12,
                              monthly_expenses=monthly_expenses,
@@ -516,7 +501,7 @@ def monthly_breakdown():
         logging.error(f"Error in monthly breakdown: {str(e)}")
         flash(f'Error loading monthly breakdown: {str(e)}', 'error')
         return render_template('monthly_breakdown.html',
-                             current_month='January',
+                             current_month=datetime.now().strftime('%B'),
                              monthly_income=0,
                              annual_income=0,
                              monthly_expenses=[],
@@ -892,6 +877,101 @@ def update_cash(platform):
         flash(f'Error updating cash: {str(e)}', 'error')
     
     return redirect(url_for('investment_manager'))
+
+@app.route('/update-monthly-income', methods=['POST'])
+def update_monthly_income():
+    """Update monthly income via API"""
+    try:
+        data = request.get_json()
+        monthly_income = float(data.get('monthly_income', 0))
+        
+        if monthly_income < 0:
+            return jsonify({'success': False, 'message': 'Monthly income cannot be negative'})
+        
+        data_manager.update_monthly_income(monthly_income)
+        return jsonify({'success': True, 'message': 'Monthly income updated successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error updating monthly income: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/add-expense', methods=['POST'])
+def add_expense():
+    """Add expense via API"""
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        monthly_amount = float(data.get('monthly_amount', 0))
+        
+        if not name:
+            return jsonify({'success': False, 'message': 'Expense name is required'})
+        
+        if monthly_amount < 0:
+            return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
+        
+        data_manager.add_expense(name, monthly_amount)
+        return jsonify({'success': True, 'message': 'Expense added successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error adding expense: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete-expense', methods=['POST'])
+def delete_expense():
+    """Delete expense via API"""
+    try:
+        data = request.get_json()
+        name = data.get('name', '').strip()
+        
+        if not name:
+            return jsonify({'success': False, 'message': 'Expense name is required'})
+        
+        data_manager.delete_expense(name)
+        return jsonify({'success': True, 'message': 'Expense deleted successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error deleting expense: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/add-investment-commitment', methods=['POST'])
+def add_investment_commitment():
+    """Add investment commitment via API"""
+    try:
+        data = request.get_json()
+        platform = data.get('platform', '').strip()
+        name = data.get('name', '').strip()
+        monthly_amount = float(data.get('monthly_amount', 0))
+        
+        if not platform or not name:
+            return jsonify({'success': False, 'message': 'Platform and investment name are required'})
+        
+        if monthly_amount < 0:
+            return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
+        
+        data_manager.add_investment_commitment(platform, name, monthly_amount)
+        return jsonify({'success': True, 'message': 'Investment commitment added successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error adding investment commitment: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/delete-investment-commitment', methods=['POST'])
+def delete_investment_commitment():
+    """Delete investment commitment via API"""
+    try:
+        data = request.get_json()
+        platform = data.get('platform', '').strip()
+        name = data.get('name', '').strip()
+        
+        if not platform or not name:
+            return jsonify({'success': False, 'message': 'Platform and investment name are required'})
+        
+        data_manager.delete_investment_commitment(platform, name)
+        return jsonify({'success': True, 'message': 'Investment commitment deleted successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error deleting investment commitment: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

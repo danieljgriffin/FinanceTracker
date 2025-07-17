@@ -7,22 +7,11 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 class="text-2xl sm:text-3xl font-bold text-white">Monthly Breakdown</h1>
-        <div class="flex items-center w-full sm:w-auto">
-            <select class="w-full sm:w-auto bg-gray-800 border border-gray-600 rounded-xl px-4 py-2 text-sm font-medium text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="{{ current_month }}" selected>{{ current_month }}</option>
-                <option value="January">January</option>
-                <option value="February">February</option>
-                <option value="March">March</option>
-                <option value="April">April</option>
-                <option value="May">May</option>
-                <option value="June">June</option>
-                <option value="July">July</option>
-                <option value="August">August</option>
-                <option value="September">September</option>
-                <option value="October">October</option>
-                <option value="November">November</option>
-                <option value="December">December</option>
-            </select>
+        <div class="flex items-center gap-3">
+            <button onclick="location.reload()" class="px-4 py-2 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Refresh
+            </button>
         </div>
     </div>
 
@@ -49,16 +38,22 @@
     <!-- Income Section -->
     <div class="card">
         <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
-            <h2 class="text-base sm:text-lg font-semibold text-white">Income</h2>
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Income</h2>
+                <button onclick="editIncome()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-edit mr-1"></i>
+                    Edit
+                </button>
+            </div>
         </div>
         <div class="p-4 sm:p-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
-                    <div class="text-2xl font-bold text-green-400">£{{ "{:,.2f}".format(monthly_income) }}</div>
+                    <div class="text-2xl font-bold text-green-400" id="monthly-income-display">£{{ "{:,.2f}".format(monthly_income) }}</div>
                     <div class="text-sm text-green-300">Monthly Take-Home</div>
                 </div>
                 <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
-                    <div class="text-2xl font-bold text-green-400">£{{ "{:,.2f}".format(annual_income) }}</div>
+                    <div class="text-2xl font-bold text-green-400" id="annual-income-display">£{{ "{:,.2f}".format(annual_income) }}</div>
                     <div class="text-sm text-green-300">Annual Take-Home</div>
                 </div>
             </div>
@@ -67,148 +62,175 @@
 
     <!-- Expenses Section -->
     <div class="card">
-        <div class="px-6 py-4 border-b border-gray-600/30">
-            <h2 class="text-lg font-semibold text-white">Expenses</h2>
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Expenses</h2>
+                <button onclick="addExpense()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add Expense
+                </button>
+            </div>
         </div>
-        <div class="overflow-x-auto">
+        <div class="p-4 sm:p-6">
             {% if monthly_expenses %}
-                <table class="min-w-full divide-y divide-gray-600/30">
-                    <thead class="bg-gray-800/50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Expense
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Monthly
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">
-                                Annual
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-600/30">
-                        {% for expense in monthly_expenses %}
-                            <tr class="hover:bg-gray-800/30">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-white">{{ expense.name }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm text-gray-300">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    <div class="text-sm text-gray-300">£{{ "{:,.2f}".format(expense.monthly_amount * 12) }}</div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                        <tr class="bg-gray-800/30 font-medium border-t-2 border-gray-600/50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-bold text-white">Total Expenses</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(total_monthly_expenses) }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(total_annual_expenses) }}</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="space-y-3" id="expenses-list">
+                    {% for expense in monthly_expenses %}
+                        <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 bg-red-500 rounded-full mr-3"></div>
+                                <div>
+                                    <div class="font-medium text-white">{{ expense.name }}</div>
+                                    <div class="text-sm text-gray-400">£{{ "{:,.2f}".format(expense.monthly_amount * 12) }} annually</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-right">
+                                    <div class="font-bold text-red-400">£{{ "{:,.2f}".format(expense.monthly_amount) }}</div>
+                                    <div class="text-sm text-gray-400">monthly</div>
+                                </div>
+                                <button onclick="deleteExpense('{{ expense.name }}')" class="text-red-400 hover:text-red-300 transition-colors">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Total Expenses Summary -->
+                <div class="mt-6 p-4 bg-red-500/10 rounded-xl border border-red-500/20">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="text-sm font-medium text-gray-300">Total Monthly Expenses</div>
+                            <div class="text-xl font-bold text-red-400" id="total-monthly-expenses">£{{ "{:,.2f}".format(total_monthly_expenses) }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-medium text-gray-300">Total Annual Expenses</div>
+                            <div class="text-xl font-bold text-red-400" id="total-annual-expenses">£{{ "{:,.2f}".format(total_annual_expenses) }}</div>
+                        </div>
+                    </div>
+                </div>
             {% else %}
                 <div class="text-center py-8">
                     <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
-                    <p class="text-gray-400">No expense data available</p>
-                    <p class="text-sm text-gray-500">Add expenses to track your monthly spending</p>
+                    <p class="text-gray-400">No expenses added yet</p>
+                    <p class="text-sm text-gray-500 mb-6">Click "Add Expense" to start tracking your monthly expenses</p>
                 </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Investments Section -->
-    <div class="bg-white rounded-lg shadow-md">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Investments</h2>
+    <!-- Monthly Investment Commitments Section -->
+    <div class="card">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Monthly Investment Commitments</h2>
+                <button onclick="addInvestmentCommitment()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add Investment
+                </button>
+            </div>
         </div>
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
             {% if platform_investments %}
-                <div class="space-y-6">
+                <div class="space-y-4">
                     {% for platform, data in platform_investments.items() %}
-                        <div class="border rounded-lg overflow-hidden">
-                            <div class="px-4 py-3 border-b" style="background-color: {{ data.color }}20;">
+                        <div class="rounded-xl border border-gray-600/30 overflow-hidden">
+                            <div class="px-4 py-3 border-b border-gray-600/30" style="background: linear-gradient(135deg, {{ data.color }}20, {{ data.color }}10);">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center">
                                         <div class="w-4 h-4 rounded-full mr-3" style="background-color: {{ data.color }}"></div>
-                                        <h3 class="font-semibold text-gray-900">{{ platform }}</h3>
+                                        <h3 class="font-semibold text-white">{{ platform }}</h3>
                                     </div>
                                     <div class="text-right">
-                                        <div class="font-medium text-gray-900">£{{ "{:,.2f}".format(data.total) }}</div>
-                                        <div class="text-sm text-gray-500">Monthly</div>
+                                        <div class="font-medium text-white">£{{ "{:,.2f}".format(data.total) }}</div>
+                                        <div class="text-sm text-gray-300">Monthly</div>
+                                        <div class="text-xs text-gray-400">
+                                            {% if total_monthly_investments > 0 %}
+                                                {{ "{:.1f}".format((data.total / total_monthly_investments) * 100) }}% of investments
+                                            {% else %}
+                                                0.0% of investments
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
-                            {% if data.investments %}
-                                <div class="divide-y divide-gray-200">
-                                    {% for investment in data.investments %}
-                                        <div class="px-4 py-3 flex items-center justify-between">
-                                            <div class="flex-1">
-                                                <div class="text-sm font-medium text-gray-900">{{ investment.name }}</div>
-                                                {% if investment.monthly_amount > 0 and monthly_income > 0 %}
-                                                    <div class="text-xs text-gray-500">
-                                                        {{ "{:.1f}".format((investment.monthly_amount / monthly_income) * 100) }}% of income
+                            <div class="bg-gray-800/20">
+                                {% if data.investments %}
+                                    <div class="divide-y divide-gray-600/30">
+                                        {% for investment in data.investments %}
+                                            <div class="px-4 py-3 flex items-center justify-between">
+                                                <div class="flex-1">
+                                                    <div class="text-sm font-medium text-white">{{ investment.name }}</div>
+                                                    {% if investment.monthly_amount > 0 and monthly_income > 0 %}
+                                                        <div class="text-xs text-gray-400">
+                                                            {{ "{:.1f}".format((investment.monthly_amount / monthly_income) * 100) }}% of income
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="flex items-center gap-3">
+                                                    <div class="text-right">
+                                                        <div class="text-sm font-medium text-white">
+                                                            £{{ "{:,.2f}".format(investment.monthly_amount) }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-400">
+                                                            £{{ "{:,.2f}".format(investment.monthly_amount * 12) }} annual
+                                                        </div>
                                                     </div>
-                                                {% endif %}
-                                            </div>
-                                            <div class="text-right">
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    £{{ "{:,.2f}".format(investment.monthly_amount) }}
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    £{{ "{:,.2f}".format(investment.monthly_amount * 12) }} annual
+                                                    <button onclick="deleteInvestmentCommitment('{{ platform }}', '{{ investment.name }}')" class="text-red-400 hover:text-red-300 transition-colors">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                    {% endfor %}
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <div class="px-4 py-3 text-center text-gray-400 text-sm">
+                                        No investments added for this platform
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="px-4 py-3 border-t border-gray-600/30">
+                                    <button onclick="addInvestmentToPlattform('{{ platform }}')" class="w-full py-2 px-3 rounded-lg border border-gray-600/50 text-gray-300 text-sm hover:bg-gray-800/30 transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Add {{ platform }} Investment
+                                    </button>
                                 </div>
-                            {% endif %}
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
                 
                 <!-- Total Investments Summary -->
-                <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                <div class="mt-6 p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
                     <div class="flex justify-between items-center">
                         <div>
-                            <div class="text-sm font-medium text-gray-500">Total Monthly Investments</div>
-                            <div class="text-xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_monthly_investments) }}</div>
+                            <div class="text-sm font-medium text-gray-300">Total Monthly Investments</div>
+                            <div class="text-xl font-bold text-blue-400" id="total-monthly-investments">£{{ "{:,.2f}".format(total_monthly_investments) }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="text-sm font-medium text-gray-500">Total Annual Investments</div>
-                            <div class="text-xl font-bold text-gray-900">£{{ "{:,.2f}".format(total_annual_investments) }}</div>
+                            <div class="text-sm font-medium text-gray-300">Total Annual Investments</div>
+                            <div class="text-xl font-bold text-blue-400" id="total-annual-investments">£{{ "{:,.2f}".format(total_annual_investments) }}</div>
                         </div>
                     </div>
                 </div>
             {% else %}
                 <div class="text-center py-8">
                     <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
-                    <p class="text-gray-500">No investment data available</p>
-                    <p class="text-sm text-gray-400 mb-6">Add investments to track your monthly contributions</p>
-                    <a href="{{ url_for('investment_manager') }}" 
-                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>
-                        Add Investments
-                    </a>
+                    <p class="text-gray-400">No investment commitments added yet</p>
+                    <p class="text-sm text-gray-500 mb-6">Add monthly investment commitments to track your planned investments</p>
                 </div>
             {% endif %}
         </div>
     </div>
 
     <!-- Financial Summary -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+        <div class="card p-4 sm:p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Expense Ratio</p>
-                    <p class="text-xl font-bold text-red-600">
+                    <p class="text-sm font-medium text-gray-300">Expense Ratio</p>
+                    <p class="text-xl font-bold text-red-400">
                         {% if monthly_income > 0 %}
                             {{ "{:.1f}".format((total_monthly_expenses / monthly_income) * 100) }}%
                         {% else %}
@@ -216,17 +238,17 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-receipt text-red-600 text-xl"></i>
+                <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-receipt text-red-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-4 sm:p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Investment Rate</p>
-                    <p class="text-xl font-bold text-blue-600">
+                    <p class="text-sm font-medium text-gray-300">Investment Rate</p>
+                    <p class="text-xl font-bold text-blue-400">
                         {% if monthly_income > 0 %}
                             {{ "{:.1f}".format((total_monthly_investments / monthly_income) * 100) }}%
                         {% else %}
@@ -234,17 +256,17 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-chart-line text-blue-600 text-xl"></i>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-blue-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-4 sm:p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Savings Rate</p>
-                    <p class="text-xl font-bold text-green-600">
+                    <p class="text-sm font-medium text-gray-300">Savings Rate</p>
+                    <p class="text-xl font-bold text-green-400">
                         {% if monthly_income > 0 %}
                             {{ "{:.1f}".format((free_cash_monthly / monthly_income) * 100) }}%
                         {% else %}
@@ -252,23 +274,200 @@
                         {% endif %}
                     </p>
                 </div>
-                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-piggy-bank text-green-600 text-xl"></i>
+                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-piggy-bank text-green-400 text-xl"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="card p-4 sm:p-6">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-500">Active Platforms</p>
-                    <p class="text-xl font-bold text-purple-600">{{ platform_investments|length }}</p>
+                    <p class="text-sm font-medium text-gray-300">Active Platforms</p>
+                    <p class="text-xl font-bold text-purple-400">{{ platform_investments|length }}</p>
                 </div>
-                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                    <i class="fas fa-building text-purple-600 text-xl"></i>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building text-purple-400 text-xl"></i>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function editIncome() {
+    const monthlyIncome = prompt("Enter monthly take-home income:", "{{ "{:,.2f}".format(monthly_income) }}");
+    if (monthlyIncome !== null && monthlyIncome !== "") {
+        const amount = parseFloat(monthlyIncome.replace(/,/g, ''));
+        if (!isNaN(amount) && amount >= 0) {
+            fetch('/update-monthly-income', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    monthly_income: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating income: ' + data.message);
+                }
+            });
+        } else {
+            alert('Please enter a valid positive number.');
+        }
+    }
+}
+
+function addExpense() {
+    const name = prompt("Enter expense name:");
+    if (name !== null && name !== "") {
+        const amount = prompt("Enter monthly amount:");
+        if (amount !== null && amount !== "") {
+            const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
+            if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
+                fetch('/add-expense', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        monthly_amount: monthlyAmount
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error adding expense: ' + data.message);
+                    }
+                });
+            } else {
+                alert('Please enter a valid positive number.');
+            }
+        }
+    }
+}
+
+function deleteExpense(expenseName) {
+    if (confirm(`Are you sure you want to delete the expense "${expenseName}"?`)) {
+        fetch('/delete-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: expenseName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting expense: ' + data.message);
+            }
+        });
+    }
+}
+
+function addInvestmentCommitment() {
+    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA', 'Cash'];
+    const platform = prompt("Enter platform name (options: " + platforms.join(', ') + "):");
+    if (platform !== null && platform !== "") {
+        const name = prompt("Enter investment name:");
+        if (name !== null && name !== "") {
+            const amount = prompt("Enter monthly commitment amount:");
+            if (amount !== null && amount !== "") {
+                const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
+                if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
+                    fetch('/add-investment-commitment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            platform: platform,
+                            name: name,
+                            monthly_amount: monthlyAmount
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        } else {
+                            alert('Error adding investment commitment: ' + data.message);
+                        }
+                    });
+                } else {
+                    alert('Please enter a valid positive number.');
+                }
+            }
+        }
+    }
+}
+
+function addInvestmentToPlattform(platform) {
+    const name = prompt(`Enter investment name for ${platform}:`);
+    if (name !== null && name !== "") {
+        const amount = prompt("Enter monthly commitment amount:");
+        if (amount !== null && amount !== "") {
+            const monthlyAmount = parseFloat(amount.replace(/,/g, ''));
+            if (!isNaN(monthlyAmount) && monthlyAmount >= 0) {
+                fetch('/add-investment-commitment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        platform: platform,
+                        name: name,
+                        monthly_amount: monthlyAmount
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Error adding investment commitment: ' + data.message);
+                    }
+                });
+            } else {
+                alert('Please enter a valid positive number.');
+            }
+        }
+    }
+}
+
+function deleteInvestmentCommitment(platform, investmentName) {
+    if (confirm(`Are you sure you want to delete the investment commitment "${investmentName}" from ${platform}?`)) {
+        fetch('/delete-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: platform,
+                name: investmentName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting investment commitment: ' + data.message);
+            }
+        });
+    }
+}
+</script>
 {% endblock %}

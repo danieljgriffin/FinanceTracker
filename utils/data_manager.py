@@ -68,6 +68,24 @@ class DataManager:
             }
             self.save_json_file(contributions_file, initial_contributions)
         
+        # Initialize monthly breakdown data
+        breakdown_file = os.path.join(self.data_dir, 'monthly_breakdown.json')
+        if not os.path.exists(breakdown_file):
+            initial_breakdown = {
+                'monthly_income': 0,
+                'expenses': [],
+                'investment_commitments': {
+                    'Degiro': [],
+                    'Trading212 ISA': [],
+                    'EQ (GSK shares)': [],
+                    'InvestEngine ISA': [],
+                    'Crypto': [],
+                    'HL Stocks & Shares LISA': [],
+                    'Cash': []
+                }
+            }
+            self.save_json_file(breakdown_file, initial_breakdown)
+        
         # Initialize transaction history data
         history_file = os.path.join(self.data_dir, 'transaction_history.json')
         if not os.path.exists(history_file):
@@ -405,3 +423,58 @@ class DataManager:
         cash_key = platform + '_cash'
         investments[cash_key] = amount
         self.save_investments_data(investments)
+    
+    def get_monthly_breakdown_data(self) -> Dict[str, Any]:
+        """Get monthly breakdown data"""
+        return self.load_json_file(os.path.join(self.data_dir, 'monthly_breakdown.json'))
+    
+    def save_monthly_breakdown_data(self, data: Dict[str, Any]):
+        """Save monthly breakdown data"""
+        self.save_json_file(os.path.join(self.data_dir, 'monthly_breakdown.json'), data)
+    
+    def update_monthly_income(self, amount: float):
+        """Update monthly income"""
+        data = self.get_monthly_breakdown_data()
+        data['monthly_income'] = amount
+        self.save_monthly_breakdown_data(data)
+    
+    def add_expense(self, name: str, monthly_amount: float):
+        """Add a new expense"""
+        data = self.get_monthly_breakdown_data()
+        expense = {
+            'name': name,
+            'monthly_amount': monthly_amount,
+            'created_at': datetime.now().isoformat()
+        }
+        data['expenses'].append(expense)
+        self.save_monthly_breakdown_data(data)
+    
+    def delete_expense(self, name: str):
+        """Delete an expense by name"""
+        data = self.get_monthly_breakdown_data()
+        data['expenses'] = [exp for exp in data['expenses'] if exp['name'] != name]
+        self.save_monthly_breakdown_data(data)
+    
+    def add_investment_commitment(self, platform: str, name: str, monthly_amount: float):
+        """Add a new investment commitment"""
+        data = self.get_monthly_breakdown_data()
+        if platform not in data['investment_commitments']:
+            data['investment_commitments'][platform] = []
+        
+        commitment = {
+            'name': name,
+            'monthly_amount': monthly_amount,
+            'created_at': datetime.now().isoformat()
+        }
+        data['investment_commitments'][platform].append(commitment)
+        self.save_monthly_breakdown_data(data)
+    
+    def delete_investment_commitment(self, platform: str, name: str):
+        """Delete an investment commitment"""
+        data = self.get_monthly_breakdown_data()
+        if platform in data['investment_commitments']:
+            data['investment_commitments'][platform] = [
+                inv for inv in data['investment_commitments'][platform] 
+                if inv['name'] != name
+            ]
+        self.save_monthly_breakdown_data(data)
