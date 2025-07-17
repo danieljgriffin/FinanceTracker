@@ -46,6 +46,10 @@
                 </div>
                 <span class="text-xl font-bold text-white hidden md:block">Net Worth Tracker</span>
                 <span class="text-lg font-bold text-white md:hidden">Net Worth</span>
+                <!-- Privacy Toggle Button -->
+                <button id="privacy-toggle" class="ml-auto mr-2 text-gray-400 hover:text-white transition-colors duration-200" title="Toggle privacy mode">
+                    <i class="fas fa-eye text-xl"></i>
+                </button>
                 <!-- Mobile Close Button -->
                 <button id="mobile-close-button" class="ml-auto md:hidden text-gray-400 hover:text-white">
                     <i class="fas fa-times text-xl"></i>
@@ -189,6 +193,36 @@
             
             // Force initialize after a short delay to ensure it works
             setTimeout(initializeMobile, 100);
+            
+            // Privacy Toggle Functionality
+            const privacyToggle = document.getElementById('privacy-toggle');
+            const privacyIcon = privacyToggle.querySelector('i');
+            let isPrivacyMode = localStorage.getItem('privacyMode') === 'true';
+            
+            // Initialize privacy mode state
+            function initializePrivacyMode() {
+                if (isPrivacyMode) {
+                    document.body.classList.add('privacy-mode');
+                    privacyIcon.classList.remove('fa-eye');
+                    privacyIcon.classList.add('fa-eye-slash');
+                    privacyToggle.title = 'Show financial figures';
+                } else {
+                    document.body.classList.remove('privacy-mode');
+                    privacyIcon.classList.remove('fa-eye-slash');
+                    privacyIcon.classList.add('fa-eye');
+                    privacyToggle.title = 'Hide financial figures';
+                }
+            }
+            
+            // Toggle privacy mode
+            privacyToggle.addEventListener('click', function() {
+                isPrivacyMode = !isPrivacyMode;
+                localStorage.setItem('privacyMode', isPrivacyMode);
+                initializePrivacyMode();
+            });
+            
+            // Initialize on page load
+            initializePrivacyMode();
         });
     </script>
 </body>

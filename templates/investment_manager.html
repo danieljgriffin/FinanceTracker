@@ -69,7 +69,7 @@
                                 </span>
                             </div>
                             <div class="text-right">
-                                <div class="font-medium text-white">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</div>
+                                <div class="font-medium text-white financial-figure">£{{ "{:,.2f}".format(data_manager.get_platform_cash(platform)) }}</div>
                                 <div class="text-sm text-gray-400">Current Balance</div>
                             </div>
                         </div>
@@ -113,9 +113,9 @@
                                 <div class="text-sm font-medium text-white">
                                     {% set platform_data = platform_totals.get(platform, {}) %}
                                     {% if platform_data and platform_data.get('total_value') %}
-                                        £{{ "{:,.2f}".format(platform_data['total_value']) }}
+                                        <span class="financial-figure">£{{ "{:,.2f}".format(platform_data['total_value']) }}</span>
                                     {% else %}
-                                        £0.00
+                                        <span class="financial-figure">£0.00</span>
                                     {% endif %}
                                 </div>
                                 <div class="text-xs text-gray-400">
@@ -165,7 +165,7 @@
                                         <td class="px-6 py-4">
                                             <div class="text-sm text-white">
                                                 {% if current_price > 0 %}
-                                                    £{{ "{:,.4f}".format(current_price) }}
+                                                    <span class="financial-figure">£{{ "{:,.4f}".format(current_price) }}</span>
                                                 {% else %}
                                                     <span class="text-gray-400">No live price</span>
                                                 {% endif %}
@@ -177,17 +177,17 @@
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium text-white">
                                                 {% if current_value > 0 %}
-                                                    £{{ "{:,.2f}".format(current_value) }}
+                                                    <span class="financial-figure">£{{ "{:,.2f}".format(current_value) }}</span>
                                                 {% else %}
                                                     <span class="text-gray-400">Update prices</span>
                                                 {% endif %}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-white">£{{ "{:,.4f}".format(average_buy_price) }}</div>
+                                            <div class="text-sm text-white financial-figure">£{{ "{:,.4f}".format(average_buy_price) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm text-white">£{{ "{:,.2f}".format(amount_spent) }}</div>
+                                            <div class="text-sm text-white financial-figure">£{{ "{:,.2f}".format(amount_spent) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium {{ 'text-green-400' if percentage_pl > 0 else 'text-red-400' if percentage_pl < 0 else 'text-white' }}">
@@ -201,7 +201,7 @@
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-medium {{ 'text-green-400' if total_pl > 0 else 'text-red-400' if total_pl < 0 else 'text-white' }}">
                                                 {% if current_value > 0 %}
-                                                    {# No £ symbol in Total P/L #}{{ "{:+,.2f}".format(total_pl) }}
+                                                    <span class="financial-figure">{# No £ symbol in Total P/L #}{{ "{:+,.2f}".format(total_pl) }}</span>
                                                 {% else %}
                                                     <span class="text-gray-400">-</span>
                                                 {% endif %}
@@ -234,13 +234,13 @@
                                             <div class="text-sm text-gray-400">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(platform_data['investment_value']) }}</div>
+                                            <div class="text-sm font-bold text-white financial-figure">£{{ "{:,.2f}".format(platform_data['investment_value']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm text-gray-400">-</div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-white">£{{ "{:,.2f}".format(platform_data['amount_spent']) }}</div>
+                                            <div class="text-sm font-bold text-white financial-figure">£{{ "{:,.2f}".format(platform_data['amount_spent']) }}</div>
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-bold {{ 'text-green-400' if platform_data['percentage_pl'] > 0 else 'text-red-400' if platform_data['percentage_pl'] < 0 else 'text-white' }}">
@@ -249,7 +249,7 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="text-sm font-bold {{ 'text-green-400' if platform_data['total_pl'] > 0 else 'text-red-400' if platform_data['total_pl'] < 0 else 'text-white' }}">
-                                                {{ "{:+,.2f}".format(platform_data['total_pl']) }}
+                                                <span class="financial-figure">{{ "{:+,.2f}".format(platform_data['total_pl']) }}</span>
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
