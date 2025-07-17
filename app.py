@@ -235,7 +235,7 @@ def yearly_tracker(year=None):
         current_year_int = datetime.now().year
         
         if year == current_year_int:
-            # For current year, compare current live portfolio value to previous year's end
+            # For current year, compare current live portfolio value to 1st Jan of current year (same as dashboard)
             try:
                 from utils.price_fetcher import PriceFetcher
                 price_fetcher = PriceFetcher()
@@ -256,20 +256,18 @@ def yearly_tracker(year=None):
                         platform_total += cash_balance
                         current_net_worth += platform_total
                 
-                # Get previous year's end value
-                previous_year_data = data_manager.get_networth_data(year - 1)
-                previous_year_total = 0
-                dec_data = previous_year_data.get('31st Dec', {})
-                if not dec_data:
-                    dec_data = previous_year_data.get('1st Dec', {})
+                # Get current year's 1st Jan value (same as dashboard calculation)
+                current_year_data = data_manager.get_networth_data(year)
+                jan_total = 0
+                jan_data = current_year_data.get('1st Jan', {})
                 
                 for platform in all_platforms:
-                    platform_value = dec_data.get(platform['name'], 0)
+                    platform_value = jan_data.get(platform['name'], 0)
                     if platform_value and isinstance(platform_value, (int, float)):
-                        previous_year_total += platform_value
+                        jan_total += platform_value
                 
-                if previous_year_total > 0:
-                    yearly_increase_percent = ((current_net_worth - previous_year_total) / previous_year_total) * 100
+                if jan_total > 0:
+                    yearly_increase_percent = ((current_net_worth - jan_total) / jan_total) * 100
                 
             except Exception as e:
                 logging.error(f"Error calculating live yearly increase: {str(e)}")
