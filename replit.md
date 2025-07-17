@@ -94,6 +94,21 @@ Preferred communication style: Simple, everyday language.
 - Cash
 
 ## Recent Changes (July 17, 2025)
+- **Investment Manager Modal System**: Implemented liquid glass modal system matching monthly breakdown page design
+  - **Liquid Glass Modal Popups**: Replaced old form interface with professional modal dialogs
+  - **Add Investment Modal**: Beautiful modal popup for adding new investments with all form fields
+  - **Edit Investment Modal**: Pre-filled modal for editing existing investments
+  - **Consistent Design**: Same backdrop blur and professional styling as monthly breakdown page
+  - **Full Functionality**: All form validation, input types, and submission preserved
+- **Mobile Dashboard Icon Alignment Fix**: Corrected misaligned icons in month-on-month and yearly metrics
+  - **Centered Icons**: Added `items-center` and `mx-auto` classes for proper icon centering
+  - **Fixed Layout**: Icons now properly centered underneath percentage values on mobile
+  - **Applied to Both Metrics**: Fixed both Month-on-Month and Yearly Net Worth Increase sections
+- **Mobile Yearly Tracker Headers**: Improved mobile column headers to show month names instead of just "1st"
+  - **Month Names**: Headers now display "Jan", "Feb", "Mar" instead of confusing "1st" labels
+  - **Smart Extraction**: Extracts month names from "1st January" format entries
+  - **December Handling**: Shows "Dec" for "31st December" entries
+  - **Mobile Optimization**: Improved readability on small screens
 - **Enhanced Monthly Breakdown Page**: Added custom modal dialogs and edit functionality
   - **Custom Modal Dialogs**: Replaced browser prompts with professional in-app modal dialogs
   - **Edit Functionality**: Added blue edit buttons for expenses and investments with full update capability

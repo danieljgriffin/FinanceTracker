@@ -93,7 +93,15 @@
                         {% for month in months %}
                             <th class="px-2 sm:px-3 lg:px-4 py-3 text-center text-xs font-medium text-gray-300 uppercase tracking-wider min-w-[80px] sm:min-w-[100px]">
                                 <span class="hidden sm:inline">{{ month }}</span>
-                                <span class="sm:hidden">{{ month[:3] }}</span>
+                                <span class="sm:hidden">
+                                    {% if month.startswith('1st') %}
+                                        {{ month.split(' ')[1][:3] }}
+                                    {% elif month.startswith('31st') %}
+                                        Dec
+                                    {% else %}
+                                        {{ month[:3] }}
+                                    {% endif %}
+                                </span>
                             </th>
                         {% endfor %}
                     </tr>
