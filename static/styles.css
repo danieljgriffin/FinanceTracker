@@ -274,6 +274,63 @@ main {
     color: white !important;
 }
 
+/* Prevent horizontal overflow */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Ensure all content containers respect viewport width */
+.container, .card, .grid, .flex {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Fix table responsiveness */
+.table-container {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* Desktop specific fixes */
+@media (min-width: 768px) {
+    main {
+        max-width: calc(100vw - 288px); /* Account for 288px sidebar */
+    }
+    
+    .desktop-layout {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Ensure grids don't overflow */
+    .grid {
+        display: grid;
+        max-width: 100%;
+    }
+    
+    /* Fix any potential text overflow */
+    .truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Mobile specific fixes */
+@media (max-width: 767px) {
+    main {
+        max-width: 100vw;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
 .nav-link i {
     color: white !important;
 }

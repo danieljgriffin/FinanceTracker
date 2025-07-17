@@ -25,7 +25,7 @@
         }
     </script>
 </head>
-<body class="min-h-screen" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);">
+<body class="min-h-screen overflow-x-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%);">
     <!-- Dark mode background overlay for glass effect -->
     <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
     <!-- Mobile Menu Button -->
@@ -107,7 +107,7 @@
     {% endwith %}
 
     <!-- Main Content -->
-    <main class="md:ml-72 px-4 py-4 pt-16 md:pt-8 relative z-10 w-full" style="transition: margin-left 0.3s ease-in-out;">
+    <main class="md:ml-72 px-4 py-4 pt-16 md:pt-8 relative z-10 min-w-0 overflow-x-hidden" style="transition: margin-left 0.3s ease-in-out;">
         {% block content %}{% endblock %}
     </main>
 
