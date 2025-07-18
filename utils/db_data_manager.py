@@ -424,6 +424,39 @@ class DatabaseDataManager:
                 self.logger.error(f"Error updating investment price: {e}")
                 raise
     
+    def update_monthly_networth(self, year: int, month: str, platform: str, value: float):
+        """Update or create networth entry for a specific platform, month, and year"""
+        # Find or create the networth entry for this year and month
+        entry = NetworthEntry.query.filter_by(year=year, month=month).first()
+        
+        if not entry:
+            # Create new entry if it doesn't exist
+            entry = NetworthEntry(year=year, month=month, total_networth=0.0)
+            entry.set_platform_data({})
+            db.session.add(entry)
+        
+        # Get current platform data
+        platform_data = entry.get_platform_data()
+        
+        # Update the specific platform value
+        platform_data[platform] = value
+        
+        # Update the entry with new platform data
+        entry.set_platform_data(platform_data)
+        
+        # Recalculate total networth
+        total_networth = sum(v for v in platform_data.values() if isinstance(v, (int, float)))
+        entry.total_networth = total_networth
+        entry.last_updated = datetime.utcnow()
+        
+        try:
+            db.session.commit()
+            self.logger.info(f"Updated {platform} networth for {month} {year}: £{value}")
+        except Exception as e:
+            db.session.rollback()
+            self.logger.error(f"Error updating monthly networth: {e}")
+            raise
+    
     def get_investment_by_symbol(self, symbol: str) -> List[Dict]:
         """Get investments by symbol"""
         investments = Investment.query.filter_by(symbol=symbol).all()

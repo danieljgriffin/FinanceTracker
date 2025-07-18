@@ -449,7 +449,7 @@ def auto_populate_month():
                     if isinstance(investment, dict) and 'holdings' in investment:
                         try:
                             holdings = float(investment.get('holdings', 0))
-                            price = float(investment.get('price', 0))
+                            price = float(investment.get('current_price', 0))
                             total_value += holdings * price
                         except (ValueError, TypeError):
                             continue
