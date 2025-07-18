@@ -433,7 +433,10 @@ def auto_populate_month():
     """Auto-populate current month with investment data"""
     try:
         year = int(request.form.get('year'))
-        current_month = datetime.now().strftime('%B')
+        # Get current month in the format expected by yearly tracker (e.g., "1st Jul")
+        current_day = datetime.now().day
+        current_month_abbr = datetime.now().strftime('%b')
+        current_month = f"1st {current_month_abbr}"
         
         # Get current investment data
         investments_data = get_data_manager().get_investments_data()
