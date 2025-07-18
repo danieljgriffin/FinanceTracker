@@ -144,7 +144,13 @@
             .then(data => {
                 const statusElement = document.getElementById('price-status-mobile');
                 if (statusElement) {
-                    statusElement.textContent = `Last updated: ${data.last_updated}`;
+                    if (data.last_updated) {
+                        // API returns time string directly (e.g., "17:49:25")
+                        const timeString = data.last_updated.substring(0, 5); // Show just HH:MM
+                        statusElement.textContent = `Last updated: ${timeString}`;
+                    } else {
+                        statusElement.textContent = 'Last updated: Never';
+                    }
                 }
             })
             .catch(error => {

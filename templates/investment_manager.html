@@ -581,8 +581,8 @@ function updatePriceStatus() {
         .then(data => {
             const statusElement = document.getElementById('price-status');
             if (data.last_updated) {
-                const lastUpdated = new Date(data.last_updated);
-                const timeString = lastUpdated.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'});
+                // API returns time string directly (e.g., "17:49:25")
+                const timeString = data.last_updated;
                 statusElement.innerHTML = `Prices refreshed: ${timeString} (auto-refresh every 15m)`;
             } else {
                 statusElement.innerHTML = 'Prices: Loading...';
