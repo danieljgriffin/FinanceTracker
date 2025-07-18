@@ -147,6 +147,8 @@
                                     <div class="text-right">
                                         <div class="font-medium text-white">£{{ "{:,.2f}".format(data.total) }}</div>
                                         <div class="text-sm text-gray-300">Monthly</div>
+                                        <div class="font-medium text-blue-300">£{{ "{:,.2f}".format(data.total * 12) }}</div>
+                                        <div class="text-sm text-gray-300">Annual</div>
                                         <div class="text-xs text-gray-400">
                                             {% if total_monthly_investments > 0 %}
                                                 {{ "{:.1f}".format((data.total / total_monthly_investments) * 100) }}% of investments
