@@ -108,6 +108,13 @@ Preferred communication style: Simple, everyday language.
   - **Annual Platform Display**: Each platform now shows both monthly and annual commitment totals
   - **Blue Text Styling**: Annual totals displayed in blue text below monthly amounts
   - **Complete Information**: Maintains existing percentage calculations and individual investment details
+- **Fixed Background Price Updates**: Resolved Flask application context errors and implemented BST timezone display
+  - **Background Threading Fix**: Added Flask app context to background price updater thread
+  - **BST Timezone Display**: Price refresh timestamps now show correct UK time (BST) instead of UTC
+  - **Database Integration**: Background updates now properly save prices to PostgreSQL database
+  - **Automatic Updates**: System successfully updates all 31 investments every 15 minutes
+  - **No More Errors**: Eliminated "Working outside of application context" errors
+  - **Complete System**: Manual updates, automatic background updates, and real-time status display all working
 
 ## Recent Changes (July 17, 2025)
 - **Platform Allocation Renamed**: Changed "Platform Allocation" to "Net Worth Allocation" throughout the application

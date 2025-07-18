@@ -4,6 +4,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
 from datetime import datetime, timedelta
+import pytz
 import json
 import threading
 import time
@@ -755,7 +756,8 @@ def update_all_prices():
     """Update live prices for all investments - background function"""
     global last_price_update
     try:
-        investments_data = get_data_manager().get_investments_data()
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
         updated_count = 0
         
         for platform, investments in investments_data.items():
@@ -764,18 +766,16 @@ def update_all_prices():
                 continue
                 
             for investment in investments:
-                if investment.get('symbol'):
+                if investment.get('symbol') and investment.get('id'):
                     try:
                         price = price_fetcher.get_price(investment['symbol'])
                         if price:
-                            investment['current_price'] = price
-                            investment['last_updated'] = datetime.now().isoformat()
+                            # Update investment price in database
+                            data_manager.update_investment_price(investment['id'], price)
                             updated_count += 1
                     except Exception as e:
                         logging.error(f"Error updating price for {investment['name']}: {str(e)}")
         
-        # Save updated data
-        get_data_manager().save_investments_data(investments_data)
         last_price_update = datetime.now()
         logging.info(f'Background price update completed: {updated_count} investments updated')
         
@@ -790,7 +790,9 @@ def background_price_updater():
     while True:
         try:
             time.sleep(PRICE_REFRESH_INTERVAL)
-            update_all_prices()
+            # Create Flask application context for database access
+            with app.app_context():
+                update_all_prices()
         except Exception as e:
             logging.error(f"Error in background price updater: {str(e)}")
             time.sleep(60)  # Wait 1 minute before retrying
@@ -820,9 +822,25 @@ def update_prices():
 def price_status():
     """API endpoint to check when prices were last updated"""
     global last_price_update
+    
+    # Convert to BST timezone for display
+    bst = pytz.timezone('Europe/London')
+    
+    if last_price_update:
+        # Convert UTC to BST
+        last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
+        last_updated_str = last_updated_bst.strftime('%H:%M:%S')
+        
+        # Calculate next update time
+        next_update_in = PRICE_REFRESH_INTERVAL - int((datetime.now() - last_price_update).total_seconds())
+        next_update_in = max(0, next_update_in)  # Ensure non-negative
+    else:
+        last_updated_str = None
+        next_update_in = PRICE_REFRESH_INTERVAL
+    
     return jsonify({
-        'last_updated': last_price_update.isoformat() if last_price_update else None,
-        'next_update_in': PRICE_REFRESH_INTERVAL - int((datetime.now() - last_price_update).total_seconds()) if last_price_update else PRICE_REFRESH_INTERVAL
+        'last_updated': last_updated_str,
+        'next_update_in': next_update_in
     })
 
 # Initialize background price updater thread
