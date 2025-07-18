@@ -93,6 +93,19 @@ Preferred communication style: Simple, everyday language.
 - HL Stocks & Shares LISA (with specialized fund price fetching)
 - Cash
 
+## Recent Changes (July 18, 2025)
+- **Database Migration - Data Persistence Fix**: Migrated from JSON file storage to PostgreSQL database
+  - **Problem Solved**: Cash changes no longer revert after deployment - data is now permanently stored
+  - **PostgreSQL Integration**: All investment data, cash balances, expenses, and networth tracking now in database
+  - **Data Migration**: Successfully transferred all existing JSON data (investments, cash, expenses, income data)
+  - **Cash Preservation**: User's cash balance safely migrated and now persistent across deployments
+  - **Architecture Change**: Replaced DataManager with DatabaseDataManager for reliable data storage
+  - **No Data Loss**: All historical networth data (2023-2025) and investment tracking preserved
+- **Monthly Breakdown Annual Platform Totals**: Added annual totals for each platform in monthly breakdown page
+  - **Annual Platform Display**: Each platform now shows both monthly and annual commitment totals
+  - **Blue Text Styling**: Annual totals displayed in blue text below monthly amounts
+  - **Complete Information**: Maintains existing percentage calculations and individual investment details
+
 ## Recent Changes (July 17, 2025)
 - **Platform Allocation Renamed**: Changed "Platform Allocation" to "Net Worth Allocation" throughout the application
   - **Dashboard Updates**: Updated both mobile and desktop dashboard sections to use "Net Worth Allocation"

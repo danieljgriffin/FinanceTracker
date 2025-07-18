@@ -1,8 +1,8 @@
 import os
 import logging
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
-from utils.data_manager import DataManager
 from datetime import datetime, timedelta
 import json
 import threading
@@ -14,9 +14,37 @@ logging.basicConfig(level=logging.DEBUG)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
 
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_recycle': 300,
+    'pool_pre_ping': True,
+}
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize database
+from models import db
+db.init_app(app)
+
 # Initialize utilities
 price_fetcher = PriceFetcher()
-data_manager = DataManager()
+
+# Initialize data manager
+from utils.db_data_manager import DatabaseDataManager
+
+def get_data_manager():
+    """Get data manager instance (lazy initialization)"""
+    return DatabaseDataManager()
+
+# Create database tables
+with app.app_context():
+    # Import models after app context is established
+    from models import Investment, PlatformCash, NetworthEntry, Expense, MonthlyCommitment, IncomeData, MonthlyBreakdown
+    db.create_all()
+    
+    # Initialize defaults for database
+    data_manager = get_data_manager()
+    get_data_manager().initialize_defaults()
 
 # Price refresh settings
 PRICE_REFRESH_INTERVAL = 900  # 15 minutes in seconds
@@ -25,7 +53,8 @@ price_update_thread = None
 
 def calculate_current_net_worth():
     """Calculate current net worth using stored investment prices (consistent across dashboard and tracker)"""
-    investments_data = data_manager.get_investments_data()
+    data_manager = get_data_manager()
+    investments_data = get_data_manager().get_investments_data()
     current_net_worth = 0
     
     # Calculate platform allocations using current investment values
@@ -43,7 +72,7 @@ def calculate_current_net_worth():
             )
         
         # Add cash balance (for all platforms including Cash)
-        platform_total += data_manager.get_platform_cash(platform)
+        platform_total += get_data_manager().get_platform_cash(platform)
         
         if platform_total > 0:  # Only include platforms with value
             current_net_worth += platform_total
@@ -66,8 +95,9 @@ def dashboard():
     """Main dashboard showing current net worth and allocations"""
     try:
         # Get current net worth data
-        networth_data = data_manager.get_networth_data()
-        investments_data = data_manager.get_investments_data()
+        data_manager = get_data_manager()
+        networth_data = get_data_manager().get_networth_data()
+        investments_data = get_data_manager().get_investments_data()
         
         # Get last price update time
         global last_price_update
@@ -103,7 +133,7 @@ def dashboard():
                 )
             
             # Add cash balance (for all platforms including Cash)
-            platform_total += data_manager.get_platform_cash(platform)
+            platform_total += get_data_manager().get_platform_cash(platform)
             
             if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
@@ -127,7 +157,7 @@ def dashboard():
             current_month_name = f"1st {month_names[current_month - 1]}"
             
             # Get current year's data
-            current_year_data = data_manager.get_networth_data(current_year)
+            current_year_data = get_data_manager().get_networth_data(current_year)
             
             # Get current month's 1st day data
             month_start_data = current_year_data.get(current_month_name, {})
@@ -152,7 +182,7 @@ def dashboard():
             current_year = datetime.now().year
             
             # Get current year's 1st January data
-            current_year_data = data_manager.get_networth_data(current_year)
+            current_year_data = get_data_manager().get_networth_data(current_year)
             jan_total = 0
             
             # Get 1st Jan data
@@ -199,7 +229,7 @@ def yearly_tracker(year=None):
     """Yearly tracker page with support for multiple years"""
     try:
         # Get available years and set default - optimized
-        available_years = data_manager.get_available_years()
+        available_years = get_data_manager().get_available_years()
         if not available_years:
             available_years = [2025]  # Start with current year only
         
@@ -209,11 +239,11 @@ def yearly_tracker(year=None):
         
         # Ensure the requested year exists
         if year not in available_years:
-            data_manager.create_new_year(year)
-            available_years = data_manager.get_available_years()
+            get_data_manager().create_new_year(year)
+            available_years = get_data_manager().get_available_years()
         
-        networth_data = data_manager.get_networth_data(year)
-        investments_data = data_manager.get_investments_data()
+        networth_data = get_data_manager().get_networth_data(year)
+        investments_data = get_data_manager().get_investments_data()
         
         # Define months with both 1st and 31st entries for some months
         months = [
@@ -239,7 +269,7 @@ def yearly_tracker(year=None):
         previous_year_december_total = 0
         if year > 2017:  # Only try to get previous year data if not the earliest year
             try:
-                previous_year_data = data_manager.get_networth_data(year - 1)
+                previous_year_data = get_data_manager().get_networth_data(year - 1)
                 december_data = previous_year_data.get('1st Dec', {})
                 
                 for platform in all_platforms:
@@ -291,7 +321,7 @@ def yearly_tracker(year=None):
                 current_net_worth = calculate_current_net_worth()
                 
                 # Get current year's 1st Jan value (same as dashboard calculation)
-                current_year_data = data_manager.get_networth_data(year)
+                current_year_data = get_data_manager().get_networth_data(year)
                 jan_total = 0
                 jan_data = current_year_data.get('1st Jan', {})
                 
@@ -315,7 +345,7 @@ def yearly_tracker(year=None):
                 yearly_increase_percent = ((dec_total - jan_total) / jan_total) * 100
         
         # Get income data for the income vs investments table
-        income_data = data_manager.get_income_data()
+        income_data = get_data_manager().get_income_data()
         
         return render_template('yearly_tracker.html', 
                              networth_data=networth_data,
@@ -353,7 +383,7 @@ def create_year():
     """Create a new year for tracking"""
     try:
         year = int(request.form.get('year'))
-        if data_manager.create_new_year(year):
+        if get_data_manager().create_new_year(year):
             flash(f'Year {year} created successfully', 'success')
         else:
             flash(f'Year {year} already exists', 'warning')
@@ -379,7 +409,7 @@ def update_monthly_value():
                 change_platform = change['platform']
                 change_value = float(change['value'])
                 
-                data_manager.update_monthly_networth(change_year, change_month, change_platform, change_value)
+                get_data_manager().update_monthly_networth(change_year, change_month, change_platform, change_value)
                 year = change_year  # Store for redirect
             
             flash(f'Updated {len(changes)} values successfully', 'success')
@@ -390,7 +420,7 @@ def update_monthly_value():
             platform = request.form.get('platform')
             value = float(request.form.get('value', 0))
             
-            data_manager.update_monthly_networth(year, month, platform, value)
+            get_data_manager().update_monthly_networth(year, month, platform, value)
             flash(f'Updated {platform} for {month} {year}', 'success')
     except (ValueError, TypeError) as e:
         flash(f'Error updating value: {str(e)}', 'error')
@@ -405,7 +435,7 @@ def auto_populate_month():
         current_month = datetime.now().strftime('%B')
         
         # Get current investment data
-        investments_data = data_manager.get_investments_data()
+        investments_data = get_data_manager().get_investments_data()
         
         # Calculate platform totals (investments + cash)
         platform_totals = {}
@@ -424,7 +454,7 @@ def auto_populate_month():
                             continue
             
             # Add cash balance
-            cash_balance = data_manager.get_platform_cash(platform)
+            cash_balance = get_data_manager().get_platform_cash(platform)
             total_value += cash_balance
             
             if total_value > 0:
@@ -432,7 +462,7 @@ def auto_populate_month():
         
         # Update monthly values for all platforms
         for platform, value in platform_totals.items():
-            data_manager.update_monthly_networth(year, current_month, platform, value)
+            get_data_manager().update_monthly_networth(year, current_month, platform, value)
         
         flash(f'Auto-populated {current_month} {year} with current investment data', 'success')
         return redirect(url_for('yearly_tracker', year=year))
@@ -446,7 +476,7 @@ def update_income_data():
     """Update income vs investments data"""
     try:
         changes = json.loads(request.form.get('changes', '[]'))
-        income_data = data_manager.get_income_data()
+        income_data = get_data_manager().get_income_data()
         
         for change in changes:
             year = change['year']
@@ -461,7 +491,7 @@ def update_income_data():
             income_data[year][field] = value
         
         # Save updated data
-        data_manager.save_income_data(income_data)
+        get_data_manager().save_income_data(income_data)
         
         flash(f'Updated {len(changes)} income values successfully', 'success')
         return redirect(url_for('yearly_tracker'))
@@ -475,7 +505,7 @@ def update_income_data():
 def income_investments():
     """Income vs Investment tracker"""
     try:
-        income_data = data_manager.get_income_data()
+        income_data = get_data_manager().get_income_data()
         years = list(range(2017, 2026))  # 2017-2025
         
         return render_template('income_investments.html',
@@ -493,7 +523,7 @@ def monthly_breakdown():
     """Monthly breakdown page with income, expenses, and investments"""
     try:
         # Get monthly breakdown data
-        breakdown_data = data_manager.get_monthly_breakdown_data()
+        breakdown_data = get_data_manager().get_monthly_breakdown_data()
         
         # Extract data
         monthly_income = breakdown_data.get('monthly_income', 0)
@@ -556,7 +586,7 @@ def monthly_breakdown():
 def investment_manager():
     """Investment manager for CRUD operations"""
     try:
-        investments_data = data_manager.get_investments_data()
+        investments_data = get_data_manager().get_investments_data()
         
         # Calculate totals and metrics from live data - optimized
         total_current_value = 0
@@ -582,7 +612,7 @@ def investment_manager():
             total_amount_spent += platform_amount_spent
             
             # Add cash to platform total
-            cash_balance = data_manager.get_platform_cash(platform)
+            cash_balance = get_data_manager().get_platform_cash(platform)
             platform_total_value = platform_investment_total + cash_balance
             total_cash += cash_balance
             
@@ -605,7 +635,7 @@ def investment_manager():
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
         # Get unique investment names for dropdown
-        unique_names = data_manager.get_unique_investment_names()
+        unique_names = get_data_manager().get_unique_investment_names()
         
         return render_template('investment_manager.html',
                              investments_data=investments_data,
@@ -656,13 +686,13 @@ def add_investment():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            data_manager.add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
+            get_data_manager().add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
         elif input_type == 'average_buy_price':
             average_buy_price = float(request.form.get('average_buy_price', 0))
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            data_manager.add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
+            get_data_manager().add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
         else:
             flash('Invalid input type', 'error')
             return redirect(url_for('investment_manager'))
@@ -687,7 +717,7 @@ def add_investment():
                 
                 if price:
                     # Update the newly added investment with the current price
-                    investments_data = data_manager.get_investments_data()
+                    investments_data = get_data_manager().get_investments_data()
                     if platform in investments_data and investments_data[platform]:
                         # Get the last added investment (most recent)
                         last_investment = investments_data[platform][-1]
@@ -695,7 +725,7 @@ def add_investment():
                             last_investment['current_price'] = price
                             last_investment['symbol'] = symbol  # Update with working symbol
                             last_investment['last_updated'] = datetime.now().isoformat()
-                            data_manager.save_investments_data(investments_data)
+                            get_data_manager().save_investments_data(investments_data)
                             flash(f'Investment {name} added successfully with live price £{price:.4f}', 'success')
                         else:
                             flash(f'Investment {name} added successfully (price fetch failed)', 'success')
@@ -719,7 +749,7 @@ def add_investment():
 def transaction_history():
     """View transaction history"""
     try:
-        history_data = data_manager.get_transaction_history()
+        history_data = get_data_manager().get_transaction_history()
         # Sort by timestamp descending (most recent first)
         history_data.sort(key=lambda x: x['timestamp'], reverse=True)
         
@@ -737,7 +767,7 @@ def update_all_prices():
     """Update live prices for all investments - background function"""
     global last_price_update
     try:
-        investments_data = data_manager.get_investments_data()
+        investments_data = get_data_manager().get_investments_data()
         updated_count = 0
         
         for platform, investments in investments_data.items():
@@ -757,7 +787,7 @@ def update_all_prices():
                         logging.error(f"Error updating price for {investment['name']}: {str(e)}")
         
         # Save updated data
-        data_manager.save_investments_data(investments_data)
+        get_data_manager().save_investments_data(investments_data)
         last_price_update = datetime.now()
         logging.info(f'Background price update completed: {updated_count} investments updated')
         
@@ -823,14 +853,14 @@ start_background_updater()
 def edit_investment(platform, index):
     """Edit an existing investment"""
     try:
-        investments_data = data_manager.get_investments_data()
+        investments_data = get_data_manager().get_investments_data()
         
         if platform not in investments_data or index >= len(investments_data[platform]):
             flash('Investment not found', 'error')
             return redirect(url_for('investment_manager'))
         
         investment = investments_data[platform][index]
-        unique_names = data_manager.get_unique_investment_names()
+        unique_names = get_data_manager().get_unique_investment_names()
         
         return render_template('edit_investment.html',
                              investment=investment,
@@ -879,7 +909,7 @@ def update_investment(platform, index):
             updates['average_buy_price'] = average_buy_price
             updates['amount_spent'] = average_buy_price * holdings
         
-        data_manager.update_investment(platform, index, updates)
+        get_data_manager().update_investment(platform, index, updates)
         flash(f'Investment {name} updated successfully', 'success')
         
     except Exception as e:
@@ -892,7 +922,7 @@ def update_investment(platform, index):
 def delete_investment(platform, index):
     """Delete an existing investment"""
     try:
-        data_manager.remove_investment(platform, index)
+        get_data_manager().remove_investment(platform, index)
         flash('Investment deleted successfully', 'success')
         
     except Exception as e:
@@ -906,7 +936,7 @@ def update_cash(platform):
     """Update cash balance for a platform"""
     try:
         cash_amount = float(request.form.get('cash_amount', 0))
-        data_manager.update_platform_cash(platform, cash_amount)
+        get_data_manager().update_platform_cash(platform, cash_amount)
         flash(f'Cash balance updated for {platform}!', 'success')
     except ValueError:
         flash('Invalid cash amount entered!', 'error')
@@ -926,7 +956,7 @@ def update_monthly_income():
         if monthly_income < 0:
             return jsonify({'success': False, 'message': 'Monthly income cannot be negative'})
         
-        data_manager.update_monthly_income(monthly_income)
+        get_data_manager().update_monthly_income(monthly_income)
         return jsonify({'success': True, 'message': 'Monthly income updated successfully'})
         
     except Exception as e:
@@ -947,7 +977,7 @@ def add_expense():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        data_manager.add_expense(name, monthly_amount)
+        get_data_manager().add_expense(name, monthly_amount)
         return jsonify({'success': True, 'message': 'Expense added successfully'})
         
     except Exception as e:
@@ -964,7 +994,7 @@ def delete_expense():
         if not name:
             return jsonify({'success': False, 'message': 'Expense name is required'})
         
-        data_manager.delete_expense(name)
+        get_data_manager().delete_expense(name)
         return jsonify({'success': True, 'message': 'Expense deleted successfully'})
         
     except Exception as e:
@@ -986,7 +1016,7 @@ def add_investment_commitment():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        data_manager.add_investment_commitment(platform, name, monthly_amount)
+        get_data_manager().add_investment_commitment(platform, name, monthly_amount)
         return jsonify({'success': True, 'message': 'Investment commitment added successfully'})
         
     except Exception as e:
@@ -1004,7 +1034,7 @@ def delete_investment_commitment():
         if not platform or not name:
             return jsonify({'success': False, 'message': 'Platform and investment name are required'})
         
-        data_manager.delete_investment_commitment(platform, name)
+        get_data_manager().delete_investment_commitment(platform, name)
         return jsonify({'success': True, 'message': 'Investment commitment deleted successfully'})
         
     except Exception as e:
@@ -1026,7 +1056,7 @@ def update_expense():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        data_manager.update_expense(old_name, new_name, monthly_amount)
+        get_data_manager().update_expense(old_name, new_name, monthly_amount)
         return jsonify({'success': True, 'message': 'Expense updated successfully'})
         
     except Exception as e:
@@ -1050,7 +1080,7 @@ def update_investment_commitment():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        data_manager.update_investment_commitment(old_platform, old_name, new_platform, new_name, monthly_amount)
+        get_data_manager().update_investment_commitment(old_platform, old_name, new_platform, new_name, monthly_amount)
         return jsonify({'success': True, 'message': 'Investment commitment updated successfully'})
         
     except Exception as e:
