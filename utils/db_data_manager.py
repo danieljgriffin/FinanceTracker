@@ -285,14 +285,14 @@ class DatabaseDataManager:
             raise
     
     def get_income_data(self) -> Dict:
-        """Get all income data"""
+        """Get all income data in format expected by templates"""
         income_entries = IncomeData.query.all()
         data = {}
         
         for entry in income_entries:
             data[entry.year] = {
-                'income': entry.income,
-                'investment': entry.investment
+                'take_home_income': entry.income,
+                'amount_invested': entry.investment
             }
         
         return data
@@ -320,6 +320,30 @@ class DatabaseDataManager:
         except Exception as e:
             db.session.rollback()
             self.logger.error(f"Error updating income data: {e}")
+            raise
+    
+    def save_income_data(self, income_data: Dict):
+        """Save income data from template format (take_home_income, amount_invested)"""
+        for year, data in income_data.items():
+            # Convert template format to database format
+            income = data.get('take_home_income', 0.0)
+            investment = data.get('amount_invested', 0.0)
+            
+            # Update or create entry
+            entry = IncomeData.query.filter_by(year=year).first()
+            if entry:
+                entry.income = income
+                entry.investment = investment
+            else:
+                entry = IncomeData(year=year, income=income, investment=investment)
+                db.session.add(entry)
+        
+        try:
+            db.session.commit()
+            self.logger.info(f"Saved income data for {len(income_data)} years")
+        except Exception as e:
+            db.session.rollback()
+            self.logger.error(f"Error saving income data: {e}")
             raise
     
     def get_monthly_breakdown(self) -> Dict:
@@ -409,3 +433,125 @@ class DatabaseDataManager:
         """Find investment by name and platform"""
         investment = Investment.query.filter_by(name=name, platform=platform).first()
         return investment.to_dict() if investment else None
+    
+    def get_monthly_breakdown_data(self) -> Dict:
+        """Get monthly breakdown data including expenses and investment commitments"""
+        breakdown = self.get_monthly_breakdown()
+        expenses = self.get_expenses()
+        commitments = self.get_monthly_commitments()
+        
+        # Calculate totals
+        total_monthly_expenses = sum(exp['monthly_amount'] for exp in expenses)
+        total_annual_expenses = total_monthly_expenses * 12
+        
+        # Calculate investment commitment totals by platform
+        platform_investments = {}
+        total_monthly_investments = 0
+        
+        for platform, commitment_list in commitments.items():
+            platform_total = sum(comm['monthly_amount'] for comm in commitment_list)
+            if platform_total > 0:
+                platform_investments[platform] = {
+                    'investments': commitment_list,
+                    'total': platform_total,
+                    'color': self._get_platform_color(platform)
+                }
+                total_monthly_investments += platform_total
+        
+        total_annual_investments = total_monthly_investments * 12
+        
+        # Calculate free cash
+        monthly_income = breakdown.get('monthly_income', 0.0)
+        annual_income = monthly_income * 12
+        free_cash_monthly = monthly_income - (total_monthly_expenses + total_monthly_investments)
+        free_cash_annual = free_cash_monthly * 12
+        
+        return {
+            'monthly_income': monthly_income,
+            'annual_income': annual_income,
+            'monthly_expenses': expenses,
+            'total_monthly_expenses': total_monthly_expenses,
+            'total_annual_expenses': total_annual_expenses,
+            'platform_investments': platform_investments,
+            'total_monthly_investments': total_monthly_investments,
+            'total_annual_investments': total_annual_investments,
+            'free_cash_monthly': free_cash_monthly,
+            'free_cash_annual': free_cash_annual
+        }
+    
+    def _get_platform_color(self, platform: str) -> str:
+        """Get color for platform"""
+        colors = {
+            'Degiro': '#1e3a8a',
+            'Trading212 ISA': '#0d9488',
+            'EQ (GSK shares)': '#dc2626',
+            'InvestEngine ISA': '#ea580c',
+            'Crypto': '#7c3aed',
+            'HL Stocks & Shares LISA': '#0ea5e9',
+            'Cash': '#059669'
+        }
+        return colors.get(platform, '#6b7280')
+    
+    def delete_expense_by_name(self, name: str):
+        """Delete expense by name"""
+        expense = Expense.query.filter_by(name=name).first()
+        if expense:
+            db.session.delete(expense)
+            try:
+                db.session.commit()
+                self.logger.info(f"Deleted expense: {name}")
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error deleting expense: {e}")
+                raise
+        else:
+            raise ValueError(f"Expense '{name}' not found")
+    
+    def update_expense_by_name(self, old_name: str, new_name: str, monthly_amount: float):
+        """Update expense by name"""
+        expense = Expense.query.filter_by(name=old_name).first()
+        if expense:
+            expense.name = new_name
+            expense.monthly_amount = monthly_amount
+            try:
+                db.session.commit()
+                self.logger.info(f"Updated expense: {old_name} -> {new_name}")
+                return expense.to_dict()
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error updating expense: {e}")
+                raise
+        else:
+            raise ValueError(f"Expense '{old_name}' not found")
+    
+    def delete_commitment_by_platform_and_name(self, platform: str, name: str):
+        """Delete monthly commitment by platform and name"""
+        commitment = MonthlyCommitment.query.filter_by(platform=platform, name=name).first()
+        if commitment:
+            db.session.delete(commitment)
+            try:
+                db.session.commit()
+                self.logger.info(f"Deleted commitment: {name} from {platform}")
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error deleting commitment: {e}")
+                raise
+        else:
+            raise ValueError(f"Commitment '{name}' not found in {platform}")
+    
+    def update_commitment_by_platform_and_name(self, platform: str, old_name: str, new_name: str, monthly_amount: float):
+        """Update monthly commitment by platform and name"""
+        commitment = MonthlyCommitment.query.filter_by(platform=platform, name=old_name).first()
+        if commitment:
+            commitment.name = new_name
+            commitment.monthly_amount = monthly_amount
+            try:
+                db.session.commit()
+                self.logger.info(f"Updated commitment: {old_name} -> {new_name} in {platform}")
+                return commitment.to_dict()
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error updating commitment: {e}")
+                raise
+        else:
+            raise ValueError(f"Commitment '{old_name}' not found in {platform}")
