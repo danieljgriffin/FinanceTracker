@@ -527,26 +527,14 @@ def monthly_breakdown():
         
         # Extract data
         monthly_income = breakdown_data.get('monthly_income', 0)
-        monthly_expenses = breakdown_data.get('expenses', [])
-        investment_commitments = breakdown_data.get('investment_commitments', {})
+        monthly_expenses = breakdown_data.get('monthly_expenses', [])
+        platform_investments = breakdown_data.get('platform_investments', {})
         
         # Calculate total expenses
         total_monthly_expenses = sum(expense['monthly_amount'] for expense in monthly_expenses)
         
-        # Calculate investment totals by platform
-        platform_investments = {}
-        total_monthly_investments = 0
-        
-        for platform, investments in investment_commitments.items():
-            if platform == 'Cash':
-                continue  # Skip Cash platform
-            platform_total = sum(inv['monthly_amount'] for inv in investments)
-            platform_investments[platform] = {
-                'investments': investments,
-                'color': PLATFORM_COLORS.get(platform, '#6b7280'),
-                'total': platform_total
-            }
-            total_monthly_investments += platform_total
+        # Get totals from breakdown data
+        total_monthly_investments = breakdown_data.get('total_monthly_investments', 0)
         
         # Calculate free cash
         free_cash_monthly = monthly_income - total_monthly_expenses - total_monthly_investments

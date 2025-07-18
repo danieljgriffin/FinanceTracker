@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investment Manager - Net Worth Tracker</title>
+    <title>Monthly Breakdown - Net Worth Tracker</title>
+    
+    <!-- iOS Home Screen Icon -->
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Net Worth Tracker">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
     <script>
         tailwind.config = {
@@ -25,51 +31,83 @@
         }
     </script>
 </head>
-<body class="min-h-screen" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-    <!-- Background overlay for glass effect -->
-    <div class="fixed inset-0 bg-gradient-to-br from-blue-50/30 to-purple-50/30 pointer-events-none"></div>
-    <!-- Modern Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 glass-dark">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0 flex items-center">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
-                            <i class="fas fa-chart-line text-white text-lg"></i>
-                        </div>
-                        <span class="text-xl font-bold text-white">Net Worth Tracker</span>
-                    </div>
+<body class="min-h-screen overflow-x-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%); overflow-y: auto;">
+    <!-- Dark mode background overlay for glass effect -->
+    <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
+    <!-- Mobile Menu Button -->
+    <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 md:hidden bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-xl p-3 text-white">
+        <i class="fas fa-bars text-xl"></i>
+    </button>
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden hidden"></div>
+
+    <!-- Left Sidebar Navigation -->
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <div class="p-6">
+            <!-- Mobile Close Button (Top Right) -->
+            <div class="flex justify-end mb-4 md:hidden">
+                <button id="mobile-close-button" class="text-gray-400 hover:text-white p-2">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Header -->
+            <div class="flex items-center mb-6 md:hidden">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                    <i class="fas fa-chart-line text-white text-lg"></i>
                 </div>
-                
-                <div class="hidden md:flex items-center space-x-2">
-                    <a href="/" class="nav-link ">
-                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-                    </a>
-                    <a href="/tracker-2025" class="nav-link ">
-                        <i class="fas fa-calendar-alt mr-2"></i>2025 Tracker
-                    </a>
-                    <a href="/income-investments" class="nav-link ">
-                        <i class="fas fa-money-bill-wave mr-2"></i>Income vs Investments
-                    </a>
-                    <a href="/monthly-breakdown" class="nav-link ">
-                        <i class="fas fa-chart-pie mr-2"></i>Monthly Breakdown
-                    </a>
-                    <a href="/investment-manager" class="nav-link active">
-                        <i class="fas fa-cog mr-2"></i>Investment Manager
-                    </a>
+                <span class="text-lg font-bold text-white">Net Worth</span>
+            </div>
+            
+            <!-- Desktop Header -->
+            <div class="hidden md:flex items-center mb-12">
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-4">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
-                
-                <div class="flex items-center">
-                    <a href="/update-prices" class="px-6 py-2 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
-                        <i class="fas fa-sync-alt mr-2"></i>Update Prices
-                    </a>
-                </div>
+                <span class="text-xl font-bold text-white">Net Worth Tracker</span>
+            </div>
+            
+            <!-- Privacy Toggle (above navigation) -->
+            <div class="flex justify-center mb-6" style="overflow: hidden;">
+                <button id="privacy-toggle" class="text-gray-400 hover:text-white transition-colors duration-200 p-2" title="Toggle privacy mode" style="overflow: hidden;">
+                    <i class="fas fa-eye text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="space-y-2">
+                <a href="/" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-blue-500/10 hover:text-blue-400">
+                    <i class="fas fa-tachometer-alt mr-4 text-lg"></i>
+                    Dashboard
+                </a>
+                <a href="/yearly-tracker" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-blue-500/10 hover:text-blue-400">
+                    <i class="fas fa-calendar-alt mr-4 text-lg"></i>
+                    Yearly Tracker
+                </a>
+                <a href="/monthly-breakdown" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 bg-gray-600/30 text-blue-400">
+                    <i class="fas fa-chart-pie mr-4 text-lg"></i>
+                    Monthly Breakdown
+                </a>
+                <a href="/investment-manager" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-blue-500/10 hover:text-blue-400">
+                    <i class="fas fa-briefcase mr-4 text-lg"></i>
+                    Investment Manager
+                </a>
+                <a href="/transaction-history" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:bg-blue-500/10 hover:text-blue-400">
+                    <i class="fas fa-history mr-4 text-lg"></i>
+                    Transaction History
+                </a>
+            </nav>
+            
+            <!-- Update Prices Button -->
+            <div class="mt-8 pt-6 border-t border-gray-600/30">
+                <a href="/update-prices" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Update Prices
+                </a>
             </div>
         </div>
-    </nav>
-    
-    <!-- Spacer for fixed navigation -->
-    <div class="h-20"></div>
+    </div>
 
     <!-- Flash Messages -->
     
@@ -77,1395 +115,595 @@
     
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 lg:px-8 py-8 relative z-10">
+    <main class="md:ml-72 px-4 md:px-8 py-4 pt-16 md:pt-8 relative z-10 min-w-0" style="transition: margin-left 0.3s ease-in-out; overflow-x: hidden; overflow-y: auto;">
         
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-4xl font-bold text-white">Investment Portfolio</h1>
-            <p class="text-white/80 mt-1">Manage your actual investment holdings and their current values</p>
-        </div>
-        <div class="flex space-x-3">
-            <a href="/transaction-history" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #6366f1, #4f46e5); box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
-                <i class="fas fa-history mr-2"></i>History
-            </a>
-            <a href="/update-prices" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
-                <i class="fas fa-sync mr-2"></i>Update Prices
-            </a>
-            <button onclick="toggleAddForm()" class="px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
-                <i class="fas fa-plus mr-2"></i>Add Investment
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="overflow: visible;">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white">Monthly Breakdown</h1>
+        <div class="flex items-center gap-3" style="overflow: visible;">
+            <button onclick="location.reload()" class="px-4 py-2 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                <i class="fas fa-sync-alt mr-2"></i>
+                Refresh
             </button>
         </div>
     </div>
 
-    <!-- Add Investment Form -->
-    <div id="addForm" class="card p-8 hidden">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Add New Investment to Portfolio</h2>
-        <form method="POST" action="/add-investment" class="space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Platform</label>
-                    <select name="platform" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Select Platform</option>
-                        
-                            <option value="Degiro">Degiro</option>
-                        
-                            <option value="Trading212 ISA">Trading212 ISA</option>
-                        
-                            <option value="EQ (GSK shares)">EQ (GSK shares)</option>
-                        
-                            <option value="InvestEngine ISA">InvestEngine ISA</option>
-                        
-                            <option value="Crypto">Crypto</option>
-                        
-                            <option value="HL Stocks &amp; Shares LISA">HL Stocks &amp; Shares LISA</option>
-                        
-                            <option value="Cash">Cash</option>
-                        
-                    </select>
+    <!-- Free Cash Summary -->
+    <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl shadow-lg text-white p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="flex-1">
+                <h2 class="text-lg sm:text-xl font-bold mb-2">Free Cash Available</h2>
+                <p class="text-blue-100 text-sm sm:text-base">Income - (Expenses + Investments)</p>
+            </div>
+            <div class="text-left sm:text-right">
+                <div class="text-2xl sm:text-3xl font-bold">£2,353.00</div>
+                <div class="text-blue-100 text-sm">Monthly</div>
+            </div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-blue-400">
+            <div class="flex justify-between items-center">
+                <span class="text-blue-100 text-sm sm:text-base">Annual Free Cash</span>
+                <span class="text-lg sm:text-xl font-bold">£28,236.00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Section -->
+    <div class="card">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Income</h2>
+                <button onclick="editIncome()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);">
+                    <i class="fas fa-edit mr-1"></i>
+                    Edit
+                </button>
+            </div>
+        </div>
+        <div class="p-4 sm:p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
+                    <div class="text-2xl font-bold text-green-400" id="monthly-income-display">£2,353.00</div>
+                    <div class="text-sm text-green-300">Monthly Take-Home</div>
                 </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Investment Name</label>
-                    <input type="text" name="name" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Tesla Stock" list="investment-names">
-                    <datalist id="investment-names">
-                        
-                        <option value="Baillie Gifford Positive Change Class B - Accumulation (GBP)">
-                        
-                        <option value="Fidelity Global Technology Class W - Accumulation (GBP">
-                        
-                        <option value="GSK Shares Reward">
-                        
-                        <option value="Haleon Shares PLC">
-                        
-                        <option value="Meta">
-                        
-                        <option value="Ninety One GSF Global Natural Resources Class I - Accumulation - GBP">
-                        
-                        <option value="UBS S&amp;P 500 Index Class C - Acc">
-                        
-                    </datalist>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Holdings (Quantity)</label>
-                    <input type="number" step="0.000001" name="holdings" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 10 shares or 0.5 BTC">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Input Type</label>
-                    <select name="input_type" id="input_type" onchange="toggleInputType()" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="amount_spent">Amount Spent</option>
-                        <option value="average_buy_price">Average Buy Price</option>
-                    </select>
-                </div>
-                
-                <div id="amount_spent_input">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Amount Spent (£)</label>
-                    <input type="number" step="0.01" name="amount_spent" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.00">
-                </div>
-                
-                <div id="average_buy_price_input" style="display: none;">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Average Buy Price (£)</label>
-                    <input type="number" step="0.0001" name="average_buy_price" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="0.0000">
-                </div>
-                
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Symbol (Optional - for live price updates)</label>
-                    <input type="text" name="symbol" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., TSLA, BTC-USD, ^GSPC">
+                <div class="text-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
+                    <div class="text-2xl font-bold text-green-400" id="annual-income-display">£28,236.00</div>
+                    <div class="text-sm text-green-300">Annual Take-Home</div>
                 </div>
             </div>
-            
-            <div class="flex justify-end space-x-4">
-                <button type="button" onclick="toggleAddForm()" class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
-                    Cancel
+        </div>
+    </div>
+
+    <!-- Expenses Section -->
+    <div class="card">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Expenses</h2>
+                <button onclick="addExpense()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);">
+                    <i class="fas fa-plus mr-1"></i>
+                    Add Expense
                 </button>
-                <button type="submit" class="px-6 py-3 text-white rounded-lg transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6);">
+            </div>
+        </div>
+        <div class="p-4 sm:p-6">
+            
+                <div class="text-center py-8">
+                    <i class="fas fa-receipt text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-400">No expenses added yet</p>
+                    <p class="text-sm text-gray-500 mb-6">Click "Add Expense" to start tracking your monthly expenses</p>
+                </div>
+            
+        </div>
+    </div>
+
+    <!-- Monthly Investment Commitments Section -->
+    <div class="card">
+        <div class="px-4 sm:px-6 py-4 border-b border-gray-600/30">
+            <div class="flex justify-between items-center">
+                <h2 class="text-base sm:text-lg font-semibold text-white">Monthly Investment Commitments</h2>
+                <button onclick="addInvestmentCommitment()" class="px-3 py-1 rounded-lg text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
+                    <i class="fas fa-plus mr-1"></i>
                     Add Investment
                 </button>
             </div>
-        </form>
+        </div>
+        <div class="p-4 sm:p-6">
+            
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-400">No investment commitments added yet</p>
+                    <p class="text-sm text-gray-500 mb-6">Add monthly investment commitments to track your planned investments</p>
+                </div>
+            
+        </div>
     </div>
 
-    <!-- Investment Platforms -->
-    
-        <div class="space-y-6">
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #1e3a8a20;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #1e3a8a"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">Degiro</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    1 investment
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £2,122.11
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">Meta</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        META
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £524.5267
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">4.000000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £2,098.11
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£268.2900</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£1,073.16</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +95.51%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +1,024.95
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('Degiro', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('Degiro', 0, 'Meta')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                </tbody>
-                            </table>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£24.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/Degiro" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="24.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+    <!-- Financial Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-6">
+        <div class="card p-4 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-300">Expense Ratio</p>
+                    <p class="text-xl font-bold text-red-400">
+                        
+                            0.0%
+                        
+                    </p>
                 </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #0d948820;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0d9488"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">Trading212 ISA</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    0 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £0.00
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="px-6 py-8 text-center">
-                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
-                            <p class="text-gray-500">No investments in this platform</p>
-                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/Trading212%20ISA" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                <div class="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-receipt text-red-400 text-xl"></i>
                 </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #dc262620;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #dc2626"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">EQ (GSK shares)</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    2 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £6,139.50
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">GSK Shares Reward</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        GSK.L
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £14.2150
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">420.000000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £5,970.30
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£4.0600</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£1,705.21</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +250.12%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +4,265.09
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('EQ (GSK shares)', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('EQ (GSK shares)', 0, 'GSK Shares Reward')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">Haleon Shares PLC</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        HLN.L
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £3.6000
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">47.000000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £169.20
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£1.9489</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£91.60</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +84.72%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +77.60
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('EQ (GSK shares)', 1)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('EQ (GSK shares)', 1, 'Haleon Shares PLC')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                </tbody>
-                            </table>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/EQ%20(GSK%20shares)" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #ea580c20;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #ea580c"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">InvestEngine ISA</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    0 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £0.00
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="px-6 py-8 text-center">
-                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
-                            <p class="text-gray-500">No investments in this platform</p>
-                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/InvestEngine%20ISA" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #7c3aed20;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #7c3aed"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">Crypto</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    0 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £0.00
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="px-6 py-8 text-center">
-                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
-                            <p class="text-gray-500">No investments in this platform</p>
-                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/Crypto" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #0ea5e920;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0ea5e9"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">HL Stocks &amp; Shares LISA</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    4 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £27,903.88
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="overflow-x-auto" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                            <table class="w-full" style="display: table !important; opacity: 1 !important; visibility: visible !important;">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Holdings</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Current Value</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Average Buy Price</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount Spent</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Percentage P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total P/L</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">UBS S&amp;P 500 Index Class C - Acc</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        GB00BMN91T34
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £2.1106
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">4,485.150000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £9,466.36
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£1.7091</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£7,665.50</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +23.49%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +1,800.86
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 0)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 0, 'UBS S&amp;P 500 Index Class C - Acc')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">Baillie Gifford Positive Change Class B - Accumulation (GBP)</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        GB00BYVGKV59
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £3.5510
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">1,543.620000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £5,481.39
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£3.0281</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£4,674.18</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +17.27%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +807.21
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 1)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 1, 'Baillie Gifford Positive Change Class B - Accumulation (GBP)')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">Fidelity Global Technology Class W - Accumulation (GBP</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        LU1033663649
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £9.3340
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">1,071.130000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £9,997.93
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£7.1877</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£7,699.00</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +29.86%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +2,298.93
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 2)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 2, 'Fidelity Global Technology Class W - Accumulation (GBP')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    
-                                    <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center">
-                                                <div class="text-sm font-medium text-gray-900">Ninety One GSF Global Natural Resources Class I - Accumulation - GBP</div>
-                                                
-                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                                        LU0345781172
-                                                    </span>
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">
-                                                
-                                                    £48.2400
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">53.922000</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-gray-900">
-                                                
-                                                    £2,601.20
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£42.1720</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm text-gray-900">£2,274.00</div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +14.39%
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-medium text-green-600">
-                                                
-                                                    +327.20
-                                                
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('HL Stocks &amp; Shares LISA', 3)" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                                <button onclick="deleteInvestment('HL Stocks &amp; Shares LISA', 3, 'Ninety One GSF Global Natural Resources Class I - Accumulation - GBP')" class="text-gray-400 hover:text-red-600 transition-colors">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    
-                                </tbody>
-                            </table>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£357.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/HL%20Stocks%20&amp;%20Shares%20LISA" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="357.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-            
-                
-                <div class="card overflow-hidden" style="display: block !important; opacity: 1 !important; visibility: visible !important;">
-                    <div class="px-6 py-4 border-b border-gray-200" style="background-color: #05966920;">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #059669"></div>
-                                <h2 class="text-lg font-semibold text-gray-900">Cash</h2>
-                                <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                    0 investments
-                                </span>
-                            </div>
-                            <div class="text-right">
-                                <div class="text-sm font-medium text-gray-900">
-                                    £0.00
-                                </div>
-                                <div class="text-xs text-gray-500">
-                                    Total Value (incl. cash)
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    
-                        <div class="px-6 py-8 text-center">
-                            <i class="fas fa-plus-circle text-gray-400 text-3xl mb-3"></i>
-                            <p class="text-gray-500">No investments in this platform</p>
-                            <p class="text-sm text-gray-400">Add your first investment to get started</p>
-                        </div>
-                    
-                    
-                    <!-- Cash Balance Section -->
-                    <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-wallet text-gray-400 mr-2"></i>
-                                <span class="text-sm font-medium text-gray-700">Cash Balance:</span>
-                                <span class="ml-2 text-sm font-semibold text-gray-900">£0.00</span>
-                            </div>
-                            <form method="POST" action="/update_cash/Cash" class="flex items-center space-x-2">
-                                <input type="number" step="0.01" name="cash_amount" value="0.0" 
-                                       class="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" 
-                                       placeholder="0.00">
-                                <button type="submit" class="px-3 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                    Update
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                
-            
-                
-            
-                
-            
-                
-            
-                
-            
-                
-            
-                
-            
-                
-            
+            </div>
         </div>
-    
 
-    <!-- Summary Statistics -->
-    <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Investment Summary</h2>
+        <div class="card p-4 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-300">Investment Rate</p>
+                    <p class="text-xl font-bold text-blue-400">
+                        
+                            0.0%
+                        
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-chart-line text-blue-400 text-xl"></i>
+                </div>
+            </div>
         </div>
-        <div class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
+
+        <div class="card p-4 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-300">Savings Rate</p>
+                    <p class="text-xl font-bold text-green-400">
                         
+                            100.0%
                         
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                        0
-                    </div>
-                    <div class="text-sm text-gray-500">Total Investments</div>
+                    </p>
                 </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                        0
-                    </div>
-                    <div class="text-sm text-gray-500">Active Platforms</div>
+                <div class="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-piggy-bank text-green-400 text-xl"></i>
                 </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        £35,784
-                    </div>
-                    <div class="text-sm text-gray-500">Total Portfolio Value</div>
+            </div>
+        </div>
+
+        <div class="card p-4 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-300">Active Platforms</p>
+                    <p class="text-xl font-bold text-purple-400">0</p>
                 </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        £25,183
-                    </div>
-                    <div class="text-sm text-gray-500">Total Amount Spent</div>
-                </div>
-                
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-gray-900">
-                        
-                        
-                            
-                                
-                                    
-                                        
-                                    
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                                    
-                                        
-                                    
-                                
-                                    
-                                        
-                                    
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                                
-                                    
-                                        
-                                    
-                                
-                                    
-                                        
-                                    
-                                
-                                    
-                                        
-                                    
-                                
-                                    
-                                        
-                                    
-                                
-                            
-                        
-                            
-                                
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                            
-                        
-                        0
-                    </div>
-                    <div class="text-sm text-gray-500">Live Price Tracking</div>
+                <div class="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-building text-purple-400 text-xl"></i>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Platform Distribution -->
-    <div class="card">
-        <div class="px-8 py-6 border-b border-gray-200/50">
-            <h2 class="text-xl font-semibold text-gray-900">Platform Distribution</h2>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4">
-                
-                    
-                        
-                        
-                            
-                            
-                        
-                        
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #1e3a8a"></div>
-                                <span class="font-medium text-gray-900">Degiro</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-medium text-gray-900">£0.00</div>
-                                <div class="text-sm text-gray-500">0.0%</div>
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: 0.0%; background-color: #1e3a8a"></div>
-                        </div>
-                    
-                
-                    
-                
-                    
-                        
-                        
-                            
-                            
-                        
-                            
-                            
-                        
-                        
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #dc2626"></div>
-                                <span class="font-medium text-gray-900">EQ (GSK shares)</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-medium text-gray-900">£0.00</div>
-                                <div class="text-sm text-gray-500">0.0%</div>
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: 0.0%; background-color: #dc2626"></div>
-                        </div>
-                    
-                
-                    
-                
-                    
-                
-                    
-                        
-                        
-                            
-                            
-                        
-                            
-                            
-                        
-                            
-                            
-                        
-                            
-                            
-                        
-                        
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <div class="w-4 h-4 rounded-full mr-3" style="background-color: #0ea5e9"></div>
-                                <span class="font-medium text-gray-900">HL Stocks &amp; Shares LISA</span>
-                            </div>
-                            <div class="text-right">
-                                <div class="font-medium text-gray-900">£0.00</div>
-                                <div class="text-sm text-gray-500">0.0%</div>
-                            </div>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="h-2 rounded-full transition-all duration-300" 
-                                 style="width: 0.0%; background-color: #0ea5e9"></div>
-                        </div>
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
-                    
-                
+<!-- Custom Modal Dialogs -->
+<div id="modalOverlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="card max-w-md w-full">
+            <div class="p-6">
+                <h3 id="modalTitle" class="text-lg font-semibold text-white mb-4"></h3>
+                <div id="modalContent" class="space-y-4"></div>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button onclick="closeModal()" class="px-4 py-2 rounded-lg bg-gray-600 text-white hover:bg-gray-700 transition-colors">
+                        Cancel
+                    </button>
+                    <button id="modalSubmit" class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                        Save
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function toggleAddForm() {
-    const form = document.getElementById('addForm');
-    form.classList.toggle('hidden');
+function editIncome() {
+    showIncomeModal('Edit Monthly Income', 2353.0, (amount) => {
+        fetch('/update-monthly-income', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                monthly_income: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating income: ' + data.message);
+            }
+        });
+    });
 }
 
-function toggleInputType() {
-    const inputType = document.getElementById('input_type').value;
-    const amountSpentInput = document.getElementById('amount_spent_input');
-    const averageBuyPriceInput = document.getElementById('average_buy_price_input');
+function addExpense() {
+    showExpenseModal('Add Expense', '', '', (name, amount) => {
+        fetch('/add-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error adding expense: ' + data.message);
+            }
+        });
+    });
+}
+
+function deleteExpense(expenseName) {
+    if (confirm(`Are you sure you want to delete the expense "${expenseName}"?`)) {
+        fetch('/delete-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: expenseName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting expense: ' + data.message);
+            }
+        });
+    }
+}
+
+function addInvestmentCommitment() {
+    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA'];
+    showInvestmentModal('Add Investment Commitment', '', platforms[0], '', (platform, name, amount) => {
+        fetch('/add-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: platform,
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error adding investment commitment: ' + data.message);
+            }
+        });
+    });
+}
+
+function addInvestmentToPlattform(platform) {
+    showInvestmentModal(`Add Investment to ${platform}`, '', platform, '', (selectedPlatform, name, amount) => {
+        fetch('/add-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: selectedPlatform,
+                name: name,
+                monthly_amount: amount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error adding investment commitment: ' + data.message);
+            }
+        });
+    });
+}
+
+function deleteInvestmentCommitment(platform, investmentName) {
+    if (confirm(`Are you sure you want to delete the investment commitment "${investmentName}" from ${platform}?`)) {
+        fetch('/delete-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                platform: platform,
+                name: investmentName
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting investment commitment: ' + data.message);
+            }
+        });
+    }
+}
+
+function editExpense(name, currentAmount) {
+    showExpenseModal('Edit Expense', name, currentAmount, (newName, newAmount) => {
+        fetch('/update-expense', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                old_name: name,
+                name: newName,
+                monthly_amount: newAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating expense: ' + data.message);
+            }
+        });
+    });
+}
+
+function editInvestmentCommitment(platform, name, currentAmount) {
+    showInvestmentModal('Edit Investment Commitment', name, platform, currentAmount, (newPlatform, newName, newAmount) => {
+        fetch('/update-investment-commitment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                old_platform: platform,
+                old_name: name,
+                platform: newPlatform,
+                name: newName,
+                monthly_amount: newAmount
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error updating investment commitment: ' + data.message);
+            }
+        });
+    });
+}
+
+// Modal helper functions
+function showIncomeModal(title, currentAmount, callback) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Take-Home Income</label>
+            <input type="number" id="incomeAmount" step="0.01" min="0" value="${currentAmount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+    `;
     
-    if (inputType === 'amount_spent') {
-        amountSpentInput.style.display = 'block';
-        averageBuyPriceInput.style.display = 'none';
-        document.querySelector('input[name="amount_spent"]').required = true;
-        document.querySelector('input[name="average_buy_price"]').required = false;
-    } else {
-        amountSpentInput.style.display = 'none';
-        averageBuyPriceInput.style.display = 'block';
-        document.querySelector('input[name="amount_spent"]').required = false;
-        document.querySelector('input[name="average_buy_price"]').required = true;
+    document.getElementById('modalSubmit').onclick = function() {
+        const amount = parseFloat(document.getElementById('incomeAmount').value);
+        if (!isNaN(amount) && amount >= 0) {
+            callback(amount);
+            closeModal();
+        } else {
+            alert('Please enter a valid positive number.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function showExpenseModal(title, name, amount, callback) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Expense Name</label>
+            <input type="text" id="expenseName" value="${name}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Amount</label>
+            <input type="number" id="expenseAmount" step="0.01" min="0" value="${amount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const expenseName = document.getElementById('expenseName').value.trim();
+        const expenseAmount = parseFloat(document.getElementById('expenseAmount').value);
+        
+        if (expenseName && !isNaN(expenseAmount) && expenseAmount >= 0) {
+            callback(expenseName, expenseAmount);
+            closeModal();
+        } else {
+            alert('Please enter a valid expense name and positive amount.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function showInvestmentModal(title, name, platform, amount, callback) {
+    const platforms = ['Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA'];
+    const platformOptions = platforms.map(p => `<option value="${p}" ${p === platform ? 'selected' : ''}>${p}</option>`).join('');
+    
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalContent').innerHTML = `
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Platform</label>
+            <select id="investmentPlatform" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                ${platformOptions}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Investment Name</label>
+            <input type="text" id="investmentName" value="${name}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-white mb-2">Monthly Amount</label>
+            <input type="number" id="investmentAmount" step="0.01" min="0" value="${amount}" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+        </div>
+    `;
+    
+    document.getElementById('modalSubmit').onclick = function() {
+        const investmentPlatform = document.getElementById('investmentPlatform').value;
+        const investmentName = document.getElementById('investmentName').value.trim();
+        const investmentAmount = parseFloat(document.getElementById('investmentAmount').value);
+        
+        if (investmentName && !isNaN(investmentAmount) && investmentAmount >= 0) {
+            callback(investmentPlatform, investmentName, investmentAmount);
+            closeModal();
+        } else {
+            alert('Please enter a valid investment name and positive amount.');
+        }
+    };
+    
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('modalOverlay').onclick = function(e) {
+    if (e.target === this) {
+        closeModal();
     }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    toggleInputType();
-});
-
-function editInvestment(platform, index) {
-    // For now, we'll use a simple approach - redirect to a form with pre-filled data
-    window.location.href = `/edit-investment/${platform}/${index}`;
-}
-
-function deleteInvestment(platform, index, name) {
-    if (confirm(`Are you sure you want to delete "${name}" from ${platform}?`)) {
-        // Create a form and submit it
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/delete-investment/${platform}/${index}`;
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
+};
 </script>
 
     </main>
 
     <!-- Footer -->
     <footer class="glass-dark mt-12 relative z-10">
-        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <div class="md:ml-72 px-4 md:px-8 py-6 md:py-8 footer-content">
             <div class="text-center text-white/70 text-sm">
                 <p>&copy; 2025 Net Worth Tracker. Built with Flask and Tailwind CSS.</p>
             </div>
         </div>
     </footer>
+
+    <!-- Mobile Menu JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileCloseButton = document.getElementById('mobile-close-button');
+            const mobileOverlay = document.getElementById('mobile-overlay');
+            const sidebar = document.getElementById('sidebar');
+            
+            // Check if we're on mobile - using standard breakpoint
+            function isMobile() {
+                return window.innerWidth < 768;
+            }
+            
+            function openMobileMenu() {
+                if (isMobile()) {
+                    sidebar.classList.add('mobile-open');
+                    mobileOverlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                }
+            }
+            
+            function closeMobileMenu() {
+                if (isMobile()) {
+                    sidebar.classList.remove('mobile-open');
+                    mobileOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Initialize mobile state
+            function initializeMobile() {
+                if (isMobile()) {
+                    // Ensure sidebar is hidden on mobile
+                    sidebar.classList.remove('mobile-open');
+                    mobileOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                } else {
+                    // Ensure sidebar is visible on desktop
+                    sidebar.classList.remove('mobile-open');
+                    mobileOverlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            }
+            
+            // Event listeners
+            if (mobileMenuButton) {
+                mobileMenuButton.addEventListener('click', openMobileMenu);
+            }
+            if (mobileCloseButton) {
+                mobileCloseButton.addEventListener('click', closeMobileMenu);
+            }
+            if (mobileOverlay) {
+                mobileOverlay.addEventListener('click', closeMobileMenu);
+            }
+            
+            // Close mobile menu when clicking on a navigation link
+            const navLinks = document.querySelectorAll('#sidebar .nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', closeMobileMenu);
+            });
+            
+            // Handle window resize
+            window.addEventListener('resize', initializeMobile);
+            
+            // Initialize on page load immediately
+            initializeMobile();
+            
+            // Force initialize after a short delay to ensure it works
+            setTimeout(initializeMobile, 100);
+            
+            // Privacy Toggle Functionality
+            const privacyToggle = document.getElementById('privacy-toggle');
+            const privacyIcon = privacyToggle.querySelector('i');
+            let isPrivacyMode = localStorage.getItem('privacyMode') === 'true';
+            
+            // Initialize privacy mode state
+            function initializePrivacyMode() {
+                if (isPrivacyMode) {
+                    document.body.classList.add('privacy-mode');
+                    privacyIcon.classList.remove('fa-eye');
+                    privacyIcon.classList.add('fa-eye-slash');
+                    privacyToggle.title = 'Show financial figures';
+                } else {
+                    document.body.classList.remove('privacy-mode');
+                    privacyIcon.classList.remove('fa-eye-slash');
+                    privacyIcon.classList.add('fa-eye');
+                    privacyToggle.title = 'Hide financial figures';
+                }
+            }
+            
+            // Toggle privacy mode
+            privacyToggle.addEventListener('click', function() {
+                isPrivacyMode = !isPrivacyMode;
+                localStorage.setItem('privacyMode', isPrivacyMode);
+                initializePrivacyMode();
+            });
+            
+            // Initialize on page load
+            initializePrivacyMode();
+        });
+    </script>
 </body>
 </html>

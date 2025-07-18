@@ -101,6 +101,9 @@ Preferred communication style: Simple, everyday language.
   - **Cash Preservation**: User's cash balance safely migrated and now persistent across deployments
   - **Architecture Change**: Replaced DataManager with DatabaseDataManager for reliable data storage
   - **No Data Loss**: All historical networth data (2023-2025) and investment tracking preserved
+  - **Expenses Recovery**: Restored all 6 expenses (Rent £150, Car £80, Spotify £9.99, Haircut £23, ChatGPT £20, Gym £20)
+  - **Monthly Commitments Recovery**: Restored all investment commitments across 5 platforms with proper platform structure
+  - **Platform Display**: Monthly breakdown now shows individual investments within each platform with monthly/annual totals
 - **Monthly Breakdown Annual Platform Totals**: Added annual totals for each platform in monthly breakdown page
   - **Annual Platform Display**: Each platform now shows both monthly and annual commitment totals
   - **Blue Text Styling**: Annual totals displayed in blue text below monthly amounts
