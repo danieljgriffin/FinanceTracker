@@ -531,7 +531,7 @@ function editInvestment(platform, index) {
             formData.append('symbol', symbol);
             
             // Submit the form
-            fetch(`/edit-investment/${platform}/${index}`, {
+            fetch(`/update-investment/${platform}/${index}`, {
                 method: 'POST',
                 body: formData
             })
