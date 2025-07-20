@@ -122,6 +122,12 @@ Preferred communication style: Simple, everyday language.
   - **Database Integration**: Auto-populate now correctly updates existing networth entries
   - **Platform Totals**: Calculates investment values + cash balances for all platforms
   - **Future Ready**: System ready for August 1st auto-population and subsequent months
+- **Fixed Edit Investment Functionality**: Resolved investment update errors in Investment Manager
+  - **Method Signature Fix**: Updated app.py to use database investment IDs instead of platform/index
+  - **JavaScript Route Fix**: Corrected fetch URL from /edit-investment to /update-investment
+  - **Database Integration**: Edit modal now properly updates investment holdings and amounts
+  - **Error Resolution**: Eliminated "takes 3 positional arguments but 4 were given" error
+  - **User Experience**: Edit button now works without browser errors and updates display correctly
 
 ## Recent Changes (July 17, 2025)
 - **Platform Allocation Renamed**: Changed "Platform Allocation" to "Net Worth Allocation" throughout the application

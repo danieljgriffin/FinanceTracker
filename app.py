@@ -918,7 +918,13 @@ def update_investment(platform, index):
             updates['average_buy_price'] = average_buy_price
             updates['amount_spent'] = average_buy_price * holdings
         
-        get_data_manager().update_investment(platform, index, updates)
+        # Get the investment ID from platform and index
+        investments_data = get_data_manager().get_investments_data()
+        if platform in investments_data and index < len(investments_data[platform]):
+            investment_id = investments_data[platform][index]['id']
+            get_data_manager().update_investment(investment_id, updates)
+        else:
+            raise ValueError("Investment not found")
         flash(f'Investment {name} updated successfully', 'success')
         
     except Exception as e:
