@@ -35,7 +35,7 @@
                 <p class="text-xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                     {{ "{:+.1f}".format(mom_change) }}%
                 </p>
-                <p class="text-sm font-medium {% if mom_change >= 0 %}text-green-500{% else %}text-red-500{% endif %} mb-3">
+                <p class="text-xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mb-3">
                     £{{ "{:+,.0f}".format(mom_amount_change) }}
                 </p>
                 <div class="flex justify-center items-center">
@@ -53,7 +53,7 @@
                 <p class="text-xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
                     {{ "{:+.1f}".format(yearly_increase) }}%
                 </p>
-                <p class="text-sm font-medium {% if yearly_increase > 0 %}text-green-500{% elif yearly_increase < 0 %}text-red-500{% else %}text-gray-500{% endif %} mb-3">
+                <p class="text-xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mb-3">
                     £{{ "{:+,.0f}".format(yearly_amount_change) }}
                 </p>
                 <div class="flex justify-center items-center">
@@ -216,7 +216,7 @@
                     <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                         {{ "{:+.1f}".format(mom_change) }}%
                     </p>
-                    <p class="text-xs sm:text-sm font-medium {% if mom_change >= 0 %}text-green-500{% else %}text-red-500{% endif %} mt-1">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-1">
                         £{{ "{:+,.0f}".format(mom_amount_change) }}
                     </p>
                 </div>
@@ -234,7 +234,7 @@
                     <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
                         {{ "{:+.1f}".format(yearly_increase) }}%
                     </p>
-                    <p class="text-xs sm:text-sm font-medium {% if yearly_increase > 0 %}text-green-500{% elif yearly_increase < 0 %}text-red-500{% else %}text-gray-500{% endif %} mt-1">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1">
                         £{{ "{:+,.0f}".format(yearly_amount_change) }}
                     </p>
                 </div>
