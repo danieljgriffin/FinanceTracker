@@ -148,6 +148,7 @@ def dashboard():
         
         # Calculate month-on-month change (current net worth vs current month's 1st day)
         mom_change = 0
+        mom_amount_change = 0
         try:
             current_year = datetime.now().year
             current_month = datetime.now().month
@@ -169,16 +170,19 @@ def dashboard():
                 if platform != 'total_net_worth' and isinstance(value, (int, float)):
                     month_start_total += value
             
-            # Calculate percentage change
+            # Calculate changes
             if month_start_total > 0:
-                mom_change = ((current_net_worth - month_start_total) / month_start_total) * 100
+                mom_amount_change = current_net_worth - month_start_total
+                mom_change = (mom_amount_change / month_start_total) * 100
             
         except Exception as e:
             logging.error(f"Error calculating month-on-month change: {str(e)}")
             mom_change = 0
+            mom_amount_change = 0
         
         # Calculate yearly net worth increase (current live portfolio vs 1st Jan current year)
         yearly_increase = 0
+        yearly_amount_change = 0
         try:
             current_year = datetime.now().year
             
@@ -194,20 +198,24 @@ def dashboard():
                 if platform != 'total_net_worth' and isinstance(value, (int, float)):
                     jan_total += value
             
-            # Calculate percentage increase
+            # Calculate changes
             if jan_total > 0:
-                yearly_increase = ((current_net_worth - jan_total) / jan_total) * 100
+                yearly_amount_change = current_net_worth - jan_total
+                yearly_increase = (yearly_amount_change / jan_total) * 100
             
         except Exception as e:
             logging.error(f"Error calculating yearly increase: {str(e)}")
             yearly_increase = 0
+            yearly_amount_change = 0
         
         return render_template('dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
                              mom_change=mom_change,
+                             mom_amount_change=mom_amount_change,
                              yearly_increase=yearly_increase,
+                             yearly_amount_change=yearly_amount_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              last_price_update=last_price_update)
@@ -219,7 +227,9 @@ def dashboard():
                              platform_allocations={},
                              platform_percentages={},
                              mom_change=0,
+                             mom_amount_change=0,
                              yearly_increase=0,
+                             yearly_amount_change=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              last_price_update=None)
@@ -845,6 +855,70 @@ def price_status():
         'last_updated': last_updated_str,
         'next_update_in': next_update_in
     })
+
+@app.route('/api/networth-chart-data')
+def networth_chart_data():
+    """API endpoint to get net worth chart data for different years"""
+    try:
+        year_param = request.args.get('year', '2025')
+        data_manager = get_data_manager()
+        
+        labels = []
+        values = []
+        
+        if year_param == 'all':
+            # Get data from all years (2023, 2024, 2025)
+            years_to_include = [2023, 2024, 2025]
+        elif year_param == '2024-2025':
+            # Get data from 2024 and 2025
+            years_to_include = [2024, 2025]
+        else:
+            # Get data from specific year
+            years_to_include = [int(year_param)]
+        
+        for year in years_to_include:
+            try:
+                year_data = data_manager.get_networth_data(year)
+                
+                # Process each month in chronological order
+                month_order = ['1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
+                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '31st Dec']
+                
+                for month in month_order:
+                    if month in year_data:
+                        month_data = year_data[month]
+                        
+                        # Calculate total for this month
+                        month_total = 0
+                        for platform, value in month_data.items():
+                            if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                month_total += value
+                        
+                        # Only add if there's actual data
+                        if month_total > 0:
+                            # Format label
+                            if len(years_to_include) > 1:
+                                # Multi-year view - include year
+                                month_short = month.replace('1st ', '').replace('31st ', '')
+                                labels.append(f"{month_short} {year}")
+                            else:
+                                # Single year view - just month
+                                labels.append(month.replace('1st ', '').replace('31st ', ''))
+                            
+                            values.append(round(month_total, 2))
+                            
+            except Exception as e:
+                logging.error(f"Error getting data for year {year}: {str(e)}")
+                continue
+        
+        return jsonify({
+            'labels': labels,
+            'values': values
+        })
+        
+    except Exception as e:
+        logging.error(f"Error in networth_chart_data: {str(e)}")
+        return jsonify({'labels': [], 'values': []}), 500
 
 # Initialize background price updater thread
 def start_background_updater():
