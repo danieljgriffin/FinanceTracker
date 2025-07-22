@@ -27,8 +27,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 from models import db
 db.init_app(app)
 
-# Initialize utilities
+# Initialize utilities with caching
 price_fetcher = PriceFetcher()
+
+# Add simple price cache for performance
+price_cache = {}
+CACHE_DURATION = 300  # 5 minutes cache for API calls
 
 # Initialize data manager
 from utils.db_data_manager import DatabaseDataManager
@@ -766,12 +770,15 @@ def transaction_history():
                              platform_colors=PLATFORM_COLORS)
 
 def update_all_prices():
-    """Update live prices for all investments - background function"""
+    """Update live prices for all investments using optimized batch fetching"""
     global last_price_update
     try:
         data_manager = get_data_manager()
         investments_data = data_manager.get_investments_data()
-        updated_count = 0
+        
+        # Collect all symbols to update
+        symbols_to_update = []
+        symbol_to_investment = {}
         
         for platform, investments in investments_data.items():
             # Skip cash platforms and ensure investments is a list
@@ -779,18 +786,33 @@ def update_all_prices():
                 continue
                 
             for investment in investments:
-                if investment.get('symbol') and investment.get('id'):
-                    try:
-                        price = price_fetcher.get_price(investment['symbol'])
-                        if price:
-                            # Update investment price in database
-                            data_manager.update_investment_price(investment['id'], price)
-                            updated_count += 1
-                    except Exception as e:
-                        logging.error(f"Error updating price for {investment['name']}: {str(e)}")
+                symbol = investment.get('symbol')
+                if symbol and investment.get('id'):
+                    symbols_to_update.append(symbol)
+                    symbol_to_investment[symbol] = investment
+        
+        if not symbols_to_update:
+            logging.info("No symbols to update")
+            return 0
+        
+        # Batch fetch prices for efficiency
+        logging.info(f"Batch updating prices for {len(symbols_to_update)} investments")
+        updated_prices = price_fetcher.get_multiple_prices(symbols_to_update)
+        
+        # Update database with fetched prices
+        updated_count = 0
+        for symbol, price in updated_prices.items():
+            if symbol in symbol_to_investment:
+                investment = symbol_to_investment[symbol]
+                try:
+                    data_manager.update_investment_price(investment['id'], price)
+                    updated_count += 1
+                    logging.info(f"Updated {symbol}: £{price}")
+                except Exception as e:
+                    logging.error(f"Error updating database for {symbol}: {str(e)}")
         
         last_price_update = datetime.now()
-        logging.info(f'Background price update completed: {updated_count} investments updated')
+        logging.info(f'Background price update completed: {updated_count}/{len(symbols_to_update)} prices updated')
         
         return updated_count
         

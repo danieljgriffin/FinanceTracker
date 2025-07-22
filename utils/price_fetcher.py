@@ -87,7 +87,7 @@ class PriceFetcher:
     
     def get_crypto_price_from_coingecko(self, symbol: str) -> Optional[float]:
         """
-        Fetch cryptocurrency price from CoinGecko API
+        Fetch cryptocurrency price from CoinGecko API with enhanced reliability
         
         Args:
             symbol: Crypto symbol (e.g., BTC, ETH, SOL)
@@ -114,25 +114,34 @@ class PriceFetcher:
                 try:
                     # Add delay between requests to avoid rate limiting
                     if attempt > 0:
-                        time.sleep(1)
+                        time.sleep(1.5 * attempt)  # Progressive delay
                     
                     headers = {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept': 'application/json',
+                        'Accept-Language': 'en-US,en;q=0.9'
                     }
                     
-                    response = requests.get(url, headers=headers, timeout=10)
+                    response = requests.get(url, headers=headers, timeout=15)
+                    
                     if response.status_code == 200:
                         data = response.json()
                         if coin_id in data and 'gbp' in data[coin_id]:
                             price_gbp = float(data[coin_id]['gbp'])
-                            self.logger.info(f"CoinGecko price for {symbol} ({coin_id}): £{price_gbp}")
-                            return price_gbp
+                            
+                            # Validate price is reasonable
+                            if price_gbp > 0 and price_gbp < 1000000:
+                                self.logger.info(f"CoinGecko price for {symbol} ({coin_id}): £{price_gbp}")
+                                return price_gbp
+                            else:
+                                self.logger.error(f"Invalid price returned for {symbol}: £{price_gbp}")
+                                return None
                         else:
                             self.logger.error(f"Price data not found in CoinGecko response for {coin_id}")
                     elif response.status_code == 429:
                         self.logger.warning(f"Rate limit hit for {symbol}, attempt {attempt + 1}")
                         if attempt < 2:  # Don't sleep on last attempt
-                            time.sleep(2 ** attempt)  # Exponential backoff
+                            time.sleep(3 ** attempt)  # Exponential backoff with longer delays
                         continue
                     else:
                         self.logger.error(f"CoinGecko API request failed with status {response.status_code}")
@@ -140,7 +149,7 @@ class PriceFetcher:
                 except requests.exceptions.RequestException as e:
                     self.logger.error(f"Request error for {symbol}: {str(e)}")
                     if attempt < 2:
-                        time.sleep(1)
+                        time.sleep(2)
                         continue
                     
                 break
@@ -164,14 +173,17 @@ class PriceFetcher:
             if not symbol:
                 return None
             
-            # Check if this is a cryptocurrency symbol
+            # Check if this is a cryptocurrency symbol - ONLY use CoinGecko for crypto
             clean_symbol = symbol.replace('-USD', '').upper()
             if clean_symbol in self.crypto_mappings:
+                self.logger.info(f"Cryptocurrency {symbol} detected - using CoinGecko exclusively")
                 crypto_price = self.get_crypto_price_from_coingecko(symbol)
                 if crypto_price:
                     return crypto_price
-                # If CoinGecko fails, fall back to yfinance
-                self.logger.warning(f"CoinGecko failed for {symbol}, falling back to yfinance")
+                else:
+                    # For crypto, NEVER fall back to yfinance as it gives wrong prices
+                    self.logger.error(f"CoinGecko failed for cryptocurrency {symbol} - returning None")
+                    return None
             
             # Check if this is a special fund that needs web scraping
             if symbol in self.special_funds:
@@ -439,13 +451,13 @@ class PriceFetcher:
                         return price
                         
         except Exception as e:
-            self.logger.error(f"Error scraping FT for {isin}: {str(e)}")
+            self.logger.error(f"Error scraping FT for fund: {str(e)}")
             
         return None
     
     def get_multiple_prices(self, symbols: list) -> dict:
         """
-        Fetch prices for multiple symbols
+        Fetch prices for multiple symbols with batching for crypto
         
         Args:
             symbols: List of symbols to fetch
@@ -455,11 +467,85 @@ class PriceFetcher:
         """
         prices = {}
         
+        # Separate crypto and non-crypto symbols
+        crypto_symbols = []
+        non_crypto_symbols = []
+        
         for symbol in symbols:
+            clean_symbol = symbol.replace('-USD', '').upper()
+            if clean_symbol in self.crypto_mappings:
+                crypto_symbols.append(symbol)
+            else:
+                non_crypto_symbols.append(symbol)
+        
+        # Batch fetch crypto prices
+        if crypto_symbols:
+            crypto_prices = self.get_batch_crypto_prices(crypto_symbols)
+            prices.update(crypto_prices)
+        
+        # Fetch non-crypto prices individually
+        for symbol in non_crypto_symbols:
             price = self.get_price(symbol)
             if price:
                 prices[symbol] = price
                 
+        return prices
+    
+    def get_batch_crypto_prices(self, crypto_symbols: list) -> dict:
+        """
+        Fetch multiple crypto prices in a single CoinGecko API call for efficiency
+        
+        Args:
+            crypto_symbols: List of crypto symbols
+            
+        Returns:
+            Dictionary mapping symbols to prices
+        """
+        prices = {}
+        
+        try:
+            # Create list of CoinGecko IDs
+            coin_ids = []
+            symbol_to_id = {}
+            
+            for symbol in crypto_symbols:
+                clean_symbol = symbol.replace('-USD', '').upper()
+                if clean_symbol in self.crypto_mappings:
+                    coin_id = self.crypto_mappings[clean_symbol]
+                    coin_ids.append(coin_id)
+                    symbol_to_id[coin_id] = symbol
+            
+            if not coin_ids:
+                return prices
+            
+            # Single API call for all cryptocurrencies
+            ids_string = ','.join(coin_ids)
+            url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids_string}&vs_currencies=gbp"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.9'
+            }
+            
+            response = requests.get(url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                for coin_id, price_data in data.items():
+                    if 'gbp' in price_data and coin_id in symbol_to_id:
+                        price_gbp = float(price_data['gbp'])
+                        if price_gbp > 0 and price_gbp < 1000000:
+                            symbol = symbol_to_id[coin_id]
+                            prices[symbol] = price_gbp
+                            self.logger.info(f"Batch fetched {symbol}: £{price_gbp}")
+            else:
+                self.logger.error(f"Batch crypto fetch failed with status {response.status_code}")
+                
+        except Exception as e:
+            self.logger.error(f"Error in batch crypto fetch: {str(e)}")
+            
         return prices
     
     def get_usd_to_gbp_rate(self) -> Optional[float]:

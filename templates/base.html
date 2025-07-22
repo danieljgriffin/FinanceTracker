@@ -13,6 +13,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <!-- Performance optimizations -->
+    <link rel="preconnect" href="https://api.coingecko.com">
+    <link rel="preconnect" href="https://query1.finance.yahoo.com">
+    <link rel="dns-prefetch" href="//cdn.tailwindcss.com">
+    <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <script>
         tailwind.config = {
             theme: {
@@ -242,6 +248,40 @@
             
             // Initialize on page load
             initializePrivacyMode();
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+    
+    <!-- Performance optimizations -->
+    <script>
+        // Loading indicator for navigation clicks
+        function showLoadingIndicator() {
+            const loader = document.createElement('div');
+            loader.id = 'page-loader';
+            loader.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center';
+            loader.innerHTML = '<div class="bg-slate-800/90 rounded-xl p-4 text-white"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>';
+            document.body.appendChild(loader);
+            
+            setTimeout(() => {
+                const existingLoader = document.getElementById('page-loader');
+                if (existingLoader) existingLoader.remove();
+            }, 10000);
+        }
+        
+        // Remove loading indicator when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            const loader = document.getElementById('page-loader');
+            if (loader) loader.remove();
+        });
+        
+        // Optimize button clicks with visual feedback
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('button, a[href]');
+            if (btn && !btn.hasAttribute('data-no-feedback')) {
+                btn.style.transform = 'scale(0.98)';
+                setTimeout(() => btn.style.transform = '', 100);
+            }
         });
     </script>
 </body>
