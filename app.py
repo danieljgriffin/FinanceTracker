@@ -1105,7 +1105,7 @@ def delete_expense():
         if not name:
             return jsonify({'success': False, 'message': 'Expense name is required'})
         
-        get_data_manager().delete_expense(name)
+        get_data_manager().delete_expense_by_name(name)
         return jsonify({'success': True, 'message': 'Expense deleted successfully'})
         
     except Exception as e:
@@ -1145,7 +1145,7 @@ def delete_investment_commitment():
         if not platform or not name:
             return jsonify({'success': False, 'message': 'Platform and investment name are required'})
         
-        get_data_manager().delete_investment_commitment(platform, name)
+        get_data_manager().delete_commitment_by_platform_and_name(platform, name)
         return jsonify({'success': True, 'message': 'Investment commitment deleted successfully'})
         
     except Exception as e:
@@ -1167,7 +1167,7 @@ def update_expense():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        get_data_manager().update_expense(old_name, new_name, monthly_amount)
+        get_data_manager().update_expense_by_name(old_name, new_name, monthly_amount)
         return jsonify({'success': True, 'message': 'Expense updated successfully'})
         
     except Exception as e:
@@ -1191,7 +1191,14 @@ def update_investment_commitment():
         if monthly_amount < 0:
             return jsonify({'success': False, 'message': 'Monthly amount cannot be negative'})
         
-        get_data_manager().update_investment_commitment(old_platform, old_name, new_platform, new_name, monthly_amount)
+        # For now, we'll delete the old commitment and create a new one if platform changes
+        # If same platform, just update the commitment
+        if old_platform == new_platform:
+            get_data_manager().update_commitment_by_platform_and_name(old_platform, old_name, new_name, monthly_amount)
+        else:
+            # Delete old commitment and create new one
+            get_data_manager().delete_commitment_by_platform_and_name(old_platform, old_name)
+            get_data_manager().add_investment_commitment(new_platform, new_name, monthly_amount)
         return jsonify({'success': True, 'message': 'Investment commitment updated successfully'})
         
     except Exception as e:
