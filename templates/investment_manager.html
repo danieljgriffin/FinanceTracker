@@ -539,6 +539,8 @@ function editInvestment(platform, investmentId) {
         const averageBuyPrice = parseFloat(document.getElementById('averageBuyPrice').value) || 0;
         const symbol = document.getElementById('investmentSymbol').value.trim();
         
+        console.log('Updating investment:', {platform, investmentId, name, holdings, inputType, amountSpent, averageBuyPrice, symbol});
+        
         if (name && !isNaN(holdings) && holdings > 0) {
             // Create form data
             const formData = new FormData();
@@ -556,11 +558,19 @@ function editInvestment(platform, investmentId) {
                 body: formData
             })
             .then(response => {
+                console.log('Update response status:', response.status);
                 if (response.ok) {
                     location.reload();
                 } else {
-                    alert('Error updating investment');
+                    response.text().then(text => {
+                        console.error('Update failed:', text);
+                        alert('Error updating investment: ' + response.status);
+                    });
                 }
+            })
+            .catch(error => {
+                console.error('Update error:', error);
+                alert('Error updating investment: ' + error.message);
             });
             
             closeModal();
