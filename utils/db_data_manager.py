@@ -54,6 +54,25 @@ class DatabaseDataManager:
         
         return data
     
+    def get_platform_investment_names(self, platform: str) -> List[str]:
+        """Get all unique investment names for a specific platform"""
+        investments = Investment.query.filter_by(platform=platform).all()
+        names = [inv.name for inv in investments]
+        return sorted(set(names))  # Return unique names sorted alphabetically
+    
+    def get_all_investment_names(self) -> Dict[str, List[str]]:
+        """Get all investment names organized by platform"""
+        result = {}
+        platforms = [
+            'Degiro', 'Trading212 ISA', 'EQ (GSK shares)', 
+            'InvestEngine ISA', 'Crypto', 'HL Stocks & Shares LISA', 'Cash'
+        ]
+        
+        for platform in platforms:
+            result[platform] = self.get_platform_investment_names(platform)
+        
+        return result
+    
     def get_platform_cash(self, platform: str) -> float:
         """Get cash balance for a platform"""
         cash_entry = PlatformCash.query.filter_by(platform=platform).first()
@@ -78,26 +97,67 @@ class DatabaseDataManager:
             raise
     
     def add_investment(self, platform: str, investment_data: Dict):
-        """Add a new investment"""
-        investment = Investment(
-            platform=platform,
-            name=investment_data.get('name', ''),
-            symbol=investment_data.get('symbol', ''),
-            holdings=investment_data.get('holdings', 0.0),
-            amount_spent=investment_data.get('amount_spent', 0.0),
-            average_buy_price=investment_data.get('average_buy_price', 0.0),
-            current_price=investment_data.get('current_price', 0.0)
-        )
+        """Add a new investment or aggregate with existing one"""
+        name = investment_data.get('name', '')
+        holdings = investment_data.get('holdings', 0.0)
+        amount_spent = investment_data.get('amount_spent', 0.0)
+        average_buy_price = investment_data.get('average_buy_price', 0.0)
+        symbol = investment_data.get('symbol', '')
         
-        db.session.add(investment)
-        try:
-            db.session.commit()
-            self.logger.info(f"Added investment: {investment_data['name']} to {platform}")
-            return investment.to_dict()
-        except Exception as e:
-            db.session.rollback()
-            self.logger.error(f"Error adding investment: {e}")
-            raise
+        # Check if this investment already exists in the platform
+        existing_investment = Investment.query.filter_by(platform=platform, name=name).first()
+        
+        if existing_investment:
+            # Calculate new aggregated values
+            old_holdings = existing_investment.holdings
+            old_amount_spent = existing_investment.amount_spent
+            
+            # Add new holdings and amount spent
+            new_holdings = old_holdings + holdings
+            new_amount_spent = old_amount_spent + amount_spent
+            
+            # Calculate new average buy price
+            new_average_buy_price = new_amount_spent / new_holdings if new_holdings > 0 else 0
+            
+            # Update existing investment
+            existing_investment.holdings = new_holdings
+            existing_investment.amount_spent = new_amount_spent
+            existing_investment.average_buy_price = new_average_buy_price
+            existing_investment.last_updated = datetime.utcnow()
+            
+            # Update symbol if provided and not already set
+            if symbol and not existing_investment.symbol:
+                existing_investment.symbol = symbol
+            
+            try:
+                db.session.commit()
+                self.logger.info(f"Aggregated investment: {name} in {platform}. Holdings: {old_holdings:.8f} + {holdings:.8f} = {new_holdings:.8f}, Avg Price: £{new_average_buy_price:.2f}")
+                return existing_investment.to_dict()
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error aggregating investment: {e}")
+                raise
+        else:
+            # Create new investment
+            investment = Investment(
+                platform=platform,
+                name=name,
+                symbol=symbol,
+                holdings=holdings,
+                amount_spent=amount_spent,
+                average_buy_price=average_buy_price,
+                current_price=investment_data.get('current_price', 0.0)
+            )
+            
+            db.session.add(investment)
+            try:
+                db.session.commit()
+                self.logger.info(f"Added new investment: {name} to {platform}")
+                return investment.to_dict()
+            except Exception as e:
+                db.session.rollback()
+                self.logger.error(f"Error adding investment: {e}")
+                raise
     
     def update_investment(self, investment_id: int, updates: Dict):
         """Update an existing investment"""

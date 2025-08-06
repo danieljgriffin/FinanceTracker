@@ -367,19 +367,23 @@
 function showAddInvestmentModal() {
     const platforms = Object.keys({{ platform_colors|tojson }});
     const platformOptions = platforms.map(p => `<option value="${p}">${p}</option>`).join('');
+    const investmentNames = {{ platform_investment_names|tojson }};
     
     document.getElementById('modalTitle').textContent = 'Add New Investment';
     document.getElementById('modalContent').innerHTML = `
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-white mb-2">Platform</label>
-                <select id="investmentPlatform" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select id="investmentPlatform" onchange="updateInvestmentNameOptions()" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     ${platformOptions}
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-white mb-2">Investment Name</label>
-                <input type="text" id="investmentName" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Tesla Stock" required>
+                <input type="text" id="investmentName" list="investmentNameOptions" class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Tesla Stock or ETH" required>
+                <datalist id="investmentNameOptions">
+                    <!-- Will be populated by updateInvestmentNameOptions() -->
+                </datalist>
             </div>
             <div>
                 <label class="block text-sm font-medium text-white mb-2">Holdings (Quantity)</label>
@@ -406,6 +410,9 @@ function showAddInvestmentModal() {
             </div>
         </div>
     `;
+    
+    // Initialize with first platform's options
+    updateInvestmentNameOptions();
     
     document.getElementById('modalSubmit').onclick = function() {
         const platform = document.getElementById('investmentPlatform').value;
@@ -598,5 +605,21 @@ setInterval(updatePriceStatus, 30000);
 
 // Initial update
 updatePriceStatus();
+
+// Function to update investment name options based on selected platform
+function updateInvestmentNameOptions() {
+    const platform = document.getElementById('investmentPlatform').value;
+    const investmentNames = {{ platform_investment_names|tojson }};
+    const datalist = document.getElementById('investmentNameOptions');
+    
+    if (datalist && investmentNames && investmentNames[platform]) {
+        datalist.innerHTML = '';
+        investmentNames[platform].forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            datalist.appendChild(option);
+        });
+    }
+}
 </script>
 {% endblock %}

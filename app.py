@@ -643,6 +643,9 @@ def investment_manager():
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
         
+        # Get investment names by platform for dropdown
+        platform_investment_names = data_manager.get_all_investment_names()
+        
         return render_template('investment_manager.html',
                              investments_data=investments_data,
                              platform_colors=PLATFORM_COLORS,
@@ -654,6 +657,7 @@ def investment_manager():
                              total_portfolio_pl=total_portfolio_pl,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl,
                              unique_names=unique_names,
+                             platform_investment_names=platform_investment_names,
                              data_manager=data_manager,
                              last_price_update=last_price_update)
     except Exception as e:
@@ -692,13 +696,29 @@ def add_investment():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            get_data_manager().add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': amount_spent,
+                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'symbol': symbol,
+                'current_price': 0.0
+            }
+            get_data_manager().add_investment(platform, investment_data)
         elif input_type == 'average_buy_price':
             average_buy_price = float(request.form.get('average_buy_price', 0))
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            get_data_manager().add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': average_buy_price * holdings,
+                'average_buy_price': average_buy_price,
+                'symbol': symbol,
+                'current_price': 0.0
+            }
+            get_data_manager().add_investment(platform, investment_data)
         else:
             flash('Invalid input type', 'error')
             return redirect(url_for('investment_manager'))
