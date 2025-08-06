@@ -743,20 +743,22 @@ def add_investment():
                 
                 if price:
                     # Update the newly added investment with the current price
-                    investments_data = get_data_manager().get_investments_data()
-                    if platform in investments_data and investments_data[platform]:
-                        # Get the last added investment (most recent)
-                        last_investment = investments_data[platform][-1]
-                        if last_investment.get('name') == name:
-                            last_investment['current_price'] = price
-                            last_investment['symbol'] = symbol  # Update with working symbol
-                            last_investment['last_updated'] = datetime.now().isoformat()
-                            get_data_manager().save_investments_data(investments_data)
+                    try:
+                        # Find the most recently added investment for this platform and name
+                        from models import Investment
+                        latest_investment = Investment.query.filter_by(platform=platform, name=name).order_by(Investment.id.desc()).first()
+                        
+                        if latest_investment:
+                            # Update the investment price directly in the database
+                            get_data_manager().update_investment_price(latest_investment.id, price)
+                            # Also update the symbol if it worked
+                            get_data_manager().update_investment(latest_investment.id, {'symbol': symbol})
                             flash(f'Investment {name} added successfully with live price £{price:.4f}', 'success')
                         else:
-                            flash(f'Investment {name} added successfully (price fetch failed)', 'success')
-                    else:
-                        flash(f'Investment {name} added successfully (price fetch failed)', 'success')
+                            flash(f'Investment {name} added successfully (price update failed)', 'success')
+                    except Exception as update_error:
+                        logging.error(f"Error updating investment price after adding: {str(update_error)}")
+                        flash(f'Investment {name} added successfully (price update failed)', 'success')
                 else:
                     flash(f'Investment {name} added successfully (no live price available for {symbol})', 'success')
             except Exception as e:
