@@ -484,6 +484,31 @@ class DatabaseDataManager:
                 self.logger.error(f"Error updating investment price: {e}")
                 raise
     
+    def remove_investment(self, platform: str, index: int):
+        """Remove an investment by platform and index"""
+        try:
+            # Get investments for the platform
+            investments = Investment.query.filter_by(platform=platform).all()
+            
+            if index < 0 or index >= len(investments):
+                raise ValueError(f"Investment index {index} out of range for platform {platform}")
+            
+            # Get the investment to delete
+            investment_to_delete = investments[index]
+            
+            self.logger.info(f"Deleting investment: {investment_to_delete.name} from {platform}")
+            
+            # Delete the investment
+            db.session.delete(investment_to_delete)
+            db.session.commit()
+            
+            self.logger.info(f"Successfully deleted investment: {investment_to_delete.name}")
+            
+        except Exception as e:
+            db.session.rollback()
+            self.logger.error(f"Error deleting investment: {e}")
+            raise
+    
     def update_monthly_networth(self, year: int, month: str, platform: str, value: float):
         """Update or create networth entry for a specific platform, month, and year"""
         # Find or create the networth entry for this year and month
