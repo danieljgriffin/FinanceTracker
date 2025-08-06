@@ -1000,8 +1000,8 @@ def edit_investment(platform, index):
         flash(f'Error editing investment: {str(e)}', 'error')
         return redirect(url_for('investment_manager'))
 
-@app.route('/update-investment/<platform>/<int:index>', methods=['POST'])
-def update_investment(platform, index):
+@app.route('/update-investment/<platform>/<int:investment_id>', methods=['POST'])
+def update_investment(platform, investment_id):
     """Update an existing investment"""
     try:
         name = request.form.get('name')
@@ -1011,7 +1011,7 @@ def update_investment(platform, index):
         
         if not name or holdings <= 0:
             flash('Investment name and holdings are required', 'error')
-            return redirect(url_for('edit_investment', platform=platform, index=index))
+            return redirect(url_for('investment_manager'))
         
         # Prepare update data
         updates = {
@@ -1025,24 +1025,19 @@ def update_investment(platform, index):
             amount_spent = float(request.form.get('amount_spent', 0))
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
-                return redirect(url_for('edit_investment', platform=platform, index=index))
+                return redirect(url_for('investment_manager'))
             updates['amount_spent'] = amount_spent
             updates['average_buy_price'] = amount_spent / holdings
         elif input_type == 'average_buy_price':
             average_buy_price = float(request.form.get('average_buy_price', 0))
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
-                return redirect(url_for('edit_investment', platform=platform, index=index))
+                return redirect(url_for('investment_manager'))
             updates['average_buy_price'] = average_buy_price
             updates['amount_spent'] = average_buy_price * holdings
         
-        # Get the investment ID from platform and index
-        investments_data = get_data_manager().get_investments_data()
-        if platform in investments_data and index < len(investments_data[platform]):
-            investment_id = investments_data[platform][index]['id']
-            get_data_manager().update_investment(investment_id, updates)
-        else:
-            raise ValueError("Investment not found")
+        # Update the investment directly by ID
+        get_data_manager().update_investment(investment_id, updates)
         flash(f'Investment {name} updated successfully', 'success')
         
     except Exception as e:
