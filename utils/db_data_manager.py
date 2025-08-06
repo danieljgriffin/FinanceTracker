@@ -484,8 +484,29 @@ class DatabaseDataManager:
                 self.logger.error(f"Error updating investment price: {e}")
                 raise
     
+    def remove_investment_by_id(self, investment_id: int):
+        """Remove an investment by ID"""
+        try:
+            investment = Investment.query.get(investment_id)
+            
+            if not investment:
+                raise ValueError(f"Investment with ID {investment_id} not found")
+            
+            self.logger.info(f"Deleting investment: {investment.name} from {investment.platform}")
+            
+            # Delete the investment
+            db.session.delete(investment)
+            db.session.commit()
+            
+            self.logger.info(f"Successfully deleted investment: {investment.name}")
+            
+        except Exception as e:
+            db.session.rollback()
+            self.logger.error(f"Error deleting investment: {e}")
+            raise
+    
     def remove_investment(self, platform: str, index: int):
-        """Remove an investment by platform and index"""
+        """Remove an investment by platform and index (legacy method for backward compatibility)"""
         try:
             # Get investments for the platform
             investments = Investment.query.filter_by(platform=platform).all()

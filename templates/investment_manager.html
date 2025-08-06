@@ -209,10 +209,10 @@
                                         </td>
                                         <td class="px-6 py-4">
                                             <div class="flex items-center space-x-2">
-                                                <button onclick="editInvestment('{{ platform }}', {{ loop.index0 }})" class="text-gray-400 hover:text-blue-400 transition-colors">
+                                                <button onclick="editInvestment('{{ platform }}', {{ investment.id }})" class="text-gray-400 hover:text-blue-400 transition-colors">
                                                     <i class="fas fa-edit"></i>
                                                 </button>
-                                                <button onclick="deleteInvestment('{{ platform }}', {{ loop.index0 }}, '{{ investment.name }}')" class="text-gray-400 hover:text-red-400 transition-colors">
+                                                <button onclick="deleteInvestment('{{ platform }}', {{ investment.id }}, '{{ investment.name }}')" class="text-gray-400 hover:text-red-400 transition-colors">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -470,10 +470,23 @@ function toggleModalInputType() {
     }
 }
 
-function editInvestment(platform, index) {
+function editInvestment(platform, investmentId) {
     // Get investment data from the page
     const investments = {{ investments_data|tojson }};
-    const investment = investments[platform][index];
+    
+    // Find the investment by ID
+    let investment = null;
+    for (const inv of investments[platform]) {
+        if (inv.id === investmentId) {
+            investment = inv;
+            break;
+        }
+    }
+    
+    if (!investment) {
+        alert('Investment not found');
+        return;
+    }
     
     const platforms = Object.keys({{ platform_colors|tojson }});
     const platformOptions = platforms.map(p => `<option value="${p}" ${p === platform ? 'selected' : ''}>${p}</option>`).join('');
@@ -559,12 +572,12 @@ function editInvestment(platform, index) {
     document.getElementById('modalOverlay').classList.remove('hidden');
 }
 
-function deleteInvestment(platform, index, name) {
+function deleteInvestment(platform, investmentId, name) {
     if (confirm(`Are you sure you want to delete "${name}" from ${platform}?`)) {
         // Create a form and submit it
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/delete-investment/${platform}/${index}`;
+        form.action = `/delete-investment/${platform}/${investmentId}`;
         document.body.appendChild(form);
         form.submit();
     }

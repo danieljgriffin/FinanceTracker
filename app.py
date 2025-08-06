@@ -1051,11 +1051,11 @@ def update_investment(platform, index):
     
     return redirect(url_for('investment_manager'))
 
-@app.route('/delete-investment/<platform>/<int:index>', methods=['POST'])
-def delete_investment(platform, index):
+@app.route('/delete-investment/<platform>/<int:investment_id>', methods=['POST'])
+def delete_investment(platform, investment_id):
     """Delete an existing investment"""
     try:
-        get_data_manager().remove_investment(platform, index)
+        get_data_manager().remove_investment_by_id(investment_id)
         flash('Investment deleted successfully', 'success')
         
     except Exception as e:
