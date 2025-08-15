@@ -101,13 +101,13 @@
                                             <div class="ml-2 flex items-center">
                                                 {% if change_amount > 0 %}
                                                     <i class="fas fa-arrow-up text-green-500 text-xs mr-1"></i>
-                                                    <span class="text-green-500 text-xs font-medium">+{{ "{:.1f}".format(change_percent) }}%</span>
+                                                    <span class="text-green-500 text-xs font-medium">+{{ "{:.1f}".format(change_percent) }}% (+£{{ "{:,.0f}".format(change_amount) }})</span>
                                                 {% elif change_amount < 0 %}
                                                     <i class="fas fa-arrow-down text-red-500 text-xs mr-1"></i>
-                                                    <span class="text-red-500 text-xs font-medium">{{ "{:.1f}".format(change_percent) }}%</span>
+                                                    <span class="text-red-500 text-xs font-medium">{{ "{:.1f}".format(change_percent) }}% (-£{{ "{:,.0f}".format(-change_amount) }})</span>
                                                 {% else %}
                                                     <i class="fas fa-minus text-gray-500 text-xs mr-1"></i>
-                                                    <span class="text-gray-500 text-xs">0.0%</span>
+                                                    <span class="text-gray-500 text-xs">0.0% (£0)</span>
                                                 {% endif %}
                                             </div>
                                         {% endif %}
@@ -300,13 +300,13 @@
                                             <div class="ml-2 sm:ml-3 flex items-center">
                                                 {% if change_amount > 0 %}
                                                     <i class="fas fa-arrow-up text-green-500 text-xs sm:text-sm mr-1"></i>
-                                                    <span class="text-green-500 text-xs sm:text-sm font-medium">+{{ "{:.1f}".format(change_percent) }}%</span>
+                                                    <span class="text-green-500 text-xs sm:text-sm font-medium">+{{ "{:.1f}".format(change_percent) }}% (+£{{ "{:,.0f}".format(change_amount) }})</span>
                                                 {% elif change_amount < 0 %}
                                                     <i class="fas fa-arrow-down text-red-500 text-xs sm:text-sm mr-1"></i>
-                                                    <span class="text-red-500 text-xs sm:text-sm font-medium">{{ "{:.1f}".format(change_percent) }}%</span>
+                                                    <span class="text-red-500 text-xs sm:text-sm font-medium">{{ "{:.1f}".format(change_percent) }}% (-£{{ "{:,.0f}".format(-change_amount) }})</span>
                                                 {% else %}
                                                     <i class="fas fa-minus text-gray-500 text-xs sm:text-sm mr-1"></i>
-                                                    <span class="text-gray-500 text-xs sm:text-sm">0.0%</span>
+                                                    <span class="text-gray-500 text-xs sm:text-sm">0.0% (£0)</span>
                                                 {% endif %}
                                             </div>
                                         {% endif %}
