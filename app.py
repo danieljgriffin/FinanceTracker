@@ -570,17 +570,56 @@ def income_investments():
     """Income vs Investment tracker"""
     try:
         income_data = get_data_manager().get_income_data()
+        monthly_investments = get_data_manager().get_monthly_investments()
         years = list(range(2017, 2026))  # 2017-2025
         
         return render_template('income_investments.html',
                              income_data=income_data,
+                             monthly_investments=monthly_investments,
                              years=years)
     except Exception as e:
         logging.error(f"Error in income investments: {str(e)}")
         flash(f'Error loading income vs investments: {str(e)}', 'error')
         return render_template('income_investments.html',
                              income_data={},
+                             monthly_investments={},
                              years=[])
+
+@app.route('/add-monthly-investment', methods=['POST'])
+def add_monthly_investment():
+    """Add monthly investment data"""
+    try:
+        year = int(request.form.get('year'))
+        month = int(request.form.get('month'))
+        month_name = request.form.get('month_name')
+        income_received = float(request.form.get('income_received', 0))
+        amount_invested = float(request.form.get('amount_invested', 0))
+        
+        get_data_manager().add_monthly_investment(
+            year=year,
+            month=month, 
+            month_name=month_name,
+            income_received=income_received,
+            amount_invested=amount_invested
+        )
+        
+        flash(f'Added investment data for {month_name} {year}', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error adding monthly investment: {str(e)}")
+        flash(f'Error adding monthly investment: {str(e)}', 'error')
+    
+    return redirect(url_for('income_investments'))
+
+@app.route('/api/chart-data')
+def chart_data():
+    """API endpoint for chart data with value and invested lines"""
+    try:
+        chart_data = get_data_manager().get_chart_data_with_invested()
+        return jsonify(chart_data)
+    except Exception as e:
+        logging.error(f"Error generating chart data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/monthly-breakdown')
 def monthly_breakdown():

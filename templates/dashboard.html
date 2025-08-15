@@ -543,21 +543,59 @@
         if (loadingElement) loadingElement.classList.remove('hidden');
         if (loadingDesktopElement) loadingDesktopElement.classList.remove('hidden');
         
-        // Fetch net worth data for the specified year(s)
-        fetch(`/api/networth-chart-data?year=${year}`)
+        // Fetch chart data with both value and invested lines
+        fetch(`/api/chart-data`)
             .then(response => response.json())
             .then(data => {
                 if (loadingElement) loadingElement.classList.add('hidden');
                 if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
                 
-                // Render chart with the data
-                renderChart(data, year);
+                // Filter data based on selected year
+                const filteredData = filterDataByYear(data, year);
+                
+                // Render chart with the filtered data
+                renderChart(filteredData, year);
             })
             .catch(error => {
                 console.error('Error loading chart data:', error);
                 if (loadingElement) loadingElement.classList.add('hidden');
                 if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
             });
+    }
+    
+    // Filter data based on selected year
+    function filterDataByYear(data, year) {
+        if (year === 'all') {
+            return data;
+        }
+        
+        const filteredData = {
+            labels: [],
+            value_line: [],
+            invested_line: []
+        };
+        
+        if (year === '2024-2025') {
+            // Include both 2024 and 2025
+            for (let i = 0; i < data.labels.length; i++) {
+                if (data.labels[i].includes('2024') || data.labels[i].includes('2025')) {
+                    filteredData.labels.push(data.labels[i]);
+                    filteredData.value_line.push(data.value_line[i]);
+                    filteredData.invested_line.push(data.invested_line[i]);
+                }
+            }
+        } else {
+            // Filter by specific year
+            for (let i = 0; i < data.labels.length; i++) {
+                if (data.labels[i].includes(year)) {
+                    filteredData.labels.push(data.labels[i]);
+                    filteredData.value_line.push(data.value_line[i]);
+                    filteredData.invested_line.push(data.invested_line[i]);
+                }
+            }
+        }
+        
+        return filteredData;
     }
     
     // Render chart using Chart.js
@@ -578,12 +616,20 @@
             data: {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Net Worth',
-                    data: data.values,
+                    label: 'Portfolio Value',
+                    data: data.value_line,
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                     borderWidth: 2,
-                    fill: true,
+                    fill: false,
+                    tension: 0.1
+                }, {
+                    label: 'Amount Invested',
+                    data: data.invested_line,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    borderWidth: 2,
+                    fill: false,
                     tension: 0.1
                 }]
             },
@@ -592,7 +638,13 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        display: true,
+                        labels: {
+                            color: 'rgb(156, 163, 175)',
+                            font: {
+                                size: 12
+                            }
+                        }
                     }
                 },
                 scales: {

@@ -202,5 +202,127 @@
             </button>
         </div>
     {% endif %}
+    
+    <!-- Monthly Investment Tracker -->
+    <div class="bg-white rounded-lg shadow-md">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900">Monthly Investment Tracker</h2>
+                <button onclick="toggleAddForm()" class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Add Month
+                </button>
+            </div>
+        </div>
+        
+        <!-- Add Monthly Investment Form (Hidden by default) -->
+        <div id="addMonthForm" class="hidden p-6 border-b border-gray-200 bg-gray-50">
+            <form method="POST" action="{{ url_for('add_monthly_investment') }}" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                        <select name="year" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="2025" selected>2025</option>
+                            <option value="2024">2024</option>
+                            <option value="2023">2023</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                        <select name="month" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="updateMonthName()">
+                            <option value="">Select month...</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                        <input type="hidden" name="month_name" id="monthName" value="">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Income Received (£)</label>
+                        <input type="number" name="income_received" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Amount Invested (£)</label>
+                        <input type="number" name="amount_invested" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="0.00">
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="toggleAddForm()" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Monthly Investment Data -->
+        <div class="p-6">
+            {% if monthly_investments %}
+                <div class="space-y-6">
+                    {% for year, months in monthly_investments.items() %}
+                        <div class="border-b border-gray-200 pb-4 last:border-b-0">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ year }}</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {% for month_num, data in months.items() %}
+                                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                        <div class="text-sm font-medium text-gray-900 mb-2">{{ data.month_name }}</div>
+                                        <div class="text-xs text-gray-600 space-y-1">
+                                            <div class="flex justify-between">
+                                                <span>Income:</span>
+                                                <span class="font-medium">£{{ "{:,.2f}".format(data.income_received) if data.income_received else "0.00" }}</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>Invested:</span>
+                                                <span class="font-medium">£{{ "{:,.2f}".format(data.amount_invested) if data.amount_invested else "0.00" }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-chart-line text-gray-400 text-3xl mb-3"></i>
+                    <p class="text-gray-600">No monthly investment data yet</p>
+                    <p class="text-sm text-gray-500 mt-1">Click "Add Month" to start tracking monthly investments</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
+
+<script>
+function toggleAddForm() {
+    const form = document.getElementById('addMonthForm');
+    form.classList.toggle('hidden');
+}
+
+function updateMonthName() {
+    const monthSelect = document.querySelector('select[name="month"]');
+    const monthNameInput = document.getElementById('monthName');
+    const monthNames = [
+        '', 'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    const monthNum = parseInt(monthSelect.value);
+    if (monthNum) {
+        monthNameInput.value = monthNames[monthNum];
+    } else {
+        monthNameInput.value = '';
+    }
+}
+</script>
 {% endblock %}

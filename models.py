@@ -138,3 +138,30 @@ class MonthlyBreakdown(db.Model):
             'monthly_income': self.monthly_income,
             'last_updated': self.last_updated.isoformat() if self.last_updated else None
         }
+
+class MonthlyInvestment(db.Model):
+    __tablename__ = 'monthly_investments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)  # 1-12
+    month_name = db.Column(db.String(20), nullable=False)  # "January", "February", etc.
+    income_received = db.Column(db.Float, default=0.0)
+    amount_invested = db.Column(db.Float, default=0.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Unique constraint for year+month combination
+    __table_args__ = (db.UniqueConstraint('year', 'month', name='unique_year_month_investment'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'year': self.year,
+            'month': self.month,
+            'month_name': self.month_name,
+            'income_received': self.income_received,
+            'amount_invested': self.amount_invested,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }

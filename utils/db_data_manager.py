@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from models import db, Investment, PlatformCash, NetworthEntry, Expense, MonthlyCommitment, IncomeData, MonthlyBreakdown
+from models import db, Investment, PlatformCash, NetworthEntry, Expense, MonthlyCommitment, IncomeData, MonthlyBreakdown, MonthlyInvestment
 
 class DatabaseDataManager:
     """Database-based data manager to replace JSON file storage"""
@@ -431,6 +431,126 @@ class DatabaseDataManager:
             db.session.rollback()
             self.logger.error(f"Error updating monthly income: {e}")
             raise
+    
+    def get_monthly_investments(self, year: int = None) -> Dict:
+        """Get monthly investment data, optionally filtered by year"""
+        if year:
+            investments = MonthlyInvestment.query.filter_by(year=year).order_by(MonthlyInvestment.month).all()
+        else:
+            investments = MonthlyInvestment.query.order_by(MonthlyInvestment.year, MonthlyInvestment.month).all()
+        
+        data = {}
+        for investment in investments:
+            if investment.year not in data:
+                data[investment.year] = {}
+            data[investment.year][investment.month] = investment.to_dict()
+        
+        return data
+    
+    def add_monthly_investment(self, year: int, month: int, month_name: str, income_received: float, amount_invested: float):
+        """Add or update monthly investment data"""
+        existing = MonthlyInvestment.query.filter_by(year=year, month=month).first()
+        
+        if existing:
+            existing.income_received = income_received
+            existing.amount_invested = amount_invested
+            existing.updated_at = datetime.utcnow()
+        else:
+            investment = MonthlyInvestment(
+                year=year,
+                month=month,
+                month_name=month_name,
+                income_received=income_received,
+                amount_invested=amount_invested
+            )
+            db.session.add(investment)
+        
+        try:
+            db.session.commit()
+            self.logger.info(f"Updated monthly investment for {month_name} {year}: Income £{income_received}, Invested £{amount_invested}")
+            return existing.to_dict() if existing else investment.to_dict()
+        except Exception as e:
+            db.session.rollback()
+            self.logger.error(f"Error updating monthly investment: {e}")
+            raise
+    
+    def get_chart_data_with_invested(self):
+        """Generate chart data with both value and invested lines"""
+        # Get existing networth data
+        networth_data = self.get_networth_data()
+        monthly_investments = self.get_monthly_investments()
+        
+        chart_data = {
+            'labels': [],
+            'value_line': [],
+            'invested_line': []
+        }
+        
+        # Constants
+        STARTING_INVESTED = 53821
+        MONTHLY_2024_INCREASE = 1724
+        
+        # Build data for 2023 (existing networth data)
+        if 2023 in networth_data:
+            year_2023 = networth_data[2023]
+            for month_key in sorted(year_2023.keys()):
+                if month_key != 'total_net_worth':
+                    month_data = year_2023[month_key]
+                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
+                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2023")
+                        chart_data['value_line'].append(month_data['total_net_worth'])
+                        # For 2023, invested line starts at same values (no separate tracking yet)
+                        chart_data['invested_line'].append(month_data['total_net_worth'])
+        
+        # Build data for 2024 (fixed increases)
+        current_invested = STARTING_INVESTED
+        if 2024 in networth_data:
+            year_2024 = networth_data[2024]
+            for month_key in sorted(year_2024.keys()):
+                if month_key != 'total_net_worth':
+                    month_data = year_2024[month_key]
+                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
+                        current_invested += MONTHLY_2024_INCREASE
+                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2024")
+                        chart_data['value_line'].append(month_data['total_net_worth'])
+                        chart_data['invested_line'].append(current_invested)
+        
+        # Build data for 2025 (value from networth data, invested from monthly tracking)
+        if 2025 in networth_data:
+            year_2025 = networth_data[2025]
+            monthly_2025 = monthly_investments.get(2025, {})
+            
+            for month_key in sorted(year_2025.keys()):
+                if month_key != 'total_net_worth':
+                    month_data = year_2025[month_key]
+                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
+                        # Get month number from month_key (e.g., "1st Jan" -> 1)
+                        month_num = self._get_month_number_from_key(month_key)
+                        
+                        # Add monthly investment amount if available
+                        if month_num in monthly_2025:
+                            monthly_invested = monthly_2025[month_num]['amount_invested']
+                            current_invested += monthly_invested
+                        else:
+                            # Default 2025 increase if no monthly data
+                            current_invested += 1640
+                        
+                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2025")
+                        chart_data['value_line'].append(month_data['total_net_worth'])
+                        chart_data['invested_line'].append(current_invested)
+        
+        return chart_data
+    
+    def _get_month_number_from_key(self, month_key: str) -> int:
+        """Convert month key like '1st Jan' to month number 1"""
+        month_mapping = {
+            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+        }
+        
+        # Extract month name from key like "1st Jan"
+        month_part = month_key.replace('1st ', '')
+        return month_mapping.get(month_part, 1)
     
     def get_unique_investment_names(self) -> List[str]:
         """Get unique investment names across all platforms"""
