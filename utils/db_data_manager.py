@@ -476,8 +476,8 @@ class DatabaseDataManager:
     
     def get_chart_data_with_invested(self):
         """Generate chart data with both value and invested lines"""
-        # Get existing networth data
-        networth_data = self.get_networth_data()
+        # Get data directly from database
+        entries = NetworthEntry.query.filter(NetworthEntry.total_networth > 0).order_by(NetworthEntry.year, NetworthEntry.month).all()
         monthly_investments = self.get_monthly_investments()
         
         chart_data = {
@@ -489,56 +489,40 @@ class DatabaseDataManager:
         # Constants
         STARTING_INVESTED = 53821
         MONTHLY_2024_INCREASE = 1724
-        
-        # Build data for 2023 (existing networth data)
-        if 2023 in networth_data:
-            year_2023 = networth_data[2023]
-            for month_key in sorted(year_2023.keys()):
-                if month_key != 'total_net_worth':
-                    month_data = year_2023[month_key]
-                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
-                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2023")
-                        chart_data['value_line'].append(month_data['total_net_worth'])
-                        # For 2023, invested line starts at same values (no separate tracking yet)
-                        chart_data['invested_line'].append(month_data['total_net_worth'])
-        
-        # Build data for 2024 (fixed increases)
         current_invested = STARTING_INVESTED
-        if 2024 in networth_data:
-            year_2024 = networth_data[2024]
-            for month_key in sorted(year_2024.keys()):
-                if month_key != 'total_net_worth':
-                    month_data = year_2024[month_key]
-                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
-                        current_invested += MONTHLY_2024_INCREASE
-                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2024")
-                        chart_data['value_line'].append(month_data['total_net_worth'])
-                        chart_data['invested_line'].append(current_invested)
         
-        # Build data for 2025 (value from networth data, invested from monthly tracking)
-        if 2025 in networth_data:
-            year_2025 = networth_data[2025]
-            monthly_2025 = monthly_investments.get(2025, {})
+        self.logger.info(f"Found {len(entries)} networth entries with data")
+        self.logger.info(f"Monthly investments available for years: {list(monthly_investments.keys())}")
+        
+        for entry in entries:
+            # Add to chart data
+            month_label = entry.month.replace('1st ', '').replace('31st ', '')
+            chart_data['labels'].append(f"{month_label} {entry.year}")
+            chart_data['value_line'].append(entry.total_networth)
             
-            for month_key in sorted(year_2025.keys()):
-                if month_key != 'total_net_worth':
-                    month_data = year_2025[month_key]
-                    if isinstance(month_data, dict) and 'total_net_worth' in month_data:
-                        # Get month number from month_key (e.g., "1st Jan" -> 1)
-                        month_num = self._get_month_number_from_key(month_key)
-                        
-                        # Add monthly investment amount if available
-                        if month_num in monthly_2025:
-                            monthly_invested = monthly_2025[month_num]['amount_invested']
-                            current_invested += monthly_invested
-                        else:
-                            # Default 2025 increase if no monthly data
-                            current_invested += 1640
-                        
-                        chart_data['labels'].append(f"{month_key.replace('1st ', '')} 2025")
-                        chart_data['value_line'].append(month_data['total_net_worth'])
-                        chart_data['invested_line'].append(current_invested)
+            # Calculate invested amount based on year
+            if entry.year == 2023:
+                # For 2023, invested line equals value line (no separate tracking)
+                chart_data['invested_line'].append(entry.total_networth)
+            elif entry.year == 2024:
+                # For 2024, add fixed monthly increase
+                current_invested += MONTHLY_2024_INCREASE
+                chart_data['invested_line'].append(current_invested)
+            elif entry.year == 2025:
+                # For 2025, use monthly investment data if available
+                month_num = self._get_month_number_from_key(entry.month)
+                monthly_2025 = monthly_investments.get(2025, {})
+                
+                if month_num in monthly_2025:
+                    monthly_invested = monthly_2025[month_num]['amount_invested']
+                    current_invested += monthly_invested
+                else:
+                    # Default 2025 increase if no monthly data
+                    current_invested += 1640
+                    
+                chart_data['invested_line'].append(current_invested)
         
+        self.logger.info(f"Generated chart data with {len(chart_data['labels'])} points")
         return chart_data
     
     def _get_month_number_from_key(self, month_key: str) -> int:
