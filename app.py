@@ -150,6 +150,50 @@ def dashboard():
             for platform, amount in platform_allocations.items():
                 platform_percentages[platform] = (amount / total_allocation) * 100
         
+        # Calculate monthly changes for each platform
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month_num = datetime.now().month
+            
+            # Get the previous month's data
+            if current_month_num == 1:
+                # January - compare to December of previous year
+                prev_year = current_year - 1
+                prev_month_name = '1st Dec'
+            else:
+                # Other months - use current year
+                prev_year = current_year
+                month_names = ['', '1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
+                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec']
+                prev_month_name = month_names[current_month_num - 1]
+            
+            # Get previous month's data
+            prev_year_data = get_data_manager().get_networth_data(prev_year)
+            prev_month_data = prev_year_data.get(prev_month_name, {})
+            
+            # Calculate changes for each platform
+            for platform, current_value in platform_allocations.items():
+                prev_value = prev_month_data.get(platform, 0)
+                if isinstance(prev_value, (int, float)) and prev_value > 0:
+                    change_amount = current_value - prev_value
+                    change_percent = (change_amount / prev_value) * 100
+                    platform_monthly_changes[platform] = {
+                        'amount': change_amount,
+                        'percent': change_percent,
+                        'previous': prev_value
+                    }
+                else:
+                    platform_monthly_changes[platform] = {
+                        'amount': 0,
+                        'percent': 0,
+                        'previous': 0
+                    }
+                    
+        except Exception as e:
+            logging.error(f"Error calculating platform monthly changes: {str(e)}")
+            platform_monthly_changes = {}
+        
         # Calculate month-on-month change (current net worth vs current month's 1st day)
         mom_change = 0
         mom_amount_change = 0
@@ -216,6 +260,7 @@ def dashboard():
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
+                             platform_monthly_changes=platform_monthly_changes,
                              mom_change=mom_change,
                              mom_amount_change=mom_amount_change,
                              yearly_increase=yearly_increase,
@@ -230,6 +275,7 @@ def dashboard():
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
+                             platform_monthly_changes={},
                              mom_change=0,
                              mom_amount_change=0,
                              yearly_increase=0,
