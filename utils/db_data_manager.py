@@ -559,6 +559,108 @@ class DatabaseDataManager:
         total_networth = sum(v for v in platform_data.values() if isinstance(v, (int, float)))
         self.save_networth_data(year, month, platform_data, total_networth)
     
+    def get_asset_class_allocation(self):
+        """Calculate asset class allocation breakdown"""
+        investments = Investment.query.all()
+        
+        asset_classes = {
+            'Stocks': 0.0,
+            'Cryptocurrency': 0.0,
+            'Cash': 0.0,
+            'ISA/Pension': 0.0
+        }
+        
+        # Calculate investment values
+        for investment in investments:
+            # Use holdings attribute (which exists in the model) instead of quantity
+            value = (investment.holdings or 0) * (investment.current_price or 0)
+            
+            # Categorize by platform and investment type
+            if investment.platform in ['Crypto']:
+                asset_classes['Cryptocurrency'] += value
+            elif investment.platform in ['Trading212 ISA', 'HL Stocks & Shares LISA', 'InvestEngine ISA']:
+                asset_classes['ISA/Pension'] += value
+            elif investment.platform in ['Degiro', 'EQ (GSK shares)']:
+                asset_classes['Stocks'] += value
+            else:
+                # Default to stocks for other investment platforms
+                asset_classes['Stocks'] += value
+        
+        # Add cash balances from platform data
+        try:
+            cash_platforms = ['Cash']
+            for platform in cash_platforms:
+                cash_balance = self.get_platform_cash(platform)
+                if cash_balance:
+                    asset_classes['Cash'] += cash_balance
+        except Exception as e:
+            self.logger.warning(f"Could not get cash balances: {e}")
+        
+        # Remove zero values and calculate percentages
+        total_value = sum(asset_classes.values())
+        if total_value > 0:
+            asset_classes = {k: v for k, v in asset_classes.items() if v > 0}
+            asset_percentages = {k: (v / total_value) * 100 for k, v in asset_classes.items()}
+        else:
+            asset_percentages = {}
+        
+        return {
+            'values': asset_classes,
+            'percentages': asset_percentages,
+            'total': total_value
+        }
+    
+    def get_geographic_sector_allocation(self):
+        """Calculate geographic and sector allocation"""
+        investments = Investment.query.all()
+        
+        allocations = {
+            'United States (Tech)': 0.0,
+            'United States (Healthcare)': 0.0,
+            'United Kingdom': 0.0,
+            'Cryptocurrency': 0.0,
+            'Global/Emerging Markets': 0.0
+        }
+        
+        for investment in investments:
+            # Use holdings attribute instead of quantity
+            value = (investment.holdings or 0) * (investment.current_price or 0)
+            name = investment.name.lower() if investment.name else ''
+            
+            # Categorize based on investment name and platform
+            if investment.platform in ['Crypto']:
+                allocations['Cryptocurrency'] += value
+            elif 'gsk' in name or investment.platform == 'EQ (GSK shares)':
+                allocations['United Kingdom'] += value
+            elif any(term in name for term in ['s&p', 'sp500', 'nasdaq', 'apple', 'microsoft', 'tesla', 'nvidia']):
+                # S&P 500 and US tech stocks
+                if any(term in name for term in ['tech', 'apple', 'microsoft', 'tesla', 'nvidia', 'nasdaq']):
+                    allocations['United States (Tech)'] += value
+                else:
+                    allocations['United States (Tech)'] += value  # S&P 500 is heavily tech-weighted
+            elif any(term in name for term in ['emerging', 'world', 'global', 'international']):
+                allocations['Global/Emerging Markets'] += value
+            else:
+                # Default categorization based on platform
+                if investment.platform in ['Trading212 ISA', 'InvestEngine ISA']:
+                    allocations['United States (Tech)'] += value  # Most ISA investments are US-focused
+                else:
+                    allocations['United Kingdom'] += value
+        
+        # Remove zero values and calculate percentages
+        total_value = sum(allocations.values())
+        if total_value > 0:
+            allocations = {k: v for k, v in allocations.items() if v > 0}
+            percentages = {k: (v / total_value) * 100 for k, v in allocations.items()}
+        else:
+            percentages = {}
+        
+        return {
+            'values': allocations,
+            'percentages': percentages,
+            'total': total_value
+        }
+    
     def update_investment_price(self, investment_id: int, current_price: float):
         """Update current price for an investment"""
         investment = Investment.query.get(investment_id)

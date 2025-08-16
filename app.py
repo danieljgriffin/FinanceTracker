@@ -1307,5 +1307,27 @@ def update_investment_commitment():
         logging.error(f"Error updating investment commitment: {str(e)}")
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/asset-allocation')
+def api_asset_allocation():
+    """API endpoint for asset class allocation data"""
+    try:
+        data_manager = get_data_manager()
+        allocation_data = data_manager.get_asset_class_allocation()
+        return jsonify(allocation_data)
+    except Exception as e:
+        logging.error(f"Error getting asset allocation data: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/geographic-allocation')
+def api_geographic_allocation():
+    """API endpoint for geographic/sector allocation data"""
+    try:
+        data_manager = get_data_manager()
+        allocation_data = data_manager.get_geographic_sector_allocation()
+        return jsonify(allocation_data)
+    except Exception as e:
+        logging.error(f"Error getting geographic allocation data: {e}")
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
