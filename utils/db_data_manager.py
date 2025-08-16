@@ -477,7 +477,7 @@ class DatabaseDataManager:
     def get_chart_data_with_invested(self):
         """Generate simple chart data showing just portfolio value"""
         # Get data directly from database
-        entries = NetworthEntry.query.filter(NetworthEntry.total_networth > 0).order_by(NetworthEntry.year, NetworthEntry.month).all()
+        entries = NetworthEntry.query.filter(NetworthEntry.total_networth > 0).all()
         
         chart_data = {
             'labels': [],
@@ -486,13 +486,28 @@ class DatabaseDataManager:
         
         self.logger.info(f"Found {len(entries)} networth entries with data")
         
-        for entry in entries:
+        # Create a proper sorting key for chronological order
+        def get_sort_key(entry):
+            # Month order mapping
+            month_order = {
+                '1st Jan': 1, '1st Feb': 2, '1st Mar': 3, '1st Apr': 4, 
+                '1st May': 5, '1st Jun': 6, '1st Jul': 7, '1st Aug': 8, 
+                '1st Sep': 9, '1st Oct': 10, '1st Nov': 11, '1st Dec': 12, 
+                '31st Dec': 13
+            }
+            return (entry.year, month_order.get(entry.month, 0))
+        
+        # Sort entries chronologically
+        sorted_entries = sorted(entries, key=get_sort_key)
+        
+        for entry in sorted_entries:
             # Add to chart data
             month_label = entry.month.replace('1st ', '').replace('31st ', '')
             chart_data['labels'].append(f"{month_label} {entry.year}")
             chart_data['value_line'].append(entry.total_networth)
         
         self.logger.info(f"Generated chart data with {len(chart_data['labels'])} points")
+        self.logger.info(f"Latest entry: {chart_data['labels'][-1] if chart_data['labels'] else 'None'}")
         return chart_data
     
     def _get_month_number_from_key(self, month_key: str) -> int:
