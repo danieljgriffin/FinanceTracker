@@ -193,15 +193,13 @@
                         <span class="text-gray-300">Progress</span>
                         <span class="text-white font-semibold">{{ "%.1f"|format(progress_info.progress_percentage) }}%</span>
                     </div>
-                    <div class="relative w-full bg-gray-700 rounded-full h-3 mb-6">
-                        <div class="h-3 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500" 
-                             style="width: {{ progress_info.progress_percentage }}%"></div>
-                        <!-- Current Progress Indicator -->
-                        <div class="absolute top-0 h-3 pointer-events-none" style="left: {{ progress_info.progress_percentage }}%; transform: translateX(-50%);">
-                            <div class="w-1 h-4 bg-white rounded-full shadow-lg"></div>
-                            <div class="absolute top-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap border border-gray-600">
+                    <div class="relative w-full bg-gray-700 rounded-full h-6">
+                        <div class="h-6 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500 flex items-center justify-center relative" 
+                             style="width: {{ progress_info.progress_percentage }}%">
+                            <!-- Current Progress Value Inside Bar -->
+                            <span class="absolute right-2 text-white text-xs font-semibold">
                                 £{{ "{:,.0f}".format(current_net_worth) }}
-                            </div>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -431,15 +429,13 @@
                     
                     <!-- Progress Bar -->
                     <div class="space-y-2">
-                        <div class="relative w-full bg-gray-700 rounded-full h-4 mb-6">
-                            <div class="h-4 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-700" 
-                                 style="width: {{ progress_info.progress_percentage }}%"></div>
-                            <!-- Current Progress Indicator -->
-                            <div class="absolute top-0 h-4 pointer-events-none" style="left: {{ progress_info.progress_percentage }}%; transform: translateX(-50%);">
-                                <div class="w-1 h-5 bg-white rounded-full shadow-lg"></div>
-                                <div class="absolute top-6 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm px-3 py-1 rounded shadow-lg whitespace-nowrap border border-gray-600">
+                        <div class="relative w-full bg-gray-700 rounded-full h-8">
+                            <div class="h-8 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-700 flex items-center justify-center relative" 
+                                 style="width: {{ progress_info.progress_percentage }}%">
+                                <!-- Current Progress Value Inside Bar -->
+                                <span class="absolute right-3 text-white text-sm font-semibold">
                                     £{{ "{:,.0f}".format(current_net_worth) }}
-                                </div>
+                                </span>
                             </div>
                         </div>
                         <div class="flex justify-between text-xs text-gray-400">
