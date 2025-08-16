@@ -108,6 +108,7 @@ main {
         max-width: 100% !important;
         padding-left: 16px !important;
         padding-right: 16px !important;
+        background: transparent !important;
     }
     
     /* Stack flex items on mobile */
@@ -139,7 +140,8 @@ main {
     /* Grid layouts stack on mobile */
     .grid {
         grid-template-columns: 1fr !important;
-        gap: 12px !important;
+        gap: 16px !important;
+        background: transparent !important;
     }
 }
 
@@ -182,7 +184,8 @@ main {
     /* Mobile responsive helpers */
     .grid {
         grid-template-columns: 1fr !important;
-        gap: 12px !important;
+        gap: 16px !important;
+        background: transparent !important;
     }
     
     .card {
@@ -334,9 +337,14 @@ h1, h2, h3, .text-2xl, .text-3xl, .text-lg, .text-xl {
 }
 
 /* Ensure all content containers respect viewport width */
-.container, .card, .grid, .flex {
+.container, .grid, .flex {
     max-width: 100%;
     overflow-x: hidden;
+    background: transparent !important;
+}
+
+.container {
+    background: transparent !important;
 }
 
 /* Fix table responsiveness */
@@ -364,6 +372,7 @@ h1, h2, h3, .text-2xl, .text-3xl, .text-lg, .text-xl {
     .grid {
         display: grid;
         max-width: 100%;
+        background: transparent !important;
     }
     
     /* Fix any potential text overflow */
@@ -412,14 +421,14 @@ h1, h2, h3, .text-2xl, .text-3xl, .text-lg, .text-xl {
     border-color: rgba(59, 130, 246, 0.3);
 }
 
-/* Dark mode liquid glass card styles */
+/* Dark mode liquid glass card styles - standardized */
 .card {
     @apply rounded-2xl border-0;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
     border-radius: 16px !important;
 }
 
