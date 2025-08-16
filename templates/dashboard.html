@@ -543,7 +543,7 @@
         if (loadingElement) loadingElement.classList.remove('hidden');
         if (loadingDesktopElement) loadingDesktopElement.classList.remove('hidden');
         
-        // Fetch chart data with both value and invested lines
+        // Fetch chart data 
         fetch(`/api/chart-data`)
             .then(response => response.json())
             .then(data => {
@@ -571,8 +571,7 @@
         
         const filteredData = {
             labels: [],
-            value_line: [],
-            invested_line: []
+            value_line: []
         };
         
         if (year === '2024-2025') {
@@ -581,7 +580,6 @@
                 if (data.labels[i].includes('2024') || data.labels[i].includes('2025')) {
                     filteredData.labels.push(data.labels[i]);
                     filteredData.value_line.push(data.value_line[i]);
-                    filteredData.invested_line.push(data.invested_line[i]);
                 }
             }
         } else {
@@ -590,7 +588,6 @@
                 if (data.labels[i].includes(year)) {
                     filteredData.labels.push(data.labels[i]);
                     filteredData.value_line.push(data.value_line[i]);
-                    filteredData.invested_line.push(data.invested_line[i]);
                 }
             }
         }
@@ -620,16 +617,8 @@
                     data: data.value_line,
                     borderColor: 'rgb(59, 130, 246)',
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.1
-                }, {
-                    label: 'Amount Invested',
-                    data: data.invested_line,
-                    borderColor: 'rgb(34, 197, 94)',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    borderWidth: 2,
-                    fill: false,
+                    borderWidth: 3,
+                    fill: true,
                     tension: 0.1
                 }]
             },
