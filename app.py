@@ -1083,17 +1083,8 @@ def networth_chart_data():
         return jsonify({'labels': [], 'values': []}), 500
 
 def get_platform_color(platform):
-    """Get consistent color for each platform"""
-    colors = {
-        'Degiro': '#3b82f6',  # blue
-        'Trading212 ISA': '#10b981',  # green
-        'EQ (GSK shares)': '#f59e0b',  # amber
-        'InvestEngine ISA': '#8b5cf6',  # purple
-        'Crypto': '#f97316',  # orange
-        'HL Stocks & Shares LISA': '#ef4444',  # red
-        'Cash': '#6b7280'  # gray
-    }
-    return colors.get(platform, '#6b7280')
+    """Get consistent color for each platform - uses same colors as PLATFORM_COLORS"""
+    return PLATFORM_COLORS.get(platform, '#6b7280')
 
 # Initialize background price updater thread
 def start_background_updater():
