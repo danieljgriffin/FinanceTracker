@@ -728,38 +728,39 @@
                     }]
                 },
                 options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: 'rgb(156, 163, 175)',
-                            font: {
-                                size: 12
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
                             }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        ticks: {
-                            color: 'rgb(156, 163, 175)',
-                            callback: function(value) {
-                                return '£' + value.toLocaleString();
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(156, 163, 175, 0.1)'
                         }
                     },
-                    x: {
-                        ticks: {
-                            color: 'rgb(156, 163, 175)'
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
                         },
-                        grid: {
-                            color: 'rgba(156, 163, 175, 0.1)'
+                        x: {
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
                         }
                     }
                 }
