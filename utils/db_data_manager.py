@@ -560,31 +560,37 @@ class DatabaseDataManager:
         self.save_networth_data(year, month, platform_data, total_networth)
     
     def get_asset_class_allocation(self):
-        """Calculate asset class allocation breakdown"""
+        """Calculate asset class allocation breakdown by actual investment types"""
         investments = Investment.query.all()
         
         asset_classes = {
-            'Stocks': 0.0,
+            'Individual Stocks': 0.0,
+            'Index Funds/ETFs': 0.0,
             'Cryptocurrency': 0.0,
-            'Cash': 0.0,
-            'ISA/Pension': 0.0
+            'Cash': 0.0
         }
         
-        # Calculate investment values
+        # Calculate investment values based on actual investment types
         for investment in investments:
-            # Use holdings attribute (which exists in the model) instead of quantity
             value = (investment.holdings or 0) * (investment.current_price or 0)
+            name = investment.name.lower() if investment.name else ''
             
-            # Categorize by platform and investment type
+            # Categorize by actual investment type, not platform
             if investment.platform in ['Crypto']:
                 asset_classes['Cryptocurrency'] += value
-            elif investment.platform in ['Trading212 ISA', 'HL Stocks & Shares LISA', 'InvestEngine ISA']:
-                asset_classes['ISA/Pension'] += value
-            elif investment.platform in ['Degiro', 'EQ (GSK shares)']:
-                asset_classes['Stocks'] += value
+            elif any(term in name for term in ['s&p', 'sp500', 'index', 'etf', 'fund', 'vanguard', 'ishares', 'spdr']):
+                # Index funds and ETFs (regardless of platform)
+                asset_classes['Index Funds/ETFs'] += value
+            elif any(term in name for term in ['gsk', 'glaxosmithkline']) or investment.platform == 'EQ (GSK shares)':
+                # Individual company stocks
+                asset_classes['Individual Stocks'] += value
             else:
-                # Default to stocks for other investment platforms
-                asset_classes['Stocks'] += value
+                # For other investments, try to categorize based on name patterns
+                if any(term in name for term in ['apple', 'microsoft', 'tesla', 'nvidia', 'amazon', 'google', 'meta']):
+                    asset_classes['Individual Stocks'] += value
+                else:
+                    # Default to index funds for most ISA/general investments
+                    asset_classes['Index Funds/ETFs'] += value
         
         # Add cash balances from platform data
         try:
