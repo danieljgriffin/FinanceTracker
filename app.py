@@ -990,10 +990,12 @@ def networth_chart_data():
     """API endpoint to get net worth chart data for different years"""
     try:
         year_param = request.args.get('year', '2025')
+        chart_type = request.args.get('type', 'line')  # line or bar
         data_manager = get_data_manager()
         
         labels = []
         values = []
+        platform_data = {}  # For stacked bar chart
         
         if year_param == 'all':
             # Get data from all years (2023, 2024, 2025)
@@ -1019,9 +1021,17 @@ def networth_chart_data():
                         
                         # Calculate total for this month
                         month_total = 0
+                        month_platforms = {}
+                        
                         for platform, value in month_data.items():
                             if platform != 'total_net_worth' and isinstance(value, (int, float)):
                                 month_total += value
+                                # Store platform data for stacked bar chart
+                                if chart_type == 'bar':
+                                    month_platforms[platform] = value
+                                    # Initialize platform in global data if not exists
+                                    if platform not in platform_data:
+                                        platform_data[platform] = []
                         
                         # Only add if there's actual data
                         if month_total > 0:
@@ -1029,25 +1039,61 @@ def networth_chart_data():
                             if len(years_to_include) > 1:
                                 # Multi-year view - include year
                                 month_short = month.replace('1st ', '').replace('31st ', '')
-                                labels.append(f"{month_short} {year}")
+                                label = f"{month_short} {year}"
                             else:
                                 # Single year view - just month
-                                labels.append(month.replace('1st ', '').replace('31st ', ''))
+                                label = month.replace('1st ', '').replace('31st ', '')
                             
+                            labels.append(label)
                             values.append(round(month_total, 2))
+                            
+                            # For stacked bar chart, store platform breakdown
+                            if chart_type == 'bar':
+                                for platform in platform_data.keys():
+                                    platform_data[platform].append(month_platforms.get(platform, 0))
                             
             except Exception as e:
                 logging.error(f"Error getting data for year {year}: {str(e)}")
                 continue
         
-        return jsonify({
-            'labels': labels,
-            'values': values
-        })
-        
+        if chart_type == 'bar':
+            # Return stacked bar chart data
+            return jsonify({
+                'labels': labels,
+                'datasets': [
+                    {
+                        'label': platform,
+                        'data': data,
+                        'backgroundColor': get_platform_color(platform),
+                        'borderColor': get_platform_color(platform),
+                        'borderWidth': 1
+                    }
+                    for platform, data in platform_data.items()
+                ]
+            })
+        else:
+            # Return line chart data
+            return jsonify({
+                'labels': labels,
+                'values': values
+            })
+            
     except Exception as e:
         logging.error(f"Error in networth_chart_data: {str(e)}")
         return jsonify({'labels': [], 'values': []}), 500
+
+def get_platform_color(platform):
+    """Get consistent color for each platform"""
+    colors = {
+        'Degiro': '#3b82f6',  # blue
+        'Trading212 ISA': '#10b981',  # green
+        'EQ (GSK shares)': '#f59e0b',  # amber
+        'InvestEngine ISA': '#8b5cf6',  # purple
+        'Crypto': '#f97316',  # orange
+        'HL Stocks & Shares LISA': '#ef4444',  # red
+        'Cash': '#6b7280'  # gray
+    }
+    return colors.get(platform, '#6b7280')
 
 # Initialize background price updater thread
 def start_background_updater():

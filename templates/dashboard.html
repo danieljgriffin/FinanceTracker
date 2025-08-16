@@ -132,7 +132,22 @@
             
             <!-- Chart View -->
             <div id="chartView" class="hidden">
-                <div class="mb-4">
+                <div class="mb-4 space-y-3">
+                    <!-- Chart Type Switcher -->
+                    <div class="flex justify-center">
+                        <div class="flex bg-gray-700/50 rounded-lg p-1">
+                            <button id="lineChartBtn" onclick="switchChartType('line')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                <i class="fas fa-chart-line mr-1"></i>Line Chart
+                            </button>
+                            <button id="barChartBtn" onclick="switchChartType('bar')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Year Filters -->
                     <div class="flex flex-wrap gap-2 justify-center">
                         <button onclick="filterYear('2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
                         <button onclick="filterYear('2024')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
@@ -331,7 +346,22 @@
             
             <!-- Chart View -->
             <div id="chartViewDesktop" class="hidden">
-                <div class="mb-4">
+                <div class="mb-4 space-y-3">
+                    <!-- Chart Type Switcher -->
+                    <div class="flex justify-center">
+                        <div class="flex bg-gray-700/50 rounded-lg p-1">
+                            <button id="lineChartBtnDesktop" onclick="switchChartType('line')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                <i class="fas fa-chart-line mr-1"></i>Line Chart
+                            </button>
+                            <button id="barChartBtnDesktop" onclick="switchChartType('bar')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Year Filters -->
                     <div class="flex flex-wrap gap-2 justify-center">
                         <button onclick="filterYear('2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
                         <button onclick="filterYear('2024')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
@@ -539,6 +569,45 @@
         loadChartData(year);
     }
     
+    // Current chart type (global variable)
+    let currentChartType = 'line';
+    
+    // Switch chart type function
+    function switchChartType(type) {
+        currentChartType = type;
+        
+        // Update button styles for mobile
+        const lineBtn = document.getElementById('lineChartBtn');
+        const barBtn = document.getElementById('barChartBtn');
+        
+        // Update button styles for desktop
+        const lineBtnDesktop = document.getElementById('lineChartBtnDesktop');
+        const barBtnDesktop = document.getElementById('barChartBtnDesktop');
+        
+        if (type === 'line') {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+        } else {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+        }
+        
+        // Reload chart with new type
+        const activeYearBtn = document.querySelector('.year-filter.bg-blue-600');
+        const year = activeYearBtn ? activeYearBtn.dataset.year : '2025';
+        loadChartData(year);
+    }
+    
     // Load chart data
     function loadChartData(year) {
         const loadingElement = document.getElementById('chartLoading');
@@ -547,18 +616,19 @@
         if (loadingElement) loadingElement.classList.remove('hidden');
         if (loadingDesktopElement) loadingDesktopElement.classList.remove('hidden');
         
-        // Fetch chart data 
-        fetch(`/api/chart-data`)
+        // Fetch chart data with type parameter
+        const apiUrl = currentChartType === 'bar' 
+            ? `/api/networth-chart-data?year=${year}&type=bar`
+            : `/api/networth-chart-data?year=${year}&type=line`;
+            
+        fetch(apiUrl)
             .then(response => response.json())
             .then(data => {
                 if (loadingElement) loadingElement.classList.add('hidden');
                 if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
                 
-                // Filter data based on selected year
-                const filteredData = filterDataByYear(data, year);
-                
-                // Render chart with the filtered data
-                renderChart(filteredData, year);
+                // Render chart with the data
+                renderChart(data, year);
             })
             .catch(error => {
                 console.error('Error loading chart data:', error);
@@ -567,37 +637,7 @@
             });
     }
     
-    // Filter data based on selected year
-    function filterDataByYear(data, year) {
-        if (year === 'all') {
-            return data;
-        }
-        
-        const filteredData = {
-            labels: [],
-            value_line: []
-        };
-        
-        if (year === '2024-2025') {
-            // Include both 2024 and 2025
-            for (let i = 0; i < data.labels.length; i++) {
-                if (data.labels[i].includes('2024') || data.labels[i].includes('2025')) {
-                    filteredData.labels.push(data.labels[i]);
-                    filteredData.value_line.push(data.value_line[i]);
-                }
-            }
-        } else {
-            // Filter by specific year
-            for (let i = 0; i < data.labels.length; i++) {
-                if (data.labels[i].includes(year)) {
-                    filteredData.labels.push(data.labels[i]);
-                    filteredData.value_line.push(data.value_line[i]);
-                }
-            }
-        }
-        
-        return filteredData;
-    }
+    // No longer needed - filtering is now handled by the API
     
     // Render chart using Chart.js
     function renderChart(data, year) {
@@ -612,21 +652,82 @@
             window.chartInstanceDesktop.destroy();
         }
         
-        const chartConfig = {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: 'Portfolio Value',
-                    data: data.value_line,
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
+        let chartConfig;
+        
+        if (currentChartType === 'bar' && data.datasets) {
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: data.datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
