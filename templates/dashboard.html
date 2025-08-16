@@ -39,7 +39,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Month-on-Month</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-1 financial-figure">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-1">
                         {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
                     </p>
                 </div>
@@ -51,7 +51,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Yearly Net Worth Increase</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1 financial-figure">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1">
                         {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_increase < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
                     </p>
                 </div>
