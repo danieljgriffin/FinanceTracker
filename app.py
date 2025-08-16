@@ -1001,6 +1001,10 @@ def price_status():
     # Convert to BST timezone for display
     bst = pytz.timezone('Europe/London')
     
+    # Get current date in BST
+    current_bst = datetime.now(bst)
+    current_date_str = current_bst.strftime('%B %d, %Y')
+    
     if last_price_update:
         # Convert UTC to BST
         last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
@@ -1009,13 +1013,19 @@ def price_status():
         # Calculate next update time
         next_update_in = PRICE_REFRESH_INTERVAL - int((datetime.now() - last_price_update).total_seconds())
         next_update_in = max(0, next_update_in)  # Ensure non-negative
+        
+        # Calculate minutes until next update
+        minutes_until_next = max(0, int(next_update_in / 60))
     else:
         last_updated_str = None
         next_update_in = PRICE_REFRESH_INTERVAL
+        minutes_until_next = int(PRICE_REFRESH_INTERVAL / 60)
     
     return jsonify({
         'last_updated': last_updated_str,
-        'next_update_in': next_update_in
+        'next_update_in': next_update_in,
+        'current_date': current_date_str,
+        'minutes_until_next': minutes_until_next
     })
 
 @app.route('/api/networth-chart-data')

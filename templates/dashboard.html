@@ -4,16 +4,11 @@
 
 {% block content %}
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-    <!-- Desktop Only: Price Status and Refresh Button -->
+    <!-- Desktop Only: Price Status -->
     <div class="hidden md:flex items-center justify-between mb-4 sm:mb-6">
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Financial Dashboard</h1>
-        <div class="flex items-center space-x-4">
-            <div class="text-right">
-                <div id="price-status" class="text-xs sm:text-sm text-gray-400">Loading price status...</div>
-            </div>
-            <button onclick="refreshPrices()" class="btn btn-secondary text-xs sm:text-sm py-2 px-3 sm:px-4">
-                <i class="fas fa-sync-alt mr-1 sm:mr-2"></i>Refresh Prices
-            </button>
+        <div class="text-right">
+            <div id="price-status" class="text-xs sm:text-sm text-gray-400">Loading price status...</div>
         </div>
     </div>
 
@@ -21,11 +16,8 @@
     <div class="md:hidden mb-4 sm:mb-6">
         <div class="flex flex-col space-y-3">
             <h1 class="text-xl sm:text-2xl font-bold text-white text-center">Financial Dashboard</h1>
-            <div class="flex items-center justify-center space-x-4">
+            <div class="text-center">
                 <div id="price-status-mobile" class="text-xs text-gray-400">Loading...</div>
-                <button onclick="refreshPrices()" class="btn btn-secondary text-xs py-1.5 px-3">
-                    <i class="fas fa-sync-alt mr-1"></i>Refresh
-                </button>
             </div>
         </div>
     </div>
@@ -281,11 +273,17 @@
             .then(data => {
                 const statusElement = document.getElementById('price-status-mobile');
                 if (statusElement) {
-                    if (data.last_updated) {
-                        const timeString = data.last_updated.substring(0, 5);
-                        statusElement.textContent = `Last updated: ${timeString}`;
+                    if (data.last_updated && data.current_date) {
+                        const statusHtml = `
+                            <div>Last updated: ${data.current_date}</div>
+                            <div>Prices refreshed: ${data.last_updated} (next in ${data.minutes_until_next}m)</div>
+                        `;
+                        statusElement.innerHTML = statusHtml;
                     } else {
-                        statusElement.textContent = 'Last updated: Never';
+                        statusElement.innerHTML = `
+                            <div>Last updated: ${data.current_date || 'Unknown'}</div>
+                            <div>Prices refreshed: Never</div>
+                        `;
                     }
                 }
             })
@@ -307,10 +305,17 @@
             .then(data => {
                 const statusElement = document.getElementById('price-status');
                 if (statusElement) {
-                    if (data.last_updated) {
-                        statusElement.textContent = `Last updated: ${data.last_updated.substring(0, 5)}`;
+                    if (data.last_updated && data.current_date) {
+                        const statusHtml = `
+                            <div>Last updated: ${data.current_date}</div>
+                            <div>Prices refreshed: ${data.last_updated} (next in ${data.minutes_until_next}m)</div>
+                        `;
+                        statusElement.innerHTML = statusHtml;
                     } else {
-                        statusElement.textContent = 'Last updated: Never';
+                        statusElement.innerHTML = `
+                            <div>Last updated: ${data.current_date || 'Unknown'}</div>
+                            <div>Prices refreshed: Never</div>
+                        `;
                     }
                 }
             })
