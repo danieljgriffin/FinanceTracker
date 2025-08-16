@@ -1097,19 +1097,29 @@ def networth_chart_data():
                 continue
         
         if chart_type == 'bar':
+            # Ensure all datasets have the same length as labels
+            datasets = []
+            for platform, data in platform_data.items():
+                # Ensure data array matches labels length
+                while len(data) < len(labels):
+                    data.append(0)  # Fill missing months with 0
+                
+                # Trim if too long
+                data = data[:len(labels)]
+                
+                dataset = {
+                    'label': platform,
+                    'data': data,
+                    'backgroundColor': get_platform_color(platform),
+                    'borderColor': get_platform_color(platform),
+                    'borderWidth': 1
+                }
+                datasets.append(dataset)
+            
             # Return stacked bar chart data
             return jsonify({
                 'labels': labels,
-                'datasets': [
-                    {
-                        'label': platform,
-                        'data': data,
-                        'backgroundColor': get_platform_color(platform),
-                        'borderColor': get_platform_color(platform),
-                        'borderWidth': 1
-                    }
-                    for platform, data in platform_data.items()
-                ]
+                'datasets': datasets
             })
         else:
             # Return line chart data
