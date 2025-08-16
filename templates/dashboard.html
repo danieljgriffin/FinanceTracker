@@ -30,30 +30,30 @@
 
         <!-- Month-on-Month Change -->
         <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl p-4">
-            <div class="text-center">
-                <p class="text-xs font-medium text-gray-300 mb-2">Month-on-Month</p>
-                <p class="text-xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mb-3">
-                    {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
-                </p>
-                <div class="flex justify-center items-center">
-                    <div class="w-8 h-8 {% if mom_change >= 0 %}bg-gradient-to-br from-green-500 to-green-600{% else %}bg-gradient-to-br from-red-500 to-red-600{% endif %} rounded-xl flex items-center justify-center mx-auto">
-                        <i class="fas {% if mom_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} text-white text-xs"></i>
-                    </div>
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-gray-300 mb-1">Month-on-Month</p>
+                    <p class="text-lg font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
+                    </p>
+                </div>
+                <div class="w-8 h-8 {% if mom_change >= 0 %}bg-gradient-to-br from-green-500 to-green-600{% else %}bg-gradient-to-br from-red-500 to-red-600{% endif %} rounded-xl flex items-center justify-center">
+                    <i class="fas {% if mom_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} text-white text-xs"></i>
                 </div>
             </div>
         </div>
 
         <!-- Yearly Net Worth Increase -->
         <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl p-4">
-            <div class="text-center">
-                <p class="text-xs font-medium text-gray-300 mb-2">Yearly Net Worth Increase</p>
-                <p class="text-xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mb-3">
-                    {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_amount_change < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
-                </p>
-                <div class="flex justify-center items-center">
-                    <div class="w-8 h-8 {% if yearly_increase > 0 %}bg-gradient-to-br from-green-500 to-green-600{% elif yearly_increase < 0 %}bg-gradient-to-br from-red-500 to-red-600{% else %}bg-gradient-to-br from-gray-500 to-gray-600{% endif %} rounded-xl flex items-center justify-center mx-auto">
-                        <i class="fas {% if yearly_increase > 0 %}fa-arrow-up{% elif yearly_increase < 0 %}fa-arrow-down{% else %}fa-minus{% endif %} text-white text-xs"></i>
-                    </div>
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-gray-300 mb-1">Yearly Net Worth Increase</p>
+                    <p class="text-lg font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                        {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_amount_change < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
+                    </p>
+                </div>
+                <div class="w-8 h-8 {% if yearly_increase > 0 %}bg-gradient-to-br from-green-500 to-green-600{% elif yearly_increase < 0 %}bg-gradient-to-br from-red-500 to-red-600{% else %}bg-gradient-to-br from-gray-500 to-gray-600{% endif %} rounded-xl flex items-center justify-center">
+                    <i class="fas {% if yearly_increase > 0 %}fa-arrow-up{% elif yearly_increase < 0 %}fa-arrow-down{% else %}fa-minus{% endif %} text-white text-xs"></i>
                 </div>
             </div>
         </div>
