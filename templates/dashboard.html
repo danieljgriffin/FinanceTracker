@@ -137,11 +137,11 @@
                     <div class="flex justify-center">
                         <div class="flex bg-gray-700/50 rounded-lg p-1">
                             <button id="lineChartBtn" onclick="switchChartType('line')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
                                 <i class="fas fa-chart-line mr-1"></i>Line Chart
                             </button>
                             <button id="barChartBtn" onclick="switchChartType('bar')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
                                 <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
                             </button>
                         </div>
@@ -372,11 +372,11 @@
                     <div class="flex justify-center">
                         <div class="flex bg-gray-700/50 rounded-lg p-1">
                             <button id="lineChartBtnDesktop" onclick="switchChartType('line')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
                                 <i class="fas fa-chart-line mr-1"></i>Line Chart
                             </button>
                             <button id="barChartBtnDesktop" onclick="switchChartType('bar')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
                                 <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
                             </button>
                         </div>
@@ -621,7 +621,7 @@
     }
     
     // Current chart type (global variable)
-    let currentChartType = 'line';
+    let currentChartType = 'bar';
     
     // Switch chart type function
     function switchChartType(type) {
