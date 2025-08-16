@@ -130,25 +130,24 @@
             <!-- Financial Target Progress -->
             <div class="card">
                 <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
-                    <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
+                    <h2 class="text-lg sm:text-xl font-semibold text-white">
+                        Financial Target Progress{% if next_target %} - {{ next_target.target_date.strftime('%b %Y') }} Target{% endif %}
+                    </h2>
                 </div>
                 <div class="p-3 sm:p-4">
                     {% if next_target %}
                     <div class="space-y-4">
-                        <!-- Target Date Header -->
+                        <!-- Goal Name -->
                         <div class="text-left">
-                            <h3 class="text-2xl font-bold text-white mb-2">
-                                Target Date: {{ next_target.target_date.strftime('%b %Y') }}
-                            </h3>
-                            <p class="text-gray-400 text-sm">{{ next_target.name }}</p>
+                            <h3 class="text-lg font-medium text-gray-300">{{ next_target.name }}</h3>
                         </div>
                         
                         {% if progress_info %}
                         <!-- Enhanced Progress Bar Section -->
                         <div class="space-y-3">
                             <div class="flex justify-between items-center px-1">
-                                <span class="text-gray-300 font-medium">Progress</span>
-                                <span class="text-xl font-bold text-white bg-gray-700/50 px-3 py-1 rounded-full">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
+                                <span class="text-gray-300 font-medium text-base">Progress</span>
+                                <span class="text-lg font-semibold text-white bg-gray-700/50 px-3 py-1 rounded-full">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
                             </div>
                             
                             <div class="relative">
@@ -159,20 +158,20 @@
                                          style="width: {{ progress_info.progress_percentage }}%">
                                         <!-- Current Value Inside Bar -->
                                         {% if progress_info.progress_percentage > 20 %}
-                                        <span class="text-white font-bold text-base drop-shadow-lg">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span class="text-white font-semibold text-sm drop-shadow-lg">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                         {% endif %}
                                     </div>
                                     
                                     <!-- Current Value Outside Bar (if bar too small) -->
                                     {% if progress_info.progress_percentage <= 20 %}
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-white font-bold text-base bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                     </div>
                                     {% endif %}
                                     
                                     <!-- Target Amount at End -->
                                     <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-gray-200 font-bold text-base bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
+                                        <span class="text-gray-200 font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -184,7 +183,7 @@
                             <div class="bg-gradient-to-br from-purple-500/15 to-purple-600/25 rounded-lg p-2 border border-purple-400/20 backdrop-blur-sm">
                                 <div class="text-center">
                                     <div class="text-purple-300 text-xs font-medium mb-1 uppercase tracking-wide">Days Remaining</div>
-                                    <div class="text-2xl font-bold text-purple-200">
+                                    <div class="text-xl font-semibold text-purple-200">
                                         {{ progress_info.days_remaining if progress_info.days_remaining > 0 else 0 }}
                                     </div>
                                 </div>
@@ -194,7 +193,7 @@
                             <div class="bg-gradient-to-br from-blue-500/15 to-blue-600/25 rounded-lg p-2 border border-blue-400/20 backdrop-blur-sm">
                                 <div class="text-center">
                                     <div class="text-blue-300 text-xs font-medium mb-1 uppercase tracking-wide">Amount Remaining</div>
-                                    <div class="text-xl font-bold text-blue-200">
+                                    <div class="text-xl font-semibold text-blue-200">
                                         £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
                                     </div>
                                 </div>
