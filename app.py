@@ -1062,9 +1062,6 @@ def networth_chart_data():
                                 # Store platform data for stacked bar chart
                                 if chart_type == 'bar':
                                     month_platforms[platform] = value
-                                    # Initialize platform in global data if not exists
-                                    if platform not in platform_data:
-                                        platform_data[platform] = []
                         
                         # Only add if there's actual data
                         if month_total > 0:
