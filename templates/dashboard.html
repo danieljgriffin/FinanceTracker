@@ -188,7 +188,7 @@
                     <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-2">
                         <i class="fas fa-chart-bar text-white text-lg"></i>
                     </div>
-                    <span class="text-white font-medium text-sm text-center">Year Tracker</span>
+                    <span class="text-white font-medium text-sm text-center">Year / Month Tracker</span>
                 </a>
             </div>
         </div>
@@ -351,44 +351,7 @@
         </div>
     </div>
 
-    <!-- Asset Allocation Analysis -->
-    <div class="card">
-        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
-            <h2 class="text-lg sm:text-xl font-semibold text-white">Asset Allocation Analysis</h2>
-            <p class="text-xs sm:text-sm text-gray-400 mt-1">Breakdown by asset class and geographic allocation</p>
-        </div>
-        <div class="p-3 sm:p-4 lg:p-6">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Asset Class Breakdown -->
-                <div class="bg-gray-800/50 rounded-xl p-4">
-                    <h3 class="text-white font-semibold mb-4 text-center">Asset Classes</h3>
-                    <div class="relative h-64 flex items-center justify-center">
-                        <canvas id="assetClassChart" width="300" height="300"></canvas>
-                        <div id="assetClassLoading" class="absolute inset-0 flex items-center justify-center">
-                            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i>
-                        </div>
-                    </div>
-                    <div id="assetClassLegend" class="mt-4 space-y-2">
-                        <!-- Legend will be populated by JavaScript -->
-                    </div>
-                </div>
 
-                <!-- Geographic/Sector Allocation -->
-                <div class="bg-gray-800/50 rounded-xl p-4">
-                    <h3 class="text-white font-semibold mb-4 text-center">Geographic & Sector Allocation</h3>
-                    <div class="relative h-64 flex items-center justify-center">
-                        <canvas id="geographicChart" width="300" height="300"></canvas>
-                        <div id="geographicLoading" class="absolute inset-0 flex items-center justify-center">
-                            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl"></i>
-                        </div>
-                    </div>
-                    <div id="geographicLegend" class="mt-4 space-y-2">
-                        <!-- Legend will be populated by JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Quick Actions -->
     <div class="card">
@@ -559,168 +522,7 @@
         }
     }
     
-    // Load asset allocation charts
-    function loadAssetAllocationCharts() {
-        loadAssetClassChart();
-        loadGeographicChart();
-    }
-    
-    // Load asset class pie chart
-    function loadAssetClassChart() {
-        const loadingElement = document.getElementById('assetClassLoading');
-        if (loadingElement) loadingElement.style.display = 'flex';
-        
-        fetch('/api/asset-allocation')
-            .then(response => response.json())
-            .then(data => {
-                if (loadingElement) loadingElement.style.display = 'none';
-                renderAssetClassChart(data);
-            })
-            .catch(error => {
-                console.error('Error loading asset class data:', error);
-                if (loadingElement) loadingElement.style.display = 'none';
-            });
-    }
-    
-    // Load geographic allocation pie chart
-    function loadGeographicChart() {
-        const loadingElement = document.getElementById('geographicLoading');
-        if (loadingElement) loadingElement.style.display = 'flex';
-        
-        fetch('/api/geographic-allocation')
-            .then(response => response.json())
-            .then(data => {
-                if (loadingElement) loadingElement.style.display = 'none';
-                renderGeographicChart(data);
-            })
-            .catch(error => {
-                console.error('Error loading geographic data:', error);
-                if (loadingElement) loadingElement.style.display = 'none';
-            });
-    }
-    
-    // Render asset class pie chart
-    function renderAssetClassChart(data) {
-        const canvas = document.getElementById('assetClassChart');
-        const legendElement = document.getElementById('assetClassLegend');
-        
-        if (!canvas || !data.values || Object.keys(data.values).length === 0) {
-            if (legendElement) {
-                legendElement.innerHTML = '<p class="text-gray-400 text-sm">No asset class data available</p>';
-            }
-            return;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        const labels = Object.keys(data.values);
-        const values = Object.values(data.values);
-        const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
-        
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderColor: '#1F2937',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-        
-        // Create custom legend
-        if (legendElement) {
-            legendElement.innerHTML = labels.map((label, index) => {
-                const value = values[index];
-                const percentage = data.percentages[label];
-                return `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors[index]}"></div>
-                            <span class="text-white text-xs">${label}</span>
-                        </div>
-                        <div class="text-xs text-gray-300">
-                            £${value.toLocaleString()} (${percentage.toFixed(1)}%)
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-    
-    // Render geographic allocation pie chart
-    function renderGeographicChart(data) {
-        const canvas = document.getElementById('geographicChart');
-        const legendElement = document.getElementById('geographicLegend');
-        
-        if (!canvas || !data.values || Object.keys(data.values).length === 0) {
-            if (legendElement) {
-                legendElement.innerHTML = '<p class="text-gray-400 text-sm">No geographic data available</p>';
-            }
-            return;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        const labels = Object.keys(data.values);
-        const values = Object.values(data.values);
-        const colors = ['#059669', '#DC2626', '#7C3AED', '#EA580C', '#0891B2'];
-        
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: values,
-                    backgroundColor: colors.slice(0, labels.length),
-                    borderColor: '#1F2937',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                }
-            }
-        });
-        
-        // Create custom legend
-        if (legendElement) {
-            legendElement.innerHTML = labels.map((label, index) => {
-                const value = values[index];
-                const percentage = data.percentages[label];
-                return `
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full mr-2" style="background-color: ${colors[index]}"></div>
-                            <span class="text-white text-xs">${label}</span>
-                        </div>
-                        <div class="text-xs text-gray-300">
-                            £${value.toLocaleString()} (${percentage.toFixed(1)}%)
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-    
-    // Initialize asset allocation charts on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        loadAssetAllocationCharts();
-    });
+
     
     // Year filter functionality
     function filterYear(year) {

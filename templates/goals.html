@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Goals - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Goals</h1>
+            <p class="text-sm text-gray-400 mt-1">Track your net worth targets and savings goals</p>
+        </div>
+        <button onclick="openCreateGoalModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium">
+            <i class="fas fa-plus mr-2"></i>Add Goal
+        </button>
+    </div>
+
+    <!-- Current Net Worth Overview -->
+    <div class="card">
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Current Position</h2>
+        </div>
+        <div class="p-4 sm:p-6 lg:p-8">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <p class="text-sm text-gray-400 mb-2">Current Net Worth</p>
+                    <p class="text-2xl font-bold text-white">£{{ "{:,.0f}".format(current_net_worth) }}</p>
+                </div>
+                <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <p class="text-sm text-gray-400 mb-2">Monthly Investment</p>
+                    <p class="text-2xl font-bold text-blue-400">£{{ "{:,.0f}".format(monthly_investment) }}</p>
+                </div>
+                <div class="bg-gray-800/50 rounded-xl p-4 text-center">
+                    <p class="text-sm text-gray-400 mb-2">Projected APY</p>
+                    <p class="text-2xl font-bold text-green-400">9%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goals List -->
+    <div class="card">
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Your Goals</h2>
+        </div>
+        <div class="p-4 sm:p-6 lg:p-8">
+            {% if goals %}
+                <div class="space-y-4">
+                    {% for goal in goals %}
+                    <div class="bg-gray-800/50 rounded-xl p-6">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h3 class="text-lg font-semibold text-white">{{ goal.title }}</h3>
+                                    <span class="px-2 py-1 bg-{{ goal.status_color }}-500/20 text-{{ goal.status_color }}-400 text-xs rounded-lg">
+                                        {{ goal.status.title() }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-400 mb-3">{{ goal.description }}</p>
+                                
+                                <!-- Progress Bar -->
+                                <div class="mb-3">
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-gray-400">Progress</span>
+                                        <span class="text-white">{{ "{:.1f}".format(goal.progress_percentage) }}%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-700 rounded-full h-3">
+                                        <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300" 
+                                             style="width: {{ goal.progress_percentage }}%"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Goal Details -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <p class="text-gray-400">Target</p>
+                                        <p class="text-white font-medium">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Current</p>
+                                        <p class="text-white font-medium">£{{ "{:,.0f}".format(goal.current_amount) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Remaining</p>
+                                        <p class="text-white font-medium">£{{ "{:,.0f}".format(goal.remaining_amount) }}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-400">Target Date</p>
+                                        <p class="text-white font-medium">{{ goal.target_date.strftime('%b %Y') }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2">
+                                <button onclick="editGoal({{ goal.id }})" class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteGoal({{ goal.id }})" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-12">
+                    <i class="fas fa-bullseye text-gray-400 text-4xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-white mb-2">No Goals Set</h3>
+                    <p class="text-gray-400 mb-6">Create your first savings goal to start tracking your progress</p>
+                    <button onclick="openCreateGoalModal()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium">
+                        <i class="fas fa-plus mr-2"></i>Create Your First Goal
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Goal Calculator -->
+    <div class="card">
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Goal Calculator</h2>
+            <p class="text-sm text-gray-400 mt-1">Calculate when you'll reach your targets based on compound growth</p>
+        </div>
+        <div class="p-4 sm:p-6 lg:p-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Calculator Inputs -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Current Amount (£)</label>
+                        <input type="number" id="calcCurrentAmount" 
+                               value="{{ current_net_worth }}"
+                               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Monthly Investment (£)</label>
+                        <input type="number" id="calcMonthlyAmount" 
+                               value="{{ monthly_investment }}"
+                               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Annual Return (%)</label>
+                        <input type="number" id="calcAnnualReturn" 
+                               value="9" step="0.1"
+                               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Target Amount (£)</label>
+                        <input type="number" id="calcTargetAmount" 
+                               value="160000"
+                               class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <button onclick="calculateGoal()" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors font-medium">
+                        Calculate Timeline
+                    </button>
+                </div>
+                
+                <!-- Calculator Results -->
+                <div class="bg-gray-800/50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">Projection Results</h3>
+                    <div id="calculatorResults" class="space-y-4">
+                        <div class="text-center py-8">
+                            <i class="fas fa-calculator text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-400">Enter your details and click calculate</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Goal Modal -->
+<div id="goalModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-700">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="modalTitle" class="text-xl font-semibold text-white">Create New Goal</h3>
+            <button onclick="closeGoalModal()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form id="goalForm" class="space-y-4">
+            <input type="hidden" id="goalId">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Goal Title</label>
+                <input type="text" id="goalTitle" required
+                       placeholder="e.g., Save £20k by Dec 2025"
+                       class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea id="goalDescription" rows="2"
+                          placeholder="Optional description..."
+                          class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Target Amount (£)</label>
+                <input type="number" id="goalTargetAmount" required
+                       class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Target Date</label>
+                <input type="month" id="goalTargetDate" required
+                       class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="button" onclick="closeGoalModal()" 
+                        class="flex-1 px-4 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-colors">
+                    Save Goal
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Goal modal functions
+function openCreateGoalModal() {
+    document.getElementById('modalTitle').textContent = 'Create New Goal';
+    document.getElementById('goalForm').reset();
+    document.getElementById('goalId').value = '';
+    document.getElementById('goalModal').classList.remove('hidden');
+}
+
+function closeGoalModal() {
+    document.getElementById('goalModal').classList.add('hidden');
+}
+
+function editGoal(goalId) {
+    // Fetch goal data and populate modal
+    fetch(`/api/goals/${goalId}`)
+        .then(response => response.json())
+        .then(goal => {
+            document.getElementById('modalTitle').textContent = 'Edit Goal';
+            document.getElementById('goalId').value = goal.id;
+            document.getElementById('goalTitle').value = goal.title;
+            document.getElementById('goalDescription').value = goal.description || '';
+            document.getElementById('goalTargetAmount').value = goal.target_amount;
+            document.getElementById('goalTargetDate').value = goal.target_date;
+            document.getElementById('goalModal').classList.remove('hidden');
+        })
+        .catch(error => console.error('Error fetching goal:', error));
+}
+
+function deleteGoal(goalId) {
+    if (confirm('Are you sure you want to delete this goal?')) {
+        fetch(`/api/goals/${goalId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error deleting goal: ' + data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+}
+
+// Goal form submission
+document.getElementById('goalForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const goalData = {
+        title: document.getElementById('goalTitle').value,
+        description: document.getElementById('goalDescription').value,
+        target_amount: parseFloat(document.getElementById('goalTargetAmount').value),
+        target_date: document.getElementById('goalTargetDate').value
+    };
+    
+    const goalId = document.getElementById('goalId').value;
+    const isEdit = goalId !== '';
+    
+    fetch(isEdit ? `/api/goals/${goalId}` : '/api/goals', {
+        method: isEdit ? 'PUT' : 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(goalData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeGoalModal();
+            location.reload();
+        } else {
+            alert('Error saving goal: ' + data.message);
+        }
+    })
+    .catch(error => console.error('Error:', error));
+});
+
+// Calculator functions
+function calculateGoal() {
+    const currentAmount = parseFloat(document.getElementById('calcCurrentAmount').value) || 0;
+    const monthlyAmount = parseFloat(document.getElementById('calcMonthlyAmount').value) || 0;
+    const annualReturn = parseFloat(document.getElementById('calcAnnualReturn').value) || 9;
+    const targetAmount = parseFloat(document.getElementById('calcTargetAmount').value) || 0;
+    
+    if (targetAmount <= currentAmount) {
+        document.getElementById('calculatorResults').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-check-circle text-green-400 text-3xl mb-3"></i>
+                <p class="text-green-400 font-semibold">Goal Already Achieved!</p>
+                <p class="text-gray-400 text-sm">Your current amount already exceeds the target</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Calculate compound growth
+    const monthlyReturn = annualReturn / 100 / 12;
+    let amount = currentAmount;
+    let months = 0;
+    const maxMonths = 50 * 12; // 50 years max
+    
+    while (amount < targetAmount && months < maxMonths) {
+        amount = amount * (1 + monthlyReturn) + monthlyAmount;
+        months++;
+    }
+    
+    if (months >= maxMonths) {
+        document.getElementById('calculatorResults').innerHTML = `
+            <div class="text-center py-4">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-3xl mb-3"></i>
+                <p class="text-yellow-400 font-semibold">Goal Not Achievable</p>
+                <p class="text-gray-400 text-sm">Consider increasing monthly investment or adjusting target</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
+    const targetDate = new Date();
+    targetDate.setMonth(targetDate.getMonth() + months);
+    
+    document.getElementById('calculatorResults').innerHTML = `
+        <div class="space-y-4">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-400 mb-2">
+                    ${years > 0 ? years + 'y ' : ''}${remainingMonths}m
+                </div>
+                <p class="text-gray-400 text-sm">Time to reach goal</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
+                    <p class="text-gray-400">Target Date</p>
+                    <p class="text-white font-medium">${targetDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</p>
+                </div>
+                <div class="bg-gray-700/50 rounded-lg p-3 text-center">
+                    <p class="text-gray-400">Final Amount</p>
+                    <p class="text-white font-medium">£${Math.round(amount).toLocaleString()}</p>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <button onclick="createGoalFromCalculator()" 
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm">
+                    <i class="fas fa-plus mr-1"></i>Create Goal
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function createGoalFromCalculator() {
+    const targetAmount = document.getElementById('calcTargetAmount').value;
+    const targetDate = new Date();
+    const months = calculateMonthsToTarget();
+    targetDate.setMonth(targetDate.getMonth() + months);
+    
+    document.getElementById('goalTitle').value = `Reach £${parseInt(targetAmount).toLocaleString()}`;
+    document.getElementById('goalTargetAmount').value = targetAmount;
+    document.getElementById('goalTargetDate').value = targetDate.toISOString().substring(0, 7);
+    
+    openCreateGoalModal();
+}
+
+function calculateMonthsToTarget() {
+    const currentAmount = parseFloat(document.getElementById('calcCurrentAmount').value) || 0;
+    const monthlyAmount = parseFloat(document.getElementById('calcMonthlyAmount').value) || 0;
+    const annualReturn = parseFloat(document.getElementById('calcAnnualReturn').value) || 9;
+    const targetAmount = parseFloat(document.getElementById('calcTargetAmount').value) || 0;
+    
+    const monthlyReturn = annualReturn / 100 / 12;
+    let amount = currentAmount;
+    let months = 0;
+    
+    while (amount < targetAmount && months < 600) {
+        amount = amount * (1 + monthlyReturn) + monthlyAmount;
+        months++;
+    }
+    
+    return months;
+}
+
+// Auto-calculate when inputs change
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['calcCurrentAmount', 'calcMonthlyAmount', 'calcAnnualReturn', 'calcTargetAmount'];
+    inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', function() {
+            if (this.value) calculateGoal();
+        });
+    });
+    
+    // Initial calculation
+    calculateGoal();
+});
+</script>
+{% endblock %}

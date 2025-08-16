@@ -165,3 +165,57 @@ class MonthlyInvestment(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
+
+class Goal(db.Model):
+    __tablename__ = 'goals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    target_amount = db.Column(db.Float, nullable=False)
+    target_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(20), default='active')  # active, completed, paused
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'target_amount': self.target_amount,
+            'target_date': self.target_date.isoformat() if self.target_date else None,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+    
+    @property
+    def current_amount(self):
+        """Get current net worth"""
+        from utils.db_data_manager import DatabaseDataManager
+        data_manager = DatabaseDataManager()
+        return data_manager.get_current_net_worth()
+    
+    @property
+    def remaining_amount(self):
+        return max(0, self.target_amount - self.current_amount)
+    
+    @property
+    def progress_percentage(self):
+        if self.target_amount <= 0:
+            return 0
+        return min(100, (self.current_amount / self.target_amount) * 100)
+    
+    @property
+    def status_color(self):
+        if self.status == 'completed':
+            return 'green'
+        elif self.status == 'paused':
+            return 'yellow'
+        elif self.progress_percentage >= 90:
+            return 'green'
+        elif self.progress_percentage >= 50:
+            return 'blue'
+        else:
+            return 'gray'

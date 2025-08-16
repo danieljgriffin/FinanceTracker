@@ -24,7 +24,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
-from models import db
+from models import db, Goal
 db.init_app(app)
 
 # Initialize utilities with caching
@@ -1328,6 +1328,92 @@ def api_geographic_allocation():
     except Exception as e:
         logging.error(f"Error getting geographic allocation data: {e}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/goals')
+def goals():
+    """Goals tracking page"""
+    try:
+        goals_list = Goal.query.order_by(Goal.created_at.desc()).all()
+        
+        # Get current net worth and monthly investment for calculator
+        data_manager = get_data_manager()
+        current_net_worth = data_manager.get_current_net_worth()
+        breakdown_data = data_manager.get_monthly_breakdown_data()
+        monthly_investment = breakdown_data.get('total_monthly_investments', 0)
+        
+        return render_template('goals.html',
+                             goals=goals_list,
+                             current_net_worth=current_net_worth,
+                             monthly_investment=monthly_investment)
+    except Exception as e:
+        logging.error(f"Error loading goals page: {e}")
+        flash(f'Error loading goals: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
+
+@app.route('/api/goals', methods=['POST'])
+def create_goal():
+    """Create a new goal"""
+    try:
+        data = request.get_json()
+        
+        goal = Goal(
+            title=data.get('title'),
+            description=data.get('description', ''),
+            target_amount=float(data.get('target_amount')),
+            target_date=datetime.strptime(data.get('target_date') + '-01', '%Y-%m-%d').date()
+        )
+        
+        db.session.add(goal)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Goal created successfully'})
+    except Exception as e:
+        logging.error(f"Error creating goal: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/goals/<int:goal_id>', methods=['GET'])
+def get_goal(goal_id):
+    """Get a specific goal"""
+    try:
+        goal = Goal.query.get_or_404(goal_id)
+        return jsonify(goal.to_dict())
+    except Exception as e:
+        logging.error(f"Error getting goal: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/goals/<int:goal_id>', methods=['PUT'])
+def update_goal(goal_id):
+    """Update a goal"""
+    try:
+        goal = Goal.query.get_or_404(goal_id)
+        data = request.get_json()
+        
+        goal.title = data.get('title', goal.title)
+        goal.description = data.get('description', goal.description)
+        goal.target_amount = float(data.get('target_amount', goal.target_amount))
+        goal.target_date = datetime.strptime(data.get('target_date') + '-01', '%Y-%m-%d').date()
+        goal.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Goal updated successfully'})
+    except Exception as e:
+        logging.error(f"Error updating goal: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/api/goals/<int:goal_id>', methods=['DELETE'])
+def delete_goal(goal_id):
+    """Delete a goal"""
+    try:
+        goal = Goal.query.get_or_404(goal_id)
+        
+        db.session.delete(goal)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Goal deleted successfully'})
+    except Exception as e:
+        logging.error(f"Error deleting goal: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

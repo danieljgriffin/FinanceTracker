@@ -27,6 +27,7 @@ Preferred communication style: Simple, everyday language.
 - **Platform-Based Tracking**: Tracks total values for various investment platforms, including cash balances.
 - **Real-time Price Fetching**: Utilizes `yfinance` for stocks and a custom CoinGecko integration for cryptocurrencies. Includes specialized web scraping for specific HL LISA funds and automatic USD to GBP conversion for US stocks, and pence to pounds conversion for UK stocks. Features automatic background price updates every 15 minutes with status display and manual override.
 - **Editable Interface**: Allows in-app editing of financial data (income, monthly values, investments) with immediate persistence.
+- **Goals Tracking**: Comprehensive goal tracking system with progress visualization, compound interest calculator, and quarterly milestone tracking similar to the user's Google Sheets approach.
 - **Comprehensive Responsiveness**: Mobile-first design ensures compatibility across devices, including optimized mobile navigation and touch interactions.
 
 ## External Dependencies
