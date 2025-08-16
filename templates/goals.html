@@ -24,11 +24,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-gray-800/50 rounded-xl p-4 text-center">
                     <p class="text-sm text-gray-400 mb-2">Current Net Worth</p>
-                    <p class="text-2xl font-bold text-white">£{{ "{:,.0f}".format(current_net_worth) }}</p>
+                    <p class="text-2xl font-bold text-white financial-figure">£{{ "{:,.0f}".format(current_net_worth) }}</p>
                 </div>
                 <div class="bg-gray-800/50 rounded-xl p-4 text-center">
                     <p class="text-sm text-gray-400 mb-2">Monthly Investment</p>
-                    <p class="text-2xl font-bold text-blue-400">£{{ "{:,.0f}".format(monthly_investment) }}</p>
+                    <p class="text-2xl font-bold text-blue-400 financial-figure">£{{ "{:,.0f}".format(monthly_investment) }}</p>
                 </div>
                 <div class="bg-gray-800/50 rounded-xl p-4 text-center">
                     <p class="text-sm text-gray-400 mb-2">Projected APY</p>
@@ -68,7 +68,7 @@
                             <!-- Left: Target Info -->
                             <div class="flex-shrink-0">
                                 <h3 class="text-lg font-semibold text-white mb-1">{{ goal.target_date.strftime('%Y/%m') }}</h3>
-                                <p class="text-2xl font-bold text-blue-400">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
+                                <p class="text-2xl font-bold text-blue-400 financial-figure">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
                                 <p class="text-sm text-gray-400">{{ goal.target_date.strftime('%b %Y') }} Target</p>
                             </div>
                             
@@ -142,7 +142,7 @@
                                         <i class="fas fa-check mr-1"></i>Completed
                                     </span>
                                 </div>
-                                <p class="text-2xl font-bold text-green-400">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
+                                <p class="text-2xl font-bold text-green-400 financial-figure">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
                                 <p class="text-sm text-gray-400">{{ goal.target_date.strftime('%b %Y') }} Target</p>
                             </div>
                             
@@ -165,11 +165,11 @@
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                                     <div>
                                         <span class="text-gray-400 block">Target</span>
-                                        <span class="text-gray-300 font-medium">£{{ "{:,.0f}".format(goal.target_amount) }}</span>
+                                        <span class="text-gray-300 font-medium financial-figure">£{{ "{:,.0f}".format(goal.target_amount) }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-400 block">Current</span>
-                                        <span class="text-gray-300 font-medium">£{{ "{:,.0f}".format(goal.current_amount) }}</span>
+                                        <span class="text-gray-300 font-medium financial-figure">£{{ "{:,.0f}".format(goal.current_amount) }}</span>
                                     </div>
                                     <div>
                                         <span class="text-gray-400 block">Status</span>

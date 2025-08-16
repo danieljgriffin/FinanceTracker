@@ -223,7 +223,7 @@
                         <div class="flex items-center justify-end">
                             <span class="text-gray-400 mr-1">£</span>
                             <input type="number" 
-                                   class="income-input financial-figure w-32 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2" 
+                                   class="income-input w-32 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2" 
                                    data-year="2017" 
                                    data-field="amount_invested" 
                                    value="{{ income_data.get('2017', {}).get('amount_invested', 0) }}"
@@ -262,7 +262,7 @@
                         <div class="flex items-center justify-end">
                             <span class="text-gray-400 mr-1">£</span>
                             <input type="number" 
-                                   class="income-input financial-figure w-32 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2" 
+                                   class="income-input w-32 text-right bg-gray-800 text-gray-300 border-none focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-3 py-2" 
                                    data-year="{{ year }}" 
                                    data-field="amount_invested" 
                                    value="{{ income_data.get(year|string, {}).get('amount_invested', 0) }}"
@@ -290,7 +290,7 @@
                         <div class="text-lg font-bold text-green-400 financial-figure" id="total-income">£0.00</div>
                     </td>
                     <td class="py-4 text-right">
-                        <div class="text-lg font-bold text-blue-400 financial-figure" id="total-invested">£0.00</div>
+                        <div class="text-lg font-bold text-blue-400" id="total-invested">£0.00</div>
                     </td>
                     <td class="py-4 text-right">
                         <div class="text-lg font-bold text-purple-400" id="total-percentage">0.0%</div>
