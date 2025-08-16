@@ -146,8 +146,8 @@
                                 <!-- Progress Bar Container -->
                                 <div class="w-full bg-gray-700/50 rounded-xl h-12 relative overflow-hidden">
                                     <!-- Progress Fill with enhanced styling -->
-                                    <div class="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
-                                         style="width: {{ progress_info.progress_percentage }}%">
+                                    <div class="h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
+                                         style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb) !important;">
                                         <!-- Current Value Inside Bar -->
                                         {% if progress_info.progress_percentage > 20 %}
                                         <span class="text-white font-semibold text-sm drop-shadow-lg">£{{ "{:,.0f}".format(current_net_worth) }}</span>
