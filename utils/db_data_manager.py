@@ -474,6 +474,20 @@ class DatabaseDataManager:
             self.logger.error(f"Error updating monthly investment: {e}")
             raise
     
+    def get_current_net_worth(self) -> float:
+        """Get the most recent net worth value"""
+        # Get the most recent entry with a positive net worth
+        latest_entry = NetworthEntry.query.filter(NetworthEntry.total_networth > 0).order_by(
+            NetworthEntry.year.desc(), 
+            NetworthEntry.id.desc()
+        ).first()
+        
+        if latest_entry:
+            return latest_entry.total_networth
+        
+        # If no entries found, return 0
+        return 0.0
+    
     def get_chart_data_with_invested(self):
         """Generate simple chart data showing just portfolio value"""
         # Get data directly from database
