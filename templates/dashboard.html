@@ -277,8 +277,8 @@
 
     <!-- Desktop Layout: Net Worth Breakdown (1/3) + Financial Target Progress (2/3) + Charts (2/3) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Net Worth Breakdown (Left Third, spans 2 rows) -->
-        <div class="card lg:col-span-1 lg:row-span-2">
+        <!-- Net Worth Breakdown (Left Third) -->
+        <div class="card lg:col-span-1">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
             </div>
@@ -333,8 +333,8 @@
             </div>
         </div>
 
-        <!-- Financial Target Progress (Right Two-Thirds, Row 1) -->
-        <div class="card lg:col-span-2 h-fit lg:row-start-1">
+        <!-- Financial Target Progress (Right Two-Thirds) -->
+        <div class="card lg:col-span-2 h-fit">
         <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
             <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
         </div>
@@ -421,8 +421,15 @@
         </div>
     </div>
 
-        <!-- Charts Section (Right Two-Thirds, in same row as Net Worth Breakdown) -->
-        <div class="card lg:col-span-2 lg:row-start-2">
+    </div>
+    
+    <!-- Charts Section (Right Two-Thirds, separate row) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Empty space to align with Net Worth Breakdown above -->
+        <div class="lg:col-span-1"></div>
+        
+        <!-- Charts (Right Two-Thirds) -->
+        <div class="card lg:col-span-2">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
             </div>
@@ -878,7 +885,7 @@
         if (loadingElement) loadingElement.style.display = 'block';
         if (canvas) canvas.style.display = 'none';
         
-        fetch(`/api/chart-data/${year}`)
+        fetch(`/api/networth-chart-data?year=${year}&type=${currentChartTypeSeparate}`)
             .then(response => response.json())
             .then(data => {
                 if (loadingElement) loadingElement.style.display = 'none';
