@@ -1333,7 +1333,7 @@ def api_geographic_allocation():
 def goals():
     """Goals tracking page"""
     try:
-        goals_list = Goal.query.order_by(Goal.created_at.desc()).all()
+        goals_list = Goal.query.order_by(Goal.target_date.asc()).all()
         
         # Get current net worth and monthly investment for calculator
         data_manager = get_data_manager()
