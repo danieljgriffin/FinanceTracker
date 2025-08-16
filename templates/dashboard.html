@@ -756,7 +756,18 @@
                             callbacks: {
                                 label: function(context) {
                                     return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
                                 }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: {
+                                weight: 'bold'
                             }
                         }
                     }

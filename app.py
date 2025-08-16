@@ -1082,8 +1082,15 @@ def networth_chart_data():
                             
                             # For stacked bar chart, store platform breakdown
                             if chart_type == 'bar':
-                                for platform in platform_data.keys():
-                                    platform_data[platform].append(month_platforms.get(platform, 0))
+                                for platform, value in month_platforms.items():
+                                    if platform not in platform_data:
+                                        platform_data[platform] = [0] * (len(labels) - 1)  # Fill previous months with zeros
+                                    platform_data[platform].append(value)
+                                
+                                # Ensure all existing platforms have data for this month
+                                for platform in list(platform_data.keys()):
+                                    if platform not in month_platforms:
+                                        platform_data[platform].append(0)
                             
             except Exception as e:
                 logging.error(f"Error getting data for year {year}: {str(e)}")
