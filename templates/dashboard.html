@@ -167,45 +167,61 @@
         </div>
     </div>
 
-    <!-- Mobile Quick Actions - 2x2 Grid -->
+    <!-- Mobile Financial Target Progress -->
     <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl">
         <div class="p-4 border-b border-gray-600/30">
-            <h2 class="text-lg font-semibold text-white">Quick Actions</h2>
+            <h2 class="text-lg font-semibold text-white">Financial Target</h2>
         </div>
         <div class="p-4">
-            <div class="grid grid-cols-2 gap-3">
-                <a href="{{ url_for('investment_manager') }}" 
-                   class="flex flex-col items-center p-4 bg-blue-500/20 rounded-xl border border-blue-500/30">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-2">
-                        <i class="fas fa-plus text-white text-lg"></i>
+            {% if next_target and progress_info %}
+            <div class="space-y-4">
+                <!-- Target Info -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-white">{{ next_target.title }}</h3>
+                        <p class="text-sm text-gray-300">Target: £{{ "{:,.0f}".format(next_target.target_amount) }}</p>
                     </div>
-                    <span class="text-white font-medium text-sm text-center">Add Investment</span>
-                </a>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-300">{{ progress_info.days_remaining }} days left</p>
+                        <p class="text-xs text-gray-400">{{ next_target.target_date }}</p>
+                    </div>
+                </div>
                 
-                <a href="{{ url_for('monthly_breakdown') }}" 
-                   class="flex flex-col items-center p-4 bg-green-500/20 rounded-xl border border-green-500/30">
-                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-2">
-                        <i class="fas fa-calendar text-white text-lg"></i>
+                <!-- Progress Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-300">Progress</span>
+                        <span class="text-white font-semibold">{{ "%.1f"|format(progress_info.progress_percentage) }}%</span>
                     </div>
-                    <span class="text-white font-medium text-sm text-center">Monthly View</span>
-                </a>
+                    <div class="w-full bg-gray-700 rounded-full h-3">
+                        <div class="h-3 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500" 
+                             style="width: {{ progress_info.progress_percentage }}%"></div>
+                    </div>
+                </div>
                 
-                <a href="{{ url_for('update_prices') }}" 
-                   class="flex flex-col items-center p-4 bg-purple-500/20 rounded-xl border border-purple-500/30">
-                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-2">
-                        <i class="fas fa-sync-alt text-white text-lg"></i>
+                <!-- Remaining Amount -->
+                {% if not progress_info.is_achieved %}
+                <div class="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <div class="flex items-center">
+                        <i class="fas fa-target text-blue-400 mr-2"></i>
+                        <span class="text-white font-medium">Remaining</span>
                     </div>
-                    <span class="text-white font-medium text-sm text-center">Update Prices</span>
-                </a>
-                
-                <a href="{{ url_for('yearly_tracker') }}" 
-                   class="flex flex-col items-center p-4 bg-orange-500/20 rounded-xl border border-orange-500/30">
-                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mb-2">
-                        <i class="fas fa-chart-bar text-white text-lg"></i>
-                    </div>
-                    <span class="text-white font-medium text-sm text-center">Year / Month Tracker</span>
-                </a>
+                    <span class="text-blue-400 font-bold">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</span>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                    <span class="text-green-400 font-bold">Target Achieved!</span>
+                </div>
+                {% endif %}
             </div>
+            {% else %}
+            <div class="text-center py-6">
+                <i class="fas fa-bullseye text-gray-500 text-3xl mb-3"></i>
+                <p class="text-gray-400 mb-2">No active financial targets</p>
+                <a href="{{ url_for('goals') }}" class="text-blue-400 hover:text-blue-300 text-sm underline">Set your first goal</a>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -383,61 +399,86 @@
 
 
 
-    <!-- Quick Actions -->
+    <!-- Desktop Financial Target Progress -->
     <div class="card">
         <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
-            <h2 class="text-lg sm:text-xl font-semibold text-white">Quick Actions</h2>
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
         </div>
         <div class="p-3 sm:p-4 lg:p-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
-                <a href="{{ url_for('investment_manager') }}" 
-                   class="flex items-center p-3 sm:p-4 lg:p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
-                   style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05));">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 lg:mr-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-plus text-white text-sm sm:text-base lg:text-lg"></i>
+            {% if next_target and progress_info %}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <!-- Left Column: Target Info & Progress -->
+                <div class="space-y-4">
+                    <!-- Target Header -->
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">{{ next_target.title }}</h3>
+                            <p class="text-gray-300">Target: <span class="font-semibold text-white">£{{ "{:,.0f}".format(next_target.target_amount) }}</span></p>
+                            <p class="text-sm text-gray-400">Due: {{ next_target.target_date }}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-white">{{ "%.1f"|format(progress_info.progress_percentage) }}%</div>
+                            <div class="text-xs text-gray-400">complete</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="font-semibold text-white text-sm sm:text-base">Add Investment</div>
-                        <div class="text-xs sm:text-sm text-gray-400 hidden sm:block">Manage investments</div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="space-y-2">
+                        <div class="w-full bg-gray-700 rounded-full h-4">
+                            <div class="h-4 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-700" 
+                                 style="width: {{ progress_info.progress_percentage }}%"></div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>£0</span>
+                            <span>£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
+                        </div>
                     </div>
-                </a>
+                </div>
                 
-                <a href="{{ url_for('monthly_breakdown') }}" 
-                   class="flex items-center p-3 sm:p-4 lg:p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
-                   style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 lg:mr-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-calendar text-white text-sm sm:text-base lg:text-lg"></i>
+                <!-- Right Column: Status Cards -->
+                <div class="space-y-3">
+                    <!-- Days Remaining -->
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-lg border border-purple-500/20">
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-purple-400 mr-3 text-lg"></i>
+                            <span class="text-white font-medium">Days Remaining</span>
+                        </div>
+                        <span class="text-purple-400 font-bold text-lg">{{ progress_info.days_remaining }}</span>
                     </div>
-                    <div>
-                        <div class="font-semibold text-white text-sm sm:text-base">Monthly View</div>
-                        <div class="text-xs sm:text-sm text-gray-400 hidden sm:block">Current month breakdown</div>
+                    
+                    <!-- Amount Remaining -->
+                    {% if not progress_info.is_achieved %}
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg border border-blue-500/20">
+                        <div class="flex items-center">
+                            <i class="fas fa-target text-blue-400 mr-3 text-lg"></i>
+                            <span class="text-white font-medium">Remaining</span>
+                        </div>
+                        <span class="text-blue-400 font-bold text-lg">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</span>
                     </div>
-                </a>
-                
-                <a href="{{ url_for('update_prices') }}" 
-                   class="flex items-center p-3 sm:p-4 lg:p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
-                   style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05));">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 lg:mr-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-sync-alt text-white text-sm sm:text-base lg:text-lg"></i>
+                    {% else %}
+                    <div class="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-lg border border-green-500/20">
+                        <i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i>
+                        <span class="text-green-400 font-bold text-lg">Target Achieved!</span>
                     </div>
-                    <div>
-                        <div class="font-semibold text-white text-sm sm:text-base">Update Prices</div>
-                        <div class="text-xs sm:text-sm text-gray-400 hidden sm:block">Refresh live prices</div>
-                    </div>
-                </a>
-                
-                <a href="{{ url_for('yearly_tracker') }}" 
-                   class="flex items-center p-3 sm:p-4 lg:p-6 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg group" 
-                   style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05));">
-                    <div class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-2 sm:mr-3 lg:mr-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-chart-bar text-white text-sm sm:text-base lg:text-lg"></i>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-white text-sm sm:text-base">Year Tracker</div>
-                        <div class="text-xs sm:text-sm text-gray-400 hidden sm:block">Monthly progress</div>
-                    </div>
+                    {% endif %}
+                    
+                    <!-- Quick Link to Goals -->
+                    <a href="{{ url_for('goals') }}" class="flex items-center justify-center p-3 bg-gray-700/30 hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-600/30">
+                        <i class="fas fa-bullseye text-gray-300 mr-2"></i>
+                        <span class="text-gray-300 font-medium text-sm">View All Goals</span>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 lg:py-12">
+                <i class="fas fa-bullseye text-gray-500 text-4xl lg:text-5xl mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">No Active Financial Targets</h3>
+                <p class="text-gray-400 mb-4">Set your first financial goal to track your progress</p>
+                <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Create Your First Goal
                 </a>
             </div>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -256,6 +256,32 @@ def dashboard():
             yearly_increase = 0
             yearly_amount_change = 0
         
+        # Get next financial target
+        next_target = None
+        progress_info = None
+        try:
+            goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
+            if goals:
+                next_target = goals[0]  # Get the earliest active goal
+                
+                # Calculate progress
+                remaining_amount = next_target.target_amount - current_net_worth
+                progress_percentage = min((current_net_worth / next_target.target_amount) * 100, 100)
+                
+                # Calculate time remaining
+                today = datetime.now().date()
+                target_date = datetime.strptime(next_target.target_date, '%Y-%m-%d').date()
+                days_remaining = (target_date - today).days
+                
+                progress_info = {
+                    'remaining_amount': max(0, remaining_amount),
+                    'progress_percentage': progress_percentage,
+                    'days_remaining': max(0, days_remaining),
+                    'is_achieved': current_net_worth >= next_target.target_amount
+                }
+        except Exception as e:
+            logging.error(f"Error calculating next target: {str(e)}")
+        
         return render_template('dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
@@ -267,7 +293,9 @@ def dashboard():
                              yearly_amount_change=yearly_amount_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             last_price_update=last_price_update)
+                             last_price_update=last_price_update,
+                             next_target=next_target,
+                             progress_info=progress_info)
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
@@ -282,7 +310,9 @@ def dashboard():
                              yearly_amount_change=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             last_price_update=None)
+                             last_price_update=None,
+                             next_target=None,
+                             progress_info=None)
 
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
