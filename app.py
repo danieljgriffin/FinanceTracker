@@ -1344,7 +1344,8 @@ def goals():
         return render_template('goals.html',
                              goals=goals_list,
                              current_net_worth=current_net_worth,
-                             monthly_investment=monthly_investment)
+                             monthly_investment=monthly_investment,
+                             today=datetime.now().date())
     except Exception as e:
         logging.error(f"Error loading goals page: {e}")
         flash(f'Error loading goals: {str(e)}', 'error')
