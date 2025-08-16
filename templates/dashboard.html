@@ -133,21 +133,20 @@
                     <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
                 </div>
                 <div class="p-3 sm:p-4 lg:p-6">
-                    {% if active_goal %}
+                    {% if next_target %}
                     <div class="space-y-4 sm:space-y-6">
                         <div class="text-center mb-4 sm:mb-6">
-                            <h3 class="text-base sm:text-lg font-semibold text-white mb-1">{{ active_goal.name }}</h3>
-                            <p class="text-xs sm:text-sm text-gray-400">Target: £{{ "{:,.0f}".format(active_goal.target_amount) }} by {{ active_goal.target_date.strftime('%b %Y') }}</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-white mb-1">{{ next_target.name }}</h3>
+                            <p class="text-xs sm:text-sm text-gray-400">Target: £{{ "{:,.0f}".format(next_target.target_amount) }} by {{ next_target.target_date.strftime('%b %Y') }}</p>
                         </div>
                         
-                        {% set progress_info = goal_progress %}
                         {% if progress_info %}
                         <div class="space-y-3 sm:space-y-4">
                             <!-- Progress Bar -->
                             <div class="w-full bg-gray-700 rounded-full h-3 sm:h-4">
                                 <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 sm:h-4 rounded-full flex items-center justify-end pr-2 transition-all duration-500" 
-                                     style="width: {{ progress_info.percentage }}%">
-                                    <span class="text-white text-xs font-bold">{{ "{:.1f}".format(progress_info.percentage) }}%</span>
+                                     style="width: {{ progress_info.progress_percentage }}%">
+                                    <span class="text-white text-xs font-bold">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
                                 </div>
                             </div>
                             
@@ -165,10 +164,10 @@
                                 </div>
                             </div>
                             
-                            {% if progress_info.percentage < 100 %}
+                            {% if not progress_info.is_achieved %}
                             <div class="flex items-center justify-center p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg border border-blue-500/20">
                                 <i class="fas fa-target text-blue-400 mr-3 text-lg"></i>
-                                <span class="text-blue-400 font-bold text-lg">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</span>
+                                <span class="text-blue-400 font-bold text-lg">£{{ "{:,.0f}".format(progress_info.remaining_amount) }} remaining</span>
                             </div>
                             {% else %}
                             <div class="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-lg border border-green-500/20">
@@ -186,10 +185,13 @@
                         {% endif %}
                     </div>
                     {% else %}
-                    <div class="text-center py-6">
-                        <i class="fas fa-bullseye text-gray-500 text-3xl mb-3"></i>
-                        <p class="text-gray-400 mb-2">No active financial targets</p>
-                        <a href="{{ url_for('goals') }}" class="text-blue-400 hover:text-blue-300 text-sm underline">Set your first goal</a>
+                    <div class="text-center py-8 lg:py-12">
+                        <i class="fas fa-bullseye text-gray-500 text-4xl lg:text-5xl mb-4"></i>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-2">No Active Financial Targets</h3>
+                        <p class="text-gray-400 mb-4">Set your first financial goal to track your progress</p>
+                        <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i>Create Your First Goal
+                        </a>
                     </div>
                     {% endif %}
                 </div>
@@ -409,6 +411,39 @@
                             legend: {
                                 position: 'bottom',
                                 labels: { color: '#e5e7eb', boxWidth: 12 }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                titleColor: '#f3f4f6',
+                                bodyColor: '#e5e7eb',
+                                borderColor: '#6b7280',
+                                borderWidth: 1,
+                                callbacks: {
+                                    footer: function(tooltipItems) {
+                                        // Calculate total for the month (for stacked bars, sum all values)
+                                        let total = 0;
+                                        if (currentChartTypeCharts === 'bar') {
+                                            // For stacked bars, show the total across all platforms for this month
+                                            tooltipItems.forEach(function(tooltipItem) {
+                                                total += tooltipItem.parsed.y;
+                                            });
+                                        } else {
+                                            // For line charts, sum all datasets for this point
+                                            const dataIndex = tooltipItems[0].dataIndex;
+                                            tooltipItems[0].chart.data.datasets.forEach(function(dataset) {
+                                                if (dataset.data[dataIndex]) {
+                                                    total += dataset.data[dataIndex];
+                                                }
+                                            });
+                                        }
+                                        return 'Total: £' + total.toLocaleString();
+                                    },
+                                    label: function(context) {
+                                        return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                    }
+                                }
                             }
                         },
                         scales: {
