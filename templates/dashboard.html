@@ -20,7 +20,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <p class="text-xs font-medium text-gray-300 mb-1">Current Net Worth</p>
-                    <p class="text-xl font-bold text-white financial-figure">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                    <p class="text-lg font-bold text-white financial-figure">£{{ "{:,.2f}".format(current_net_worth) }}</p>
                 </div>
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
                     <i class="fas fa-chart-line text-white text-sm"></i>
@@ -33,7 +33,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <p class="text-xs font-medium text-gray-300 mb-1">Month-on-Month</p>
-                    <p class="text-base font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} whitespace-nowrap">
+                    <p class="text-sm font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} whitespace-nowrap">
                         {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
                     </p>
                 </div>
@@ -48,7 +48,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1">
                     <p class="text-xs font-medium text-gray-300 mb-1">Yearly Net Worth Increase</p>
-                    <p class="text-base font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} whitespace-nowrap">
+                    <p class="text-sm font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} whitespace-nowrap">
                         {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_amount_change < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
                     </p>
                 </div>
