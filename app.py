@@ -1416,5 +1416,29 @@ def delete_goal(goal_id):
         logging.error(f"Error deleting goal: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/goals/<int:goal_id>/toggle-completion', methods=['POST'])
+def toggle_goal_completion(goal_id):
+    """Toggle goal completion status"""
+    try:
+        goal = Goal.query.get_or_404(goal_id)
+        
+        # Toggle the status
+        if goal.status == 'completed':
+            goal.status = 'active'
+        else:
+            goal.status = 'completed'
+            
+        goal.updated_at = datetime.now()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Goal marked as {goal.status}',
+            'status': goal.status
+        })
+    except Exception as e:
+        logging.error(f"Error toggling goal completion: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

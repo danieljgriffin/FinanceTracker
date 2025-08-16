@@ -41,13 +41,28 @@
     <!-- Goals List -->
     <div class="card">
         <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
-            <h2 class="text-lg sm:text-xl font-semibold text-white">Your Goals</h2>
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg sm:text-xl font-semibold text-white">Your Goals</h2>
+                
+                <!-- Tab Switcher -->
+                <div class="flex bg-gray-700/50 rounded-lg p-1">
+                    <button id="activeTab" onclick="switchTab('active')" 
+                            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors bg-blue-600 text-white">
+                        Active
+                    </button>
+                    <button id="completedTab" onclick="switchTab('completed')" 
+                            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                        Completed
+                    </button>
+                </div>
+            </div>
         </div>
         <div class="p-4 sm:p-6 lg:p-8">
             {% if goals %}
-                <!-- Quarterly Targets List -->
-                <div class="space-y-4">
+                <!-- Active Goals -->
+                <div id="activeGoals" class="space-y-4">
                     {% for goal in goals %}
+                    {% if goal.status != 'completed' %}
                     <div class="bg-gray-800/50 rounded-xl p-6 border border-gray-700/30">
                         <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                             <!-- Left: Target Info -->
@@ -95,8 +110,11 @@
                                 </div>
                             </div>
                             
-                            <!-- Far Right: Edit/Delete buttons -->
+                            <!-- Far Right: Complete/Edit/Delete buttons -->
                             <div class="flex gap-2 flex-shrink-0">
+                                <button onclick="toggleGoalCompletion({{ goal.id }})" class="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors" title="Mark as completed">
+                                    <i class="fas fa-check"></i>
+                                </button>
                                 <button onclick="editGoal({{ goal.id }})" class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm transition-colors">
                                     <i class="fas fa-edit"></i>
                                 </button>
@@ -106,6 +124,79 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Completed Goals (initially hidden) -->
+                <div id="completedGoals" class="space-y-4 hidden">
+                    {% for goal in goals %}
+                    {% if goal.status == 'completed' %}
+                    <div class="bg-gray-800/30 rounded-xl p-6 border border-gray-700/30 opacity-75">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                            <!-- Left: Target Info with completed badge -->
+                            <div class="flex-shrink-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-lg font-semibold text-white">{{ goal.target_date.strftime('%Y/%m') }}</h3>
+                                    <span class="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
+                                        <i class="fas fa-check mr-1"></i>Completed
+                                    </span>
+                                </div>
+                                <p class="text-2xl font-bold text-green-400">£{{ "{:,.0f}".format(goal.target_amount) }}</p>
+                                <p class="text-sm text-gray-400">{{ goal.target_date.strftime('%b %Y') }} Target</p>
+                            </div>
+                            
+                            <!-- Center: Completed Circle -->
+                            <div class="flex-shrink-0">
+                                <div class="relative w-20 h-20">
+                                    <svg class="w-20 h-20 transform -rotate-90" viewBox="0 0 32 32">
+                                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" fill="none" class="text-gray-700" />
+                                        <circle cx="16" cy="16" r="14" stroke="currentColor" stroke-width="2" fill="none" 
+                                                class="text-green-400" stroke-dasharray="87.96 87.96" stroke-linecap="round" />
+                                    </svg>
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <i class="fas fa-check text-green-400 text-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Details -->
+                            <div class="flex-1">
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-400 block">Target</span>
+                                        <span class="text-gray-300 font-medium">£{{ "{:,.0f}".format(goal.target_amount) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400 block">Current</span>
+                                        <span class="text-gray-300 font-medium">£{{ "{:,.0f}".format(goal.current_amount) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400 block">Status</span>
+                                        <span class="text-green-400 font-medium">Achieved</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-400 block">Date</span>
+                                        <span class="text-gray-300 font-medium">{{ goal.target_date.strftime('%b %Y') }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Far Right: Reactivate/Edit/Delete buttons -->
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button onclick="toggleGoalCompletion({{ goal.id }})" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors" title="Mark as active">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                                <button onclick="editGoal({{ goal.id }})" class="px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteGoal({{ goal.id }})" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </div>
             {% else %}
@@ -266,6 +357,51 @@ function deleteGoal(goalId) {
             }
         })
         .catch(error => console.error('Error:', error));
+    }
+}
+
+function toggleGoalCompletion(goalId) {
+    fetch(`/api/goals/${goalId}/toggle-completion`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating goal: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating goal');
+    });
+}
+
+function switchTab(tab) {
+    const activeTab = document.getElementById('activeTab');
+    const completedTab = document.getElementById('completedTab');
+    const activeGoals = document.getElementById('activeGoals');
+    const completedGoals = document.getElementById('completedGoals');
+
+    if (tab === 'active') {
+        // Switch to active tab
+        activeTab.classList.add('bg-blue-600', 'text-white');
+        activeTab.classList.remove('text-gray-300');
+        completedTab.classList.remove('bg-blue-600', 'text-white');
+        completedTab.classList.add('text-gray-300');
+        
+        activeGoals.classList.remove('hidden');
+        completedGoals.classList.add('hidden');
+    } else {
+        // Switch to completed tab
+        completedTab.classList.add('bg-blue-600', 'text-white');
+        completedTab.classList.remove('text-gray-300');
+        activeTab.classList.remove('bg-blue-600', 'text-white');
+        activeTab.classList.add('text-gray-300');
+        
+        completedGoals.classList.remove('hidden');
+        activeGoals.classList.add('hidden');
     }
 }
 
