@@ -678,6 +678,17 @@
                 if (loadingElement) loadingElement.classList.add('hidden');
                 if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
                 
+                // Debug logging for stacked bar data
+                if (currentChartType === 'bar') {
+                    console.log('Stacked bar data received:', data);
+                    console.log('Datasets count:', data.datasets ? data.datasets.length : 0);
+                    if (data.datasets) {
+                        data.datasets.forEach(dataset => {
+                            console.log(`Platform: ${dataset.label}, Data points: ${dataset.data.length}, Sample values:`, dataset.data.slice(0, 3));
+                        });
+                    }
+                }
+                
                 // Render chart with the data
                 renderChart(data, year);
             })
@@ -706,12 +717,22 @@
         let chartConfig;
         
         if (currentChartType === 'bar' && data.datasets) {
+            // Filter out empty datasets and ensure all datasets have proper data
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            console.log(`Filtered datasets: ${validDatasets.length}/${data.datasets.length}`);
+            validDatasets.forEach(dataset => {
+                console.log(`${dataset.label}: ${dataset.data.length} points, color: ${dataset.backgroundColor}`);
+            });
+            
             // Stacked bar chart configuration
             chartConfig = {
                 type: 'bar',
                 data: {
                     labels: data.labels,
-                    datasets: data.datasets
+                    datasets: validDatasets
                 },
                 options: {
                     responsive: true,
