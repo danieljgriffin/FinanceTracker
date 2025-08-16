@@ -275,10 +275,10 @@
         </div>
     </div>
 
-    <!-- Desktop Layout: Net Worth Breakdown + Financial Target Progress -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Net Worth Breakdown (Left Half) -->
-        <div class="card">
+    <!-- Desktop Layout: Net Worth Breakdown (1/3) + Financial Target Progress (2/3) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Net Worth Breakdown (Left Third) -->
+        <div class="card lg:col-span-1">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
@@ -381,8 +381,8 @@
             </div>
         </div>
 
-        <!-- Financial Target Progress (Right Half) -->
-        <div class="card">
+        <!-- Financial Target Progress (Right Two-Thirds) -->
+        <div class="card lg:col-span-2 h-fit">
         <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
             <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
         </div>
@@ -466,6 +466,52 @@
                 </a>
             </div>
             {% endif %}
+        </div>
+    </div>
+
+    <!-- Charts Section (Right Two-Thirds, underneath Financial Target) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Empty space to align with Net Worth Breakdown above -->
+        <div class="lg:col-span-1"></div>
+        
+        <!-- Charts (Right Two-Thirds) -->
+        <div class="card lg:col-span-2">
+            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
+                <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
+            </div>
+            <div class="p-3 sm:p-4 lg:p-6">
+                <div class="mb-4 space-y-3">
+                    <!-- Chart Type Switcher -->
+                    <div class="flex justify-center">
+                        <div class="flex bg-gray-700/50 rounded-lg p-1">
+                            <button id="lineChartBtnCharts" onclick="switchChartTypeCharts('line')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                <i class="fas fa-chart-line mr-1"></i>Line Chart
+                            </button>
+                            <button id="barChartBtnCharts" onclick="switchChartTypeCharts('bar')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Year Filters -->
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
+                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
+                        <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
+                        <button onclick="filterYearCharts('2024-2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024-2025">2024-25</button>
+                        <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
+                    </div>
+                </div>
+                <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
+                    <canvas id="networthChartSeparate" width="400" height="300"></canvas>
+                </div>
+                <div id="chartLoadingSeparate" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">Loading chart data...</p>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -826,7 +872,207 @@
             const ctxDesktop = canvasDesktop.getContext('2d');
             window.chartInstanceDesktop = new Chart(ctxDesktop, chartConfig);
         }
+        
+        // Create separate charts section chart
+        const canvasSeparate = document.getElementById('networthChartSeparate');
+        if (canvasSeparate) {
+            if (window.chartInstanceSeparate) {
+                window.chartInstanceSeparate.destroy();
+            }
+            const ctxSeparate = canvasSeparate.getContext('2d');
+            window.chartInstanceSeparate = new Chart(ctxSeparate, chartConfig);
+        }
     }
+
+    // Functions for separate charts section
+    let currentChartTypeSeparate = 'bar';
+    let currentYearFilterSeparate = '2025';
+
+    function switchChartTypeCharts(type) {
+        currentChartTypeSeparate = type;
+        
+        // Update button states
+        const lineBtn = document.getElementById('lineChartBtnCharts');
+        const barBtn = document.getElementById('barChartBtnCharts');
+        
+        if (type === 'line') {
+            lineBtn.classList.add('bg-blue-600', 'text-white');
+            lineBtn.classList.remove('text-gray-300', 'hover:text-white');
+            barBtn.classList.remove('bg-blue-600', 'text-white');
+            barBtn.classList.add('text-gray-300', 'hover:text-white');
+        } else {
+            barBtn.classList.add('bg-blue-600', 'text-white');
+            barBtn.classList.remove('text-gray-300', 'hover:text-white');
+            lineBtn.classList.remove('bg-blue-600', 'text-white');
+            lineBtn.classList.add('text-gray-300', 'hover:text-white');
+        }
+        
+        loadChartDataSeparate(currentYearFilterSeparate);
+    }
+
+    function filterYearCharts(year) {
+        currentYearFilterSeparate = year;
+        
+        // Update button states
+        document.querySelectorAll('.year-filter-charts').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-600', 'text-gray-300');
+        });
+        
+        document.querySelector(`[data-year="${year}"]`).classList.add('bg-blue-600', 'text-white');
+        document.querySelector(`[data-year="${year}"]`).classList.remove('bg-gray-600', 'text-gray-300');
+        
+        loadChartDataSeparate(year);
+    }
+
+    function loadChartDataSeparate(year) {
+        const loadingElement = document.getElementById('chartLoadingSeparate');
+        const canvas = document.getElementById('networthChartSeparate');
+        
+        if (loadingElement) loadingElement.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        fetch(`/api/chart-data/${year}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingElement) loadingElement.style.display = 'none';
+                if (canvas) canvas.style.display = 'block';
+                createChartSeparate(data);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                if (loadingElement) {
+                    loadingElement.innerHTML = '<p class="text-red-400">Error loading chart data</p>';
+                }
+            });
+    }
+
+    function createChartSeparate(data) {
+        const canvas = document.getElementById('networthChartSeparate');
+        if (!canvas) return;
+        
+        // Destroy existing chart
+        if (window.chartInstanceSeparate) {
+            window.chartInstanceSeparate.destroy();
+        }
+        
+        let chartConfig;
+        
+        if (currentChartTypeSeparate === 'bar' && data.datasets) {
+            // Filter out empty datasets
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: validDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
+                                }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: { weight: 'bold' }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    }
+                }
+            }
+        };
+        
+        const ctx = canvas.getContext('2d');
+        window.chartInstanceSeparate = new Chart(ctx, chartConfig);
+    }
+
+    // Initialize separate charts on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('networthChartSeparate')) {
+            loadChartDataSeparate(currentYearFilterSeparate);
+        }
+    });
 </script>
 
 <!-- Chart.js -->
