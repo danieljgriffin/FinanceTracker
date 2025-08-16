@@ -256,13 +256,16 @@ def dashboard():
             yearly_increase = 0
             yearly_amount_change = 0
         
-        # Get next financial target
+        # Get next financial target - closest to current day
         next_target = None
         progress_info = None
         try:
-            goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
-            if goals:
-                next_target = goals[0]  # Get the earliest active goal
+            today = datetime.now().date()
+            # Get all active goals and find the closest one to today (future or current)
+            active_goals = Goal.query.filter_by(status='active').all()
+            if active_goals:
+                # Find the closest goal to today's date
+                next_target = min(active_goals, key=lambda g: abs((g.target_date - today).days))
                 
                 # Calculate progress
                 remaining_amount = next_target.target_amount - current_net_worth
@@ -270,7 +273,7 @@ def dashboard():
                 
                 # Calculate time remaining
                 today = datetime.now().date()
-                target_date = datetime.strptime(next_target.target_date, '%Y-%m-%d').date()
+                target_date = next_target.target_date
                 days_remaining = (target_date - today).days
                 
                 progress_info = {
