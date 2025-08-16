@@ -134,39 +134,16 @@
                 </div>
                 <div class="p-3 sm:p-4 lg:p-6">
                     {% if next_target %}
-                    <div class="space-y-8">
-                        <!-- Goal Title with elegant spacing -->
-                        <div class="text-center py-4">
-                            <h3 class="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-wide">{{ next_target.target_date.strftime('%b %Y') }}</h3>
-                            <p class="text-gray-400 text-base font-medium">{{ next_target.name }}</p>
+                    <div class="space-y-6">
+                        <!-- Target Date Header -->
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold text-white mb-2">
+                                <span class="text-gray-400 text-lg font-normal">Target Date: </span>{{ next_target.target_date.strftime('%b %Y') }}
+                            </h3>
+                            <p class="text-gray-400 text-sm">{{ next_target.name }}</p>
                         </div>
                         
                         {% if progress_info %}
-                        <!-- Progress Indicators with improved design -->
-                        <div class="grid grid-cols-2 gap-6">
-                            <!-- Days Remaining (Purple) -->
-                            <div class="bg-gradient-to-br from-purple-500/15 to-purple-600/25 rounded-2xl p-6 border border-purple-400/20 shadow-lg backdrop-blur-sm">
-                                <div class="text-center">
-                                    <div class="text-purple-300 text-sm font-semibold mb-3 uppercase tracking-wider">Days Remaining</div>
-                                    <div class="text-4xl font-bold text-purple-200 mb-1">
-                                        {{ progress_info.days_remaining if progress_info.days_remaining > 0 else 0 }}
-                                    </div>
-                                    <div class="w-8 h-1 bg-purple-400 rounded-full mx-auto"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- Amount Remaining (Blue) -->
-                            <div class="bg-gradient-to-br from-blue-500/15 to-blue-600/25 rounded-2xl p-6 border border-blue-400/20 shadow-lg backdrop-blur-sm">
-                                <div class="text-center">
-                                    <div class="text-blue-300 text-sm font-semibold mb-3 uppercase tracking-wider">Amount Remaining</div>
-                                    <div class="text-3xl font-bold text-blue-200 mb-1">
-                                        £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
-                                    </div>
-                                    <div class="w-8 h-1 bg-blue-400 rounded-full mx-auto"></div>
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Enhanced Progress Bar Section -->
                         <div class="space-y-4">
                             <div class="flex justify-between items-center px-1">
@@ -201,19 +178,42 @@
                             </div>
                         </div>
                         
+                        <!-- Compact Progress Indicators Below Progress Bar -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Days Remaining (Purple) - Compact -->
+                            <div class="bg-gradient-to-br from-purple-500/15 to-purple-600/25 rounded-lg p-3 border border-purple-400/20 backdrop-blur-sm">
+                                <div class="text-center">
+                                    <div class="text-purple-300 text-xs font-medium mb-1 uppercase tracking-wide">Days Remaining</div>
+                                    <div class="text-2xl font-bold text-purple-200">
+                                        {{ progress_info.days_remaining if progress_info.days_remaining > 0 else 0 }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Amount Remaining (Blue) - Compact -->
+                            <div class="bg-gradient-to-br from-blue-500/15 to-blue-600/25 rounded-lg p-3 border border-blue-400/20 backdrop-blur-sm">
+                                <div class="text-center">
+                                    <div class="text-blue-300 text-xs font-medium mb-1 uppercase tracking-wide">Amount Remaining</div>
+                                    <div class="text-xl font-bold text-blue-200">
+                                        £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
                         <!-- Enhanced Action Buttons -->
                         <div class="flex gap-4 pt-2">
                             <!-- View Goals Button -->
                             <a href="{{ url_for('goals') }}" 
-                               class="flex-1 flex items-center justify-center py-4 px-6 bg-gradient-to-r from-gray-700/70 to-gray-600/70 hover:from-gray-600/80 hover:to-gray-500/80 rounded-xl transition-all duration-300 border border-gray-500/30 backdrop-blur-sm shadow-lg group">
-                                <i class="fas fa-bullseye text-gray-200 mr-3 text-lg group-hover:text-white transition-colors"></i>
-                                <span class="text-gray-200 font-semibold group-hover:text-white transition-colors">View Goals</span>
+                               class="flex-1 flex items-center justify-center py-3 px-4 bg-gradient-to-r from-gray-700/70 to-gray-600/70 hover:from-gray-600/80 hover:to-gray-500/80 rounded-xl transition-all duration-300 border border-gray-500/30 backdrop-blur-sm shadow-lg group">
+                                <i class="fas fa-bullseye text-gray-200 mr-2 group-hover:text-white transition-colors"></i>
+                                <span class="text-gray-200 font-medium group-hover:text-white transition-colors">View Goals</span>
                             </a>
                             
                             <!-- Complete Goal Button -->
                             <button onclick="markGoalComplete('{{ next_target.id }}')" 
-                                    class="px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-xl transition-all duration-300 border border-green-400/30 shadow-lg transform hover:scale-105 group">
-                                <i class="fas fa-check text-white text-xl group-hover:scale-110 transition-transform"></i>
+                                    class="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 rounded-xl transition-all duration-300 border border-green-400/30 shadow-lg transform hover:scale-105 group">
+                                <i class="fas fa-check text-white text-lg group-hover:scale-110 transition-transform"></i>
                             </button>
                         </div>
                         {% endif %}
