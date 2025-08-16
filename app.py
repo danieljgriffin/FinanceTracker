@@ -1044,9 +1044,9 @@ def networth_chart_data():
             try:
                 year_data = data_manager.get_networth_data(year)
                 
-                # Process each month in chronological order
+                # Process each month in chronological order - including both December entries
                 month_order = ['1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
-                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '31st Dec']
+                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec', '31st Dec']
                 
                 for month in month_order:
                     if month in year_data:
@@ -1068,11 +1068,21 @@ def networth_chart_data():
                             # Format label
                             if len(years_to_include) > 1:
                                 # Multi-year view - include year
-                                month_short = month.replace('1st ', '').replace('31st ', '')
-                                label = f"{month_short} {year}"
+                                if month == '1st Dec':
+                                    label = f"1st Dec {year}"
+                                elif month == '31st Dec':
+                                    label = f"31st Dec {year}"
+                                else:
+                                    month_short = month.replace('1st ', '').replace('31st ', '')
+                                    label = f"{month_short} {year}"
                             else:
-                                # Single year view - just month
-                                label = month.replace('1st ', '').replace('31st ', '')
+                                # Single year view - distinguish the two December entries
+                                if month == '1st Dec':
+                                    label = "1st Dec"
+                                elif month == '31st Dec':
+                                    label = "31st Dec"
+                                else:
+                                    label = month.replace('1st ', '').replace('31st ', '')
                             
                             labels.append(label)
                             values.append(round(month_total, 2))
