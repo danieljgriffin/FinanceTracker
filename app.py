@@ -1534,5 +1534,24 @@ def toggle_goal_completion(goal_id):
         logging.error(f"Error toggling goal completion: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+@app.route('/api/complete-goal/<int:goal_id>', methods=['POST'])
+def complete_goal(goal_id):
+    """Mark a goal as completed"""
+    try:
+        goal = Goal.query.get_or_404(goal_id)
+        
+        # Mark as completed
+        goal.status = 'completed'
+        goal.updated_at = datetime.now()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Goal marked as completed'
+        })
+    except Exception as e:
+        logging.error(f"Error completing goal: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

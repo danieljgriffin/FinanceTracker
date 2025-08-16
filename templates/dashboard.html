@@ -134,53 +134,84 @@
                 </div>
                 <div class="p-3 sm:p-4 lg:p-6">
                     {% if next_target %}
-                    <div class="space-y-4 sm:space-y-6">
-                        <div class="text-center mb-4 sm:mb-6">
-                            <h3 class="text-base sm:text-lg font-semibold text-white mb-1">{{ next_target.name }}</h3>
-                            <p class="text-xs sm:text-sm text-gray-400">Target: £{{ "{:,.0f}".format(next_target.target_amount) }} by {{ next_target.target_date.strftime('%b %Y') }}</p>
+                    <div class="space-y-6">
+                        <!-- Goal Title -->
+                        <div class="text-center">
+                            <h3 class="text-2xl sm:text-3xl font-bold text-white mb-2">{{ next_target.target_date.strftime('%b %Y') }}</h3>
+                            <p class="text-sm text-gray-400">{{ next_target.name }}</p>
                         </div>
                         
                         {% if progress_info %}
-                        <div class="space-y-3 sm:space-y-4">
-                            <!-- Progress Bar -->
-                            <div class="w-full bg-gray-700 rounded-full h-3 sm:h-4">
-                                <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 sm:h-4 rounded-full flex items-center justify-end pr-2 transition-all duration-500" 
-                                     style="width: {{ progress_info.progress_percentage }}%">
-                                    <span class="text-white text-xs font-bold">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
-                                </div>
-                            </div>
-                            
-                            <!-- Progress Stats -->
-                            <div class="grid grid-cols-2 gap-3 sm:gap-4 text-center">
-                                <div class="bg-gray-700/30 rounded-lg p-3 border border-gray-600/30">
-                                    <p class="text-xs text-gray-400 mb-1">Days Remaining</p>
-                                    <p class="text-lg sm:text-xl font-bold {% if progress_info.days_remaining > 0 %}text-blue-400{% else %}text-red-400{% endif %}">
+                        <!-- Progress Indicators -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Days Remaining (Purple) -->
+                            <div class="bg-gradient-to-br from-purple-500/20 to-purple-600/20 rounded-xl p-4 border border-purple-500/30">
+                                <div class="text-center">
+                                    <div class="text-xs font-medium text-purple-300 mb-1">Days Remaining</div>
+                                    <div class="text-2xl font-bold text-purple-400">
                                         {{ progress_info.days_remaining if progress_info.days_remaining > 0 else 0 }}
-                                    </p>
-                                </div>
-                                <div class="bg-gray-700/30 rounded-lg p-3 border border-gray-600/30">
-                                    <p class="text-xs text-gray-400 mb-1">Remaining</p>
-                                    <p class="text-lg sm:text-xl font-bold text-blue-400">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</p>
+                                    </div>
                                 </div>
                             </div>
                             
-                            {% if not progress_info.is_achieved %}
-                            <div class="flex items-center justify-center p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg border border-blue-500/20">
-                                <i class="fas fa-target text-blue-400 mr-3 text-lg"></i>
-                                <span class="text-blue-400 font-bold text-lg">£{{ "{:,.0f}".format(progress_info.remaining_amount) }} remaining</span>
+                            <!-- Amount Remaining (Blue) -->
+                            <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 rounded-xl p-4 border border-blue-500/30">
+                                <div class="text-center">
+                                    <div class="text-xs font-medium text-blue-300 mb-1">Amount Remaining</div>
+                                    <div class="text-xl font-bold text-blue-400">
+                                        £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
+                                    </div>
+                                </div>
                             </div>
-                            {% else %}
-                            <div class="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-lg border border-green-500/20">
-                                <i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i>
-                                <span class="text-green-400 font-bold text-lg">Target Achieved!</span>
+                        </div>
+                        
+                        <!-- Large Progress Bar -->
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-400">Progress</span>
+                                <span class="text-sm font-bold text-white">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
                             </div>
-                            {% endif %}
-                            
-                            <!-- Quick Link to Goals -->
-                            <a href="{{ url_for('goals') }}" class="flex items-center justify-center p-3 bg-gray-700/30 hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-600/30">
+                            <div class="relative">
+                                <!-- Progress Bar Container -->
+                                <div class="w-full bg-gray-700 rounded-xl h-12 relative overflow-hidden">
+                                    <!-- Progress Fill -->
+                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-xl flex items-center justify-center transition-all duration-700" 
+                                         style="width: {{ progress_info.progress_percentage }}%">
+                                        <!-- Current Value Inside Bar -->
+                                        {% if progress_info.progress_percentage > 15 %}
+                                        <span class="text-white font-bold text-sm">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- Current Value Outside Bar (if bar too small) -->
+                                    {% if progress_info.progress_percentage <= 15 %}
+                                    <div class="absolute left-2 top-1/2 transform -translate-y-1/2">
+                                        <span class="text-white font-bold text-sm">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Target Amount at End -->
+                                    <div class="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                        <span class="text-gray-300 font-medium text-sm">£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3">
+                            <!-- View Goals Button -->
+                            <a href="{{ url_for('goals') }}" 
+                               class="flex-1 flex items-center justify-center p-3 bg-gray-700/50 hover:bg-gray-700/70 rounded-lg transition-colors border border-gray-600/30">
                                 <i class="fas fa-bullseye text-gray-300 mr-2"></i>
-                                <span class="text-gray-300 font-medium text-sm">View All Goals</span>
+                                <span class="text-gray-300 font-medium text-sm">View Goals</span>
                             </a>
+                            
+                            <!-- Complete Goal Button -->
+                            <button onclick="markGoalComplete('{{ next_target.id }}')" 
+                                    class="px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-lg transition-colors border border-green-500/30">
+                                <i class="fas fa-check text-white text-lg"></i>
+                            </button>
                         </div>
                         {% endif %}
                     </div>
@@ -475,6 +506,34 @@
                     chartLoadingElement.innerHTML = '<p class="text-red-400 text-sm">Error loading chart data</p>';
                 }
             });
+    }
+    
+    // Mark goal as complete
+    function markGoalComplete(goalId) {
+        if (confirm('Mark this goal as completed? This will move to the next active goal.')) {
+            fetch(`/api/complete-goal/${goalId}`, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Goal marked as completed!', 'success');
+                    // Reload to show next goal
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showNotification('Failed to complete goal: ' + (data.error || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to complete goal', 'error');
+            });
+        }
     }
     
     // Initialize charts when page loads
