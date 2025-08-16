@@ -1,0 +1,1033 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<!-- Mobile Layout -->
+<div class="mobile-layout">
+    <!-- Mobile Header -->
+    <div class="mb-4">
+        <h1 class="text-2xl font-bold text-white mb-2">Dashboard</h1>
+        <div class="text-sm text-gray-400">
+            <span id="price-status-mobile">Last updated: Never</span>
+        </div>
+    </div>
+
+    <!-- Mobile Key Metrics - Stacked -->
+    <div class="space-y-3 mb-6">
+        <!-- Current Net Worth -->
+        <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-gray-300 mb-1">Current Net Worth</p>
+                    <p class="text-sm font-bold text-white financial-figure">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month-on-Month Change -->
+        <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-gray-300 mb-1">Month-on-Month</p>
+                    <p class="text-xs font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} whitespace-nowrap">
+                        {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yearly Net Worth Increase -->
+        <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <p class="text-xs font-medium text-gray-300 mb-1">Yearly Net Worth Increase</p>
+                    <p class="text-xs font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} whitespace-nowrap">
+                        {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_amount_change < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Layout: Grid for larger screens, stack for small -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Net Worth Breakdown -->
+        <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl">
+            <div class="p-4 border-b border-gray-600/30">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-white">Net Worth Breakdown</h2>
+                    <div class="flex items-center space-x-2">
+                        <button id="listViewBtn" onclick="toggleView('list')" class="px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors">
+                            <i class="fas fa-list mr-1"></i>List
+                        </button>
+                        <button id="chartViewBtn" onclick="toggleView('chart')" class="px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors">
+                            <i class="fas fa-chart-line mr-1"></i>Chart
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4">
+                <!-- List View -->
+                <div id="listView">
+                    {% if platform_allocations %}
+                        <div class="space-y-3">
+                            {% for platform, amount in platform_allocations.items() %}
+                                <div class="flex items-center justify-between py-2">
+                                    <div class="flex items-center">
+                                        <div class="w-3 h-3 rounded-full mr-3 flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                        <div>
+                                            <h3 class="font-medium text-white text-sm">{{ platform }}</h3>
+                                            <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-white text-base financial-figure">£{{ "{:,.0f}".format(amount) }}</div>
+                                        {% set change_data = platform_monthly_changes.get(platform, {}) %}
+                                        {% if change_data.get('previous', 0) > 0 %}
+                                            {% set change_amount = change_data.get('amount', 0) %}
+                                            {% set change_percent = change_data.get('percent', 0) %}
+                                            <div class="mt-0.5">
+                                                {% if change_amount > 0 %}
+                                                    <span class="inline-flex items-center text-green-500 text-xs font-medium">
+                                                        <i class="fas fa-arrow-up mr-1"></i>
+                                                        +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
+                                                    </span>
+                                                {% elif change_amount < 0 %}
+                                                    <span class="inline-flex items-center text-red-500 text-xs font-medium">
+                                                        <i class="fas fa-arrow-down mr-1"></i>
+                                                        -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
+                                                    </span>
+                                                {% else %}
+                                                    <span class="inline-flex items-center text-gray-400 text-xs">
+                                                        <i class="fas fa-minus mr-1"></i>
+                                                        No change
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-6">
+                            <i class="fas fa-chart-pie text-gray-400 text-3xl mb-3"></i>
+                            <p class="text-gray-400 text-sm">No allocation data available</p>
+                            <p class="text-xs text-gray-500">Add investments to see net worth allocation</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Chart View -->
+                <div id="chartView" class="hidden">
+                    <div class="mb-4 space-y-3">
+                        <!-- Chart Type Switcher -->
+                        <div class="flex justify-center">
+                            <div class="flex bg-gray-700/50 rounded-lg p-1">
+                                <button id="lineChartBtn" onclick="switchChartType('line')" 
+                                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                    <i class="fas fa-chart-line mr-1"></i>Line Chart
+                                </button>
+                                <button id="barChartBtn" onclick="switchChartType('bar')" 
+                                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                    <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Year Filters -->
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            <button onclick="filterYear('2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
+                            <button onclick="filterYear('2024')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
+                            <button onclick="filterYear('2023')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
+                            <button onclick="filterYear('2024-2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024-2025">2024-25</button>
+                            <button onclick="filterYear('all')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
+                        </div>
+                    </div>
+                    <div class="relative h-64 bg-gray-800/50 rounded-xl p-4">
+                        <canvas id="networthChart" width="400" height="200"></canvas>
+                    </div>
+                    <div id="chartLoading" class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+                        <p class="text-gray-400 text-sm">Loading chart data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Target Progress -->
+        <div class="bg-slate-800/40 backdrop-blur-md border border-gray-600/20 rounded-2xl">
+        <div class="p-4 border-b border-gray-600/30">
+            <h2 class="text-lg font-semibold text-white">Financial Target</h2>
+        </div>
+        <div class="p-4">
+            {% if next_target and progress_info %}
+            <div class="space-y-4">
+                <!-- Target Info -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-semibold text-white">{{ next_target.title }}</h3>
+                        <p class="text-sm text-gray-300">Target: £{{ "{:,.0f}".format(next_target.target_amount) }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-300">{{ progress_info.days_remaining }} days left</p>
+                        <p class="text-xs text-gray-400">{{ next_target.target_date }}</p>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-300">Progress</span>
+                        <span class="text-white font-semibold">{{ "%.1f"|format(progress_info.progress_percentage) }}%</span>
+                    </div>
+                    <div class="relative w-full bg-gray-700 rounded-full h-6">
+                        <div class="h-6 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-500 flex items-center justify-center relative" 
+                             style="width: {{ progress_info.progress_percentage }}%">
+                            <!-- Current Progress Value Inside Bar -->
+                            <span class="absolute right-2 text-white text-xs font-semibold">
+                                £{{ "{:,.0f}".format(current_net_worth) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Remaining Amount -->
+                {% if not progress_info.is_achieved %}
+                <div class="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg border border-blue-500/20">
+                    <div class="flex items-center">
+                        <i class="fas fa-target text-blue-400 mr-2"></i>
+                        <span class="text-white font-medium">Remaining</span>
+                    </div>
+                    <span class="text-blue-400 font-bold">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</span>
+                </div>
+                {% else %}
+                <div class="flex items-center justify-center p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                    <span class="text-green-400 font-bold">Target Achieved!</span>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="text-center py-6">
+                <i class="fas fa-bullseye text-gray-500 text-3xl mb-3"></i>
+                <p class="text-gray-400 mb-2">No active financial targets</p>
+                <a href="{{ url_for('goals') }}" class="text-blue-400 hover:text-blue-300 text-sm underline">Set your first goal</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- Desktop Layout -->
+<div class="desktop-layout space-y-6 max-w-none">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4" style="overflow: visible;">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">Dashboard</h1>
+        <div class="text-xs sm:text-sm text-white/80" style="overflow: visible;">
+            <div style="overflow: visible;">Last updated: {{ current_date }}</div>
+            <div id="price-status" style="overflow: visible;">
+                {% if last_price_update %}
+                    Prices refreshed: {{ last_price_update.strftime('%H:%M:%S') }}
+                {% else %}
+                    Prices: Loading...
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        <!-- Current Net Worth -->
+        <div class="card p-3 sm:p-4 lg:p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Current Net Worth</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate financial-figure">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Month-on-Month Change -->
+        <div class="card p-3 sm:p-4 lg:p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Month-on-Month</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-1">
+                        {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yearly Net Worth Increase -->
+        <div class="card p-3 sm:p-4 lg:p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Yearly Net Worth Increase</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1">
+                        {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_increase < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Layout: Net Worth Breakdown (1/3) + Financial Target Progress (2/3) + Charts (2/3) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Net Worth Breakdown (Left Third) -->
+        <div class="card lg:col-span-1">
+            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
+                <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
+            </div>
+            <div class="p-3 sm:p-4 lg:p-6">
+                {% if platform_allocations %}
+                    <div class="space-y-3 sm:space-y-4">
+                        {% for platform, amount in platform_allocations.items() %}
+                            <div class="flex items-center justify-between py-2 sm:py-3">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full mr-3 sm:mr-4 flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                    <div>
+                                        <h3 class="font-medium text-white text-sm sm:text-base">{{ platform }}</h3>
+                                        <p class="text-xs sm:text-sm text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-bold text-white text-base sm:text-lg financial-figure">£{{ "{:,.0f}".format(amount) }}</div>
+                                    {% set change_data = platform_monthly_changes.get(platform, {}) %}
+                                    {% if change_data.get('previous', 0) > 0 %}
+                                        {% set change_amount = change_data.get('amount', 0) %}
+                                        {% set change_percent = change_data.get('percent', 0) %}
+                                        <div class="mt-0.5">
+                                            {% if change_amount > 0 %}
+                                                <span class="inline-flex items-center text-green-500 text-xs sm:text-sm font-medium">
+                                                    <i class="fas fa-arrow-up mr-1"></i>
+                                                    +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
+                                                </span>
+                                            {% elif change_amount < 0 %}
+                                                <span class="inline-flex items-center text-red-500 text-xs sm:text-sm font-medium">
+                                                    <i class="fas fa-arrow-down mr-1"></i>
+                                                    -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center text-gray-400 text-xs sm:text-sm">
+                                                    <i class="fas fa-minus mr-1"></i>
+                                                    No change
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-6 sm:py-8">
+                        <i class="fas fa-chart-pie text-gray-400 text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4"></i>
+                        <p class="text-gray-400 text-sm sm:text-base">No allocation data available</p>
+                        <p class="text-xs sm:text-sm text-gray-500">Add investments to see net worth allocation</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Financial Target Progress (Right Two-Thirds) -->
+        <div class="card lg:col-span-2 h-fit">
+        <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+            <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
+        </div>
+        <div class="p-3 sm:p-4 lg:p-6">
+            {% if next_target and progress_info %}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                <!-- Left Column: Target Info & Progress -->
+                <div class="space-y-4">
+                    <!-- Target Header -->
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">{{ next_target.title }}</h3>
+                            <p class="text-gray-300">Target: <span class="font-semibold text-white">£{{ "{:,.0f}".format(next_target.target_amount) }}</span></p>
+                            <p class="text-sm text-gray-400">Due: {{ next_target.target_date }}</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-white">{{ "%.1f"|format(progress_info.progress_percentage) }}%</div>
+                            <div class="text-xs text-gray-400">complete</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="space-y-2">
+                        <div class="relative w-full bg-gray-700 rounded-full h-8">
+                            <div class="h-8 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-700 flex items-center justify-center relative" 
+                                 style="width: {{ progress_info.progress_percentage }}%">
+                                <!-- Current Progress Value Inside Bar -->
+                                <span class="absolute right-3 text-white text-sm font-semibold">
+                                    £{{ "{:,.0f}".format(current_net_worth) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>£0</span>
+                            <span>£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Status Cards -->
+                <div class="space-y-3">
+                    <!-- Days Remaining -->
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-purple-500/10 to-purple-600/10 rounded-lg border border-purple-500/20">
+                        <div class="flex items-center">
+                            <i class="fas fa-calendar-alt text-purple-400 mr-3 text-lg"></i>
+                            <span class="text-white font-medium">Days Remaining</span>
+                        </div>
+                        <span class="text-purple-400 font-bold text-lg">{{ progress_info.days_remaining }}</span>
+                    </div>
+                    
+                    <!-- Amount Remaining -->
+                    {% if not progress_info.is_achieved %}
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 rounded-lg border border-blue-500/20">
+                        <div class="flex items-center">
+                            <i class="fas fa-target text-blue-400 mr-3 text-lg"></i>
+                            <span class="text-white font-medium">Remaining</span>
+                        </div>
+                        <span class="text-blue-400 font-bold text-lg">£{{ "{:,.0f}".format(progress_info.remaining_amount) }}</span>
+                    </div>
+                    {% else %}
+                    <div class="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-green-600/10 rounded-lg border border-green-500/20">
+                        <i class="fas fa-check-circle text-green-400 mr-3 text-lg"></i>
+                        <span class="text-green-400 font-bold text-lg">Target Achieved!</span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Quick Link to Goals -->
+                    <a href="{{ url_for('goals') }}" class="flex items-center justify-center p-3 bg-gray-700/30 hover:bg-gray-700/50 rounded-lg transition-colors border border-gray-600/30">
+                        <i class="fas fa-bullseye text-gray-300 mr-2"></i>
+                        <span class="text-gray-300 font-medium text-sm">View All Goals</span>
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8 lg:py-12">
+                <i class="fas fa-bullseye text-gray-500 text-4xl lg:text-5xl mb-4"></i>
+                <h3 class="text-lg font-semibold text-gray-300 mb-2">No Active Financial Targets</h3>
+                <p class="text-gray-400 mb-4">Set your first financial goal to track your progress</p>
+                <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>Create Your First Goal
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    </div>
+    
+    <!-- Charts Section positioned directly under Financial Target Progress -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Empty left column to align with Net Worth Breakdown -->
+        <div class="lg:col-span-1"></div>
+        
+        <!-- Charts taking right 2/3 width, aligned with Financial Target above -->
+        <div class="card lg:col-span-2">
+            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
+                <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
+            </div>
+            <div class="p-3 sm:p-4 lg:p-6">
+                <div class="mb-4 space-y-3">
+                    <!-- Chart Type Switcher -->
+                    <div class="flex justify-center">
+                        <div class="flex bg-gray-700/50 rounded-lg p-1">
+                            <button id="lineChartBtnCharts" onclick="switchChartTypeCharts('line')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
+                                <i class="fas fa-chart-line mr-1"></i>Line Chart
+                            </button>
+                            <button id="barChartBtnCharts" onclick="switchChartTypeCharts('bar')" 
+                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
+                                <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Year Filters -->
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
+                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
+                        <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
+                        <button onclick="filterYearCharts('2024-2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024-2025">2024-25</button>
+                        <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
+                    </div>
+                </div>
+                <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
+                    <canvas id="networthChartSeparate" width="400" height="300"></canvas>
+                </div>
+                <div id="chartLoadingSeparate" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">Loading chart data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Mobile-specific JavaScript
+    function updatePriceStatusMobile() {
+        fetch('/api/price-status')
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('price-status-mobile');
+                if (statusElement) {
+                    if (data.last_updated) {
+                        // API returns time string directly (e.g., "17:49:25")
+                        const timeString = data.last_updated.substring(0, 5); // Show just HH:MM
+                        statusElement.textContent = `Last updated: ${timeString}`;
+                    } else {
+                        statusElement.textContent = 'Last updated: Never';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching mobile price status:', error);
+            });
+    }
+
+    // Update mobile price status every 30 seconds
+    setInterval(updatePriceStatusMobile, 30000);
+    
+    // Update on page load
+    updatePriceStatusMobile();
+    // Auto-refresh price status every 30 seconds
+    function updatePriceStatus() {
+        fetch('/api/price-status')
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('price-status');
+                if (data.last_updated) {
+                    // API returns time string directly (e.g., "17:49:25")
+                    const timeString = data.last_updated;
+                    statusElement.innerHTML = `Prices refreshed: ${timeString} (next in ${Math.max(0, Math.floor(data.next_update_in / 60))}m)`;
+                } else {
+                    statusElement.innerHTML = 'Prices: Loading...';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching price status:', error);
+            });
+    }
+
+    // Update price status every 30 seconds
+    setInterval(updatePriceStatus, 30000);
+    
+    // Initial update
+    updatePriceStatus();
+    
+    // View toggle functionality
+    function toggleView(view) {
+        const listView = document.getElementById('listView');
+        const chartView = document.getElementById('chartView');
+        const listViewDesktop = document.getElementById('listViewDesktop');
+        const chartViewDesktop = document.getElementById('chartViewDesktop');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const chartViewBtn = document.getElementById('chartViewBtn');
+        const listViewBtnDesktop = document.getElementById('listViewBtnDesktop');
+        const chartViewBtnDesktop = document.getElementById('chartViewBtnDesktop');
+        
+        if (view === 'list') {
+            // Mobile
+            if (listView) listView.classList.remove('hidden');
+            if (chartView) chartView.classList.add('hidden');
+            if (listViewBtn) {
+                listViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            if (chartViewBtn) {
+                chartViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            
+            // Desktop
+            if (listViewDesktop) listViewDesktop.classList.remove('hidden');
+            if (chartViewDesktop) chartViewDesktop.classList.add('hidden');
+            if (listViewBtnDesktop) {
+                listViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            if (chartViewBtnDesktop) {
+                chartViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+        } else if (view === 'chart') {
+            // Mobile
+            if (listView) listView.classList.add('hidden');
+            if (chartView) chartView.classList.remove('hidden');
+            if (listViewBtn) {
+                listViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            if (chartViewBtn) {
+                chartViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            
+            // Desktop
+            if (listViewDesktop) listViewDesktop.classList.add('hidden');
+            if (chartViewDesktop) chartViewDesktop.classList.remove('hidden');
+            if (listViewBtnDesktop) {
+                listViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            if (chartViewBtnDesktop) {
+                chartViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            
+            // Load chart data when switching to chart view
+            loadChartData('2025');
+        }
+    }
+    
+
+    
+    // Year filter functionality
+    function filterYear(year) {
+        // Update button styles
+        document.querySelectorAll('.year-filter').forEach(btn => {
+            if (btn.dataset.year === year) {
+                btn.className = 'year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white';
+            } else {
+                btn.className = 'year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300';
+            }
+        });
+        
+        // Load data for selected year
+        loadChartData(year);
+    }
+    
+    // Current chart type (global variable)
+    let currentChartType = 'bar';
+    
+    // Switch chart type function
+    function switchChartType(type) {
+        currentChartType = type;
+        
+        // Update button styles for mobile
+        const lineBtn = document.getElementById('lineChartBtn');
+        const barBtn = document.getElementById('barChartBtn');
+        
+        // Update button styles for desktop
+        const lineBtnDesktop = document.getElementById('lineChartBtnDesktop');
+        const barBtnDesktop = document.getElementById('barChartBtnDesktop');
+        
+        if (type === 'line') {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+        } else {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+        }
+        
+        // Reload chart with new type
+        const activeYearBtn = document.querySelector('.year-filter.bg-blue-600');
+        const year = activeYearBtn ? activeYearBtn.dataset.year : '2025';
+        loadChartData(year);
+    }
+    
+    // Load chart data
+    function loadChartData(year) {
+        const loadingElement = document.getElementById('chartLoading');
+        const loadingDesktopElement = document.getElementById('chartLoadingDesktop');
+        
+        if (loadingElement) loadingElement.classList.remove('hidden');
+        if (loadingDesktopElement) loadingDesktopElement.classList.remove('hidden');
+        
+        // Fetch chart data with type parameter
+        const apiUrl = currentChartType === 'bar' 
+            ? `/api/networth-chart-data?year=${year}&type=bar`
+            : `/api/networth-chart-data?year=${year}&type=line`;
+            
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingElement) loadingElement.classList.add('hidden');
+                if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
+                
+                // Debug logging removed - chart now working correctly
+                
+                // Render chart with the data
+                renderChart(data, year);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                if (loadingElement) loadingElement.classList.add('hidden');
+                if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
+            });
+    }
+    
+    // No longer needed - filtering is now handled by the API
+    
+    // Render chart using Chart.js
+    function renderChart(data, year) {
+        const canvas = document.getElementById('networthChart');
+        const canvasDesktop = document.getElementById('networthChartDesktop');
+        
+        // Clear existing charts
+        if (window.chartInstance) {
+            window.chartInstance.destroy();
+        }
+        if (window.chartInstanceDesktop) {
+            window.chartInstanceDesktop.destroy();
+        }
+        
+        let chartConfig;
+        
+        if (currentChartType === 'bar' && data.datasets) {
+            // Filter out empty datasets and ensure all datasets have proper data
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            // Debug logging removed - chart filtering working correctly
+            
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: validDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
+                                }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        // Create mobile chart
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            window.chartInstance = new Chart(ctx, chartConfig);
+        }
+        
+        // Create desktop chart
+        if (canvasDesktop) {
+            const ctxDesktop = canvasDesktop.getContext('2d');
+            window.chartInstanceDesktop = new Chart(ctxDesktop, chartConfig);
+        }
+        
+        // Create separate charts section chart
+        const canvasSeparate = document.getElementById('networthChartSeparate');
+        if (canvasSeparate) {
+            if (window.chartInstanceSeparate) {
+                window.chartInstanceSeparate.destroy();
+            }
+            const ctxSeparate = canvasSeparate.getContext('2d');
+            window.chartInstanceSeparate = new Chart(ctxSeparate, chartConfig);
+        }
+    }
+
+    // Functions for separate charts section
+    let currentChartTypeSeparate = 'bar';
+    let currentYearFilterSeparate = '2025';
+
+    function switchChartTypeCharts(type) {
+        currentChartTypeSeparate = type;
+        
+        // Update button states
+        const lineBtn = document.getElementById('lineChartBtnCharts');
+        const barBtn = document.getElementById('barChartBtnCharts');
+        
+        if (type === 'line') {
+            lineBtn.classList.add('bg-blue-600', 'text-white');
+            lineBtn.classList.remove('text-gray-300', 'hover:text-white');
+            barBtn.classList.remove('bg-blue-600', 'text-white');
+            barBtn.classList.add('text-gray-300', 'hover:text-white');
+        } else {
+            barBtn.classList.add('bg-blue-600', 'text-white');
+            barBtn.classList.remove('text-gray-300', 'hover:text-white');
+            lineBtn.classList.remove('bg-blue-600', 'text-white');
+            lineBtn.classList.add('text-gray-300', 'hover:text-white');
+        }
+        
+        loadChartDataSeparate(currentYearFilterSeparate);
+    }
+
+    function filterYearCharts(year) {
+        currentYearFilterSeparate = year;
+        
+        // Update button states
+        document.querySelectorAll('.year-filter-charts').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-600', 'text-gray-300');
+        });
+        
+        document.querySelector(`[data-year="${year}"]`).classList.add('bg-blue-600', 'text-white');
+        document.querySelector(`[data-year="${year}"]`).classList.remove('bg-gray-600', 'text-gray-300');
+        
+        loadChartDataSeparate(year);
+    }
+
+    function loadChartDataSeparate(year) {
+        const loadingElement = document.getElementById('chartLoadingSeparate');
+        const canvas = document.getElementById('networthChartSeparate');
+        
+        if (loadingElement) loadingElement.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        fetch(`/api/networth-chart-data?year=${year}&type=${currentChartTypeSeparate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingElement) loadingElement.style.display = 'none';
+                if (canvas) canvas.style.display = 'block';
+                createChartSeparate(data);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                if (loadingElement) {
+                    loadingElement.innerHTML = '<p class="text-red-400">Error loading chart data</p>';
+                }
+            });
+    }
+
+    function createChartSeparate(data) {
+        const canvas = document.getElementById('networthChartSeparate');
+        if (!canvas) return;
+        
+        // Destroy existing chart
+        if (window.chartInstanceSeparate) {
+            window.chartInstanceSeparate.destroy();
+        }
+        
+        let chartConfig;
+        
+        if (currentChartTypeSeparate === 'bar' && data.datasets) {
+            // Filter out empty datasets
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: validDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
+                                }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: { weight: 'bold' }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    }
+                }
+            }
+        };
+        
+        const ctx = canvas.getContext('2d');
+        window.chartInstanceSeparate = new Chart(ctx, chartConfig);
+    }
+
+    // Initialize separate charts on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('networthChartSeparate')) {
+            loadChartDataSeparate(currentYearFilterSeparate);
+        }
+    });
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}

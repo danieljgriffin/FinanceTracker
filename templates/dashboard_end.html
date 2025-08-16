@@ -1,0 +1,562 @@
+
+<script>
+    // Mobile-specific JavaScript
+    function updatePriceStatusMobile() {
+        fetch('/api/price-status')
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('price-status-mobile');
+                if (statusElement) {
+                    if (data.last_updated) {
+                        // API returns time string directly (e.g., "17:49:25")
+                        const timeString = data.last_updated.substring(0, 5); // Show just HH:MM
+                        statusElement.textContent = `Last updated: ${timeString}`;
+                    } else {
+                        statusElement.textContent = 'Last updated: Never';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching mobile price status:', error);
+            });
+    }
+
+    // Update mobile price status every 30 seconds
+    setInterval(updatePriceStatusMobile, 30000);
+    
+    // Update on page load
+    updatePriceStatusMobile();
+    // Auto-refresh price status every 30 seconds
+    function updatePriceStatus() {
+        fetch('/api/price-status')
+            .then(response => response.json())
+            .then(data => {
+                const statusElement = document.getElementById('price-status');
+                if (data.last_updated) {
+                    // API returns time string directly (e.g., "17:49:25")
+                    const timeString = data.last_updated;
+                    statusElement.innerHTML = `Prices refreshed: ${timeString} (next in ${Math.max(0, Math.floor(data.next_update_in / 60))}m)`;
+                } else {
+                    statusElement.innerHTML = 'Prices: Loading...';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching price status:', error);
+            });
+    }
+
+    // Update price status every 30 seconds
+    setInterval(updatePriceStatus, 30000);
+    
+    // Initial update
+    updatePriceStatus();
+    
+    // View toggle functionality
+    function toggleView(view) {
+        const listView = document.getElementById('listView');
+        const chartView = document.getElementById('chartView');
+        const listViewDesktop = document.getElementById('listViewDesktop');
+        const chartViewDesktop = document.getElementById('chartViewDesktop');
+        const listViewBtn = document.getElementById('listViewBtn');
+        const chartViewBtn = document.getElementById('chartViewBtn');
+        const listViewBtnDesktop = document.getElementById('listViewBtnDesktop');
+        const chartViewBtnDesktop = document.getElementById('chartViewBtnDesktop');
+        
+        if (view === 'list') {
+            // Mobile
+            if (listView) listView.classList.remove('hidden');
+            if (chartView) chartView.classList.add('hidden');
+            if (listViewBtn) {
+                listViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            if (chartViewBtn) {
+                chartViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            
+            // Desktop
+            if (listViewDesktop) listViewDesktop.classList.remove('hidden');
+            if (chartViewDesktop) chartViewDesktop.classList.add('hidden');
+            if (listViewBtnDesktop) {
+                listViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            if (chartViewBtnDesktop) {
+                chartViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+        } else if (view === 'chart') {
+            // Mobile
+            if (listView) listView.classList.add('hidden');
+            if (chartView) chartView.classList.remove('hidden');
+            if (listViewBtn) {
+                listViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            if (chartViewBtn) {
+                chartViewBtn.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            
+            // Desktop
+            if (listViewDesktop) listViewDesktop.classList.add('hidden');
+            if (chartViewDesktop) chartViewDesktop.classList.remove('hidden');
+            if (listViewBtnDesktop) {
+                listViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors';
+            }
+            if (chartViewBtnDesktop) {
+                chartViewBtnDesktop.className = 'px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors';
+            }
+            
+            // Load chart data when switching to chart view
+            loadChartData('2025');
+        }
+    }
+    
+
+    
+    // Year filter functionality
+    function filterYear(year) {
+        // Update button styles
+        document.querySelectorAll('.year-filter').forEach(btn => {
+            if (btn.dataset.year === year) {
+                btn.className = 'year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white';
+            } else {
+                btn.className = 'year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300';
+            }
+        });
+        
+        // Load data for selected year
+        loadChartData(year);
+    }
+    
+    // Current chart type (global variable)
+    let currentChartType = 'bar';
+    
+    // Switch chart type function
+    function switchChartType(type) {
+        currentChartType = type;
+        
+        // Update button styles for mobile
+        const lineBtn = document.getElementById('lineChartBtn');
+        const barBtn = document.getElementById('barChartBtn');
+        
+        // Update button styles for desktop
+        const lineBtnDesktop = document.getElementById('lineChartBtnDesktop');
+        const barBtnDesktop = document.getElementById('barChartBtnDesktop');
+        
+        if (type === 'line') {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+        } else {
+            // Mobile buttons
+            if (lineBtn) lineBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtn) barBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+            
+            // Desktop buttons
+            if (lineBtnDesktop) lineBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white';
+            if (barBtnDesktop) barBtnDesktop.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white';
+        }
+        
+        // Reload chart with new type
+        const activeYearBtn = document.querySelector('.year-filter.bg-blue-600');
+        const year = activeYearBtn ? activeYearBtn.dataset.year : '2025';
+        loadChartData(year);
+    }
+    
+    // Load chart data
+    function loadChartData(year) {
+        const loadingElement = document.getElementById('chartLoading');
+        const loadingDesktopElement = document.getElementById('chartLoadingDesktop');
+        
+        if (loadingElement) loadingElement.classList.remove('hidden');
+        if (loadingDesktopElement) loadingDesktopElement.classList.remove('hidden');
+        
+        // Fetch chart data with type parameter
+        const apiUrl = currentChartType === 'bar' 
+            ? `/api/networth-chart-data?year=${year}&type=bar`
+            : `/api/networth-chart-data?year=${year}&type=line`;
+            
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingElement) loadingElement.classList.add('hidden');
+                if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
+                
+                // Debug logging removed - chart now working correctly
+                
+                // Render chart with the data
+                renderChart(data, year);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                if (loadingElement) loadingElement.classList.add('hidden');
+                if (loadingDesktopElement) loadingDesktopElement.classList.add('hidden');
+            });
+    }
+    
+    // No longer needed - filtering is now handled by the API
+    
+    // Render chart using Chart.js
+    function renderChart(data, year) {
+        const canvas = document.getElementById('networthChart');
+        const canvasDesktop = document.getElementById('networthChartDesktop');
+        
+        // Clear existing charts
+        if (window.chartInstance) {
+            window.chartInstance.destroy();
+        }
+        if (window.chartInstanceDesktop) {
+            window.chartInstanceDesktop.destroy();
+        }
+        
+        let chartConfig;
+        
+        if (currentChartType === 'bar' && data.datasets) {
+            // Filter out empty datasets and ensure all datasets have proper data
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            // Debug logging removed - chart filtering working correctly
+            
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: validDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
+                                }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                color: 'rgb(156, 163, 175)',
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: 'rgb(156, 163, 175)'
+                            },
+                            grid: {
+                                color: 'rgba(156, 163, 175, 0.1)'
+                            }
+                        }
+                    }
+                }
+            }
+        };
+        
+        // Create mobile chart
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            window.chartInstance = new Chart(ctx, chartConfig);
+        }
+        
+        // Create desktop chart
+        if (canvasDesktop) {
+            const ctxDesktop = canvasDesktop.getContext('2d');
+            window.chartInstanceDesktop = new Chart(ctxDesktop, chartConfig);
+        }
+        
+        // Create separate charts section chart
+        const canvasSeparate = document.getElementById('networthChartSeparate');
+        if (canvasSeparate) {
+            if (window.chartInstanceSeparate) {
+                window.chartInstanceSeparate.destroy();
+            }
+            const ctxSeparate = canvasSeparate.getContext('2d');
+            window.chartInstanceSeparate = new Chart(ctxSeparate, chartConfig);
+        }
+    }
+
+    // Functions for separate charts section
+    let currentChartTypeSeparate = 'bar';
+    let currentYearFilterSeparate = '2025';
+
+    function switchChartTypeCharts(type) {
+        currentChartTypeSeparate = type;
+        
+        // Update button states
+        const lineBtn = document.getElementById('lineChartBtnCharts');
+        const barBtn = document.getElementById('barChartBtnCharts');
+        
+        if (type === 'line') {
+            lineBtn.classList.add('bg-blue-600', 'text-white');
+            lineBtn.classList.remove('text-gray-300', 'hover:text-white');
+            barBtn.classList.remove('bg-blue-600', 'text-white');
+            barBtn.classList.add('text-gray-300', 'hover:text-white');
+        } else {
+            barBtn.classList.add('bg-blue-600', 'text-white');
+            barBtn.classList.remove('text-gray-300', 'hover:text-white');
+            lineBtn.classList.remove('bg-blue-600', 'text-white');
+            lineBtn.classList.add('text-gray-300', 'hover:text-white');
+        }
+        
+        loadChartDataSeparate(currentYearFilterSeparate);
+    }
+
+    function filterYearCharts(year) {
+        currentYearFilterSeparate = year;
+        
+        // Update button states
+        document.querySelectorAll('.year-filter-charts').forEach(btn => {
+            btn.classList.remove('bg-blue-600', 'text-white');
+            btn.classList.add('bg-gray-600', 'text-gray-300');
+        });
+        
+        document.querySelector(`[data-year="${year}"]`).classList.add('bg-blue-600', 'text-white');
+        document.querySelector(`[data-year="${year}"]`).classList.remove('bg-gray-600', 'text-gray-300');
+        
+        loadChartDataSeparate(year);
+    }
+
+    function loadChartDataSeparate(year) {
+        const loadingElement = document.getElementById('chartLoadingSeparate');
+        const canvas = document.getElementById('networthChartSeparate');
+        
+        if (loadingElement) loadingElement.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        
+        fetch(`/api/networth-chart-data?year=${year}&type=${currentChartTypeSeparate}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingElement) loadingElement.style.display = 'none';
+                if (canvas) canvas.style.display = 'block';
+                createChartSeparate(data);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+                if (loadingElement) {
+                    loadingElement.innerHTML = '<p class="text-red-400">Error loading chart data</p>';
+                }
+            });
+    }
+
+    function createChartSeparate(data) {
+        const canvas = document.getElementById('networthChartSeparate');
+        if (!canvas) return;
+        
+        // Destroy existing chart
+        if (window.chartInstanceSeparate) {
+            window.chartInstanceSeparate.destroy();
+        }
+        
+        let chartConfig;
+        
+        if (currentChartTypeSeparate === 'bar' && data.datasets) {
+            // Filter out empty datasets
+            const validDatasets = data.datasets.filter(dataset => {
+                return dataset.data && dataset.data.length > 0 && dataset.data.some(value => value > 0);
+            });
+            
+            // Stacked bar chart configuration
+            chartConfig = {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: validDatasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            stacked: true,
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                },
+                                footer: function(tooltipItems) {
+                                    let total = 0;
+                                    tooltipItems.forEach(function(tooltipItem) {
+                                        total += tooltipItem.parsed.y;
+                                    });
+                                    return 'Total: £' + total.toLocaleString();
+                                }
+                            },
+                            footerColor: 'rgb(255, 255, 255)',
+                            footerFont: { weight: 'bold' }
+                        }
+                    }
+                }
+            };
+        } else {
+            // Line chart configuration
+            chartConfig = {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Portfolio Value',
+                        data: data.values || data.value_line,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: { color: 'rgb(156, 163, 175)', font: { size: 12 } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                color: 'rgb(156, 163, 175)',
+                                callback: function(value) {
+                                    return '£' + value.toLocaleString();
+                                }
+                            },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgb(156, 163, 175)' },
+                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
+                        }
+                    }
+                }
+            }
+        };
+        
+        const ctx = canvas.getContext('2d');
+        window.chartInstanceSeparate = new Chart(ctx, chartConfig);
+    }
+
+    // Initialize separate charts on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('networthChartSeparate')) {
+            loadChartDataSeparate(currentYearFilterSeparate);
+        }
+    });
+</script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
