@@ -91,12 +91,12 @@
                                             {% set change_amount = change_data.get('amount', 0) %}
                                             {% set change_percent = change_data.get('percent', 0) %}
                                             {% if change_amount > 0 %}
-                                                <span class="inline-flex items-center text-green-500 text-xs font-medium financial-figure">
+                                                <span class="inline-flex items-center text-green-500 text-xs font-medium">
                                                     <i class="fas fa-arrow-up mr-1"></i>
                                                     +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
                                                 </span>
                                             {% elif change_amount < 0 %}
-                                                <span class="inline-flex items-center text-red-500 text-xs font-medium financial-figure">
+                                                <span class="inline-flex items-center text-red-500 text-xs font-medium">
                                                     <i class="fas fa-arrow-down mr-1"></i>
                                                     -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
                                                 </span>
