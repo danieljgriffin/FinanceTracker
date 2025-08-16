@@ -1337,7 +1337,7 @@ def goals():
         
         # Get current net worth and monthly investment for calculator
         data_manager = get_data_manager()
-        current_net_worth = data_manager.get_current_net_worth()
+        current_net_worth = calculate_current_net_worth()
         breakdown_data = data_manager.get_monthly_breakdown_data()
         monthly_investment = breakdown_data.get('total_monthly_investments', 0)
         

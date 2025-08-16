@@ -192,10 +192,9 @@ class Goal(db.Model):
     
     @property
     def current_amount(self):
-        """Get current net worth"""
-        from utils.db_data_manager import DatabaseDataManager
-        data_manager = DatabaseDataManager()
-        return data_manager.get_current_net_worth()
+        """Get current net worth using real-time calculation (same as dashboard)"""
+        from app import calculate_current_net_worth
+        return calculate_current_net_worth()
     
     @property
     def remaining_amount(self):
