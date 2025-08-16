@@ -275,114 +275,66 @@
         </div>
     </div>
 
-    <!-- Desktop Layout: Net Worth Breakdown (1/3) + Financial Target Progress (2/3) -->
+    <!-- Desktop Layout: Net Worth Breakdown (1/3) + Financial Target Progress (2/3) + Charts (2/3) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Net Worth Breakdown (Left Third) -->
-        <div class="card lg:col-span-1">
+        <!-- Net Worth Breakdown (Left Third, spans 2 rows) -->
+        <div class="card lg:col-span-1 lg:row-span-2">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
-                    <div class="flex items-center space-x-2">
-                        <button id="listViewBtnDesktop" onclick="toggleView('list')" class="px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors">
-                            <i class="fas fa-list mr-1"></i>List
-                        </button>
-                        <button id="chartViewBtnDesktop" onclick="toggleView('chart')" class="px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300 hover:bg-gray-500 transition-colors">
-                            <i class="fas fa-chart-line mr-1"></i>Chart
-                        </button>
-                    </div>
-                </div>
+                <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
             </div>
             <div class="p-3 sm:p-4 lg:p-6">
-                <!-- List View -->
-                <div id="listViewDesktop">
-                    {% if platform_allocations %}
-                        <div class="space-y-3 sm:space-y-4">
-                            {% for platform, amount in platform_allocations.items() %}
-                                <div class="flex items-center justify-between py-2 sm:py-3">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full mr-3 sm:mr-4 flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                        <div>
-                                            <h3 class="font-medium text-white text-sm sm:text-base">{{ platform }}</h3>
-                                            <p class="text-xs sm:text-sm text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="font-bold text-white text-base sm:text-lg financial-figure">£{{ "{:,.0f}".format(amount) }}</div>
-                                        {% set change_data = platform_monthly_changes.get(platform, {}) %}
-                                        {% if change_data.get('previous', 0) > 0 %}
-                                            {% set change_amount = change_data.get('amount', 0) %}
-                                            {% set change_percent = change_data.get('percent', 0) %}
-                                            <div class="mt-0.5">
-                                                {% if change_amount > 0 %}
-                                                    <span class="inline-flex items-center text-green-500 text-xs sm:text-sm font-medium">
-                                                        <i class="fas fa-arrow-up mr-1"></i>
-                                                        +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
-                                                    </span>
-                                                {% elif change_amount < 0 %}
-                                                    <span class="inline-flex items-center text-red-500 text-xs sm:text-sm font-medium">
-                                                        <i class="fas fa-arrow-down mr-1"></i>
-                                                        -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
-                                                    </span>
-                                                {% else %}
-                                                    <span class="inline-flex items-center text-gray-400 text-xs sm:text-sm">
-                                                        <i class="fas fa-minus mr-1"></i>
-                                                        No change
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                        {% endif %}
+                {% if platform_allocations %}
+                    <div class="space-y-3 sm:space-y-4">
+                        {% for platform, amount in platform_allocations.items() %}
+                            <div class="flex items-center justify-between py-2 sm:py-3">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 sm:w-4 sm:h-4 rounded-full mr-3 sm:mr-4 flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                    <div>
+                                        <h3 class="font-medium text-white text-sm sm:text-base">{{ platform }}</h3>
+                                        <p class="text-xs sm:text-sm text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="text-center py-6 sm:py-8">
-                            <i class="fas fa-chart-pie text-gray-400 text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4"></i>
-                            <p class="text-gray-400 text-sm sm:text-base">No allocation data available</p>
-                            <p class="text-xs sm:text-sm text-gray-500">Add investments to see net worth allocation</p>
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <!-- Chart View -->
-                <div id="chartViewDesktop" class="hidden">
-                    <div class="mb-4 space-y-3">
-                        <!-- Chart Type Switcher -->
-                        <div class="flex justify-center">
-                            <div class="flex bg-gray-700/50 rounded-lg p-1">
-                                <button id="lineChartBtnDesktop" onclick="switchChartType('line')" 
-                                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
-                                    <i class="fas fa-chart-line mr-1"></i>Line Chart
-                                </button>
-                                <button id="barChartBtnDesktop" onclick="switchChartType('bar')" 
-                                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
-                                    <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
-                                </button>
+                                <div class="text-right">
+                                    <div class="font-bold text-white text-base sm:text-lg financial-figure">£{{ "{:,.0f}".format(amount) }}</div>
+                                    {% set change_data = platform_monthly_changes.get(platform, {}) %}
+                                    {% if change_data.get('previous', 0) > 0 %}
+                                        {% set change_amount = change_data.get('amount', 0) %}
+                                        {% set change_percent = change_data.get('percent', 0) %}
+                                        <div class="mt-0.5">
+                                            {% if change_amount > 0 %}
+                                                <span class="inline-flex items-center text-green-500 text-xs sm:text-sm font-medium">
+                                                    <i class="fas fa-arrow-up mr-1"></i>
+                                                    +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
+                                                </span>
+                                            {% elif change_amount < 0 %}
+                                                <span class="inline-flex items-center text-red-500 text-xs sm:text-sm font-medium">
+                                                    <i class="fas fa-arrow-down mr-1"></i>
+                                                    -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center text-gray-400 text-xs sm:text-sm">
+                                                    <i class="fas fa-minus mr-1"></i>
+                                                    No change
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Year Filters -->
-                        <div class="flex flex-wrap gap-2 justify-center">
-                            <button onclick="filterYear('2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
-                            <button onclick="filterYear('2024')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
-                            <button onclick="filterYear('2023')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
-                            <button onclick="filterYear('2024-2025')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024-2025">2024-25</button>
-                            <button onclick="filterYear('all')" class="year-filter px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
-                        </div>
+                        {% endfor %}
                     </div>
-                    <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
-                        <canvas id="networthChartDesktop" width="400" height="300"></canvas>
+                {% else %}
+                    <div class="text-center py-6 sm:py-8">
+                        <i class="fas fa-chart-pie text-gray-400 text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4"></i>
+                        <p class="text-gray-400 text-sm sm:text-base">No allocation data available</p>
+                        <p class="text-xs sm:text-sm text-gray-500">Add investments to see net worth allocation</p>
                     </div>
-                    <div id="chartLoadingDesktop" class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
-                        <p class="text-gray-400 text-sm">Loading chart data...</p>
-                    </div>
-                </div>
+                {% endif %}
             </div>
         </div>
 
-        <!-- Financial Target Progress (Right Two-Thirds) -->
-        <div class="card lg:col-span-2 h-fit">
+        <!-- Financial Target Progress (Right Two-Thirds, Row 1) -->
+        <div class="card lg:col-span-2 h-fit lg:row-start-1">
         <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
             <h2 class="text-lg sm:text-xl font-semibold text-white">Financial Target Progress</h2>
         </div>
@@ -469,13 +421,8 @@
         </div>
     </div>
 
-    <!-- Charts Section (Right Two-Thirds, underneath Financial Target) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Empty space to align with Net Worth Breakdown above -->
-        <div class="lg:col-span-1"></div>
-        
-        <!-- Charts (Right Two-Thirds) -->
-        <div class="card lg:col-span-2">
+        <!-- Charts Section (Right Two-Thirds, in same row as Net Worth Breakdown) -->
+        <div class="card lg:col-span-2 lg:row-start-2">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
             </div>
@@ -514,7 +461,6 @@
             </div>
         </div>
     </div>
-</div>
 </div>
 
 <script>
