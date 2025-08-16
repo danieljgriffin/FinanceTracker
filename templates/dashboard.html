@@ -60,9 +60,9 @@
     </div>
 
     <!-- Main Layout: Sidebar + Right Column -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="background: transparent !important;">
         <!-- Net Worth Breakdown (Left Third) -->
-        <div class="card lg:col-span-1">
+        <div class="card lg:col-span-1" style="background: rgba(255, 255, 255, 0.05) !important;">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
             </div>
@@ -118,9 +118,9 @@
         </div>
 
         <!-- Right Column: Financial Target Progress + Charts -->
-        <div class="lg:col-span-2 space-y-6">
+        <div class="lg:col-span-2 space-y-6" style="background: transparent !important;">
             <!-- Financial Target Progress -->
-            <div class="card">
+            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
                 <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
                     <h2 class="text-lg sm:text-xl font-semibold text-white">
                         Financial Target Progress{% if next_target %} - {{ next_target.target_date.strftime('%b %Y') }} Target{% endif %}
@@ -144,7 +144,7 @@
                             
                             <div class="relative">
                                 <!-- Progress Bar Container -->
-                                <div class="w-full bg-gray-700 rounded-xl h-12 relative overflow-hidden">
+                                <div class="w-full bg-gray-700/50 rounded-xl h-12 relative overflow-hidden">
                                     <!-- Progress Fill with enhanced styling -->
                                     <div class="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
                                          style="width: {{ progress_info.progress_percentage }}%">
@@ -223,7 +223,7 @@
             </div>
 
             <!-- Charts Section -->
-            <div class="card">
+            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
                 <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                     <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
                 </div>
