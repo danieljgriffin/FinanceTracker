@@ -124,8 +124,10 @@
 
         <!-- Right Column: Financial Target Progress + Charts -->
         <div class="lg:col-span-2 space-y-6" style="background: transparent !important;">
-            <!-- Financial Target Progress -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
+            <!-- Split Section: Financial Target Progress + £1M Prediction -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <!-- Left Half: Financial Target Progress -->
+                <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
                 <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
                     <h2 class="text-lg sm:text-xl font-semibold text-white">
                         Financial Target Progress{% if next_target %} - {{ next_target.target_date.strftime('%b %Y') }} Target{% endif %}
@@ -224,6 +226,47 @@
                         </a>
                     </div>
                     {% endif %}
+                </div>
+                </div>
+
+                <!-- Right Half: £1M Prediction Chart -->
+                <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
+                    <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+                        <h2 class="text-lg sm:text-xl font-semibold text-white">£1M Journey Prediction</h2>
+                        <p class="text-sm text-gray-400 mt-1">Based on 10% annual return + £1,825 monthly investment</p>
+                    </div>
+                    <div class="p-3 sm:p-4">
+                        <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
+                            <canvas id="millionPredictionChart" width="400" height="300"></canvas>
+                        </div>
+                        <div id="predictionChartLoading" class="text-center py-8 hidden">
+                            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+                            <p class="text-gray-400 text-sm">Loading prediction data...</p>
+                        </div>
+                        
+                        <!-- Key Milestones -->
+                        <div class="mt-4 space-y-2">
+                            <h3 class="text-sm font-semibold text-gray-300 mb-3">Key Milestones</h3>
+                            <div class="grid grid-cols-2 gap-3 text-xs">
+                                <div id="milestone-100k" class="flex justify-between p-2 bg-gray-700/30 rounded">
+                                    <span class="text-gray-400">£100k:</span>
+                                    <span class="text-white" id="date-100k">Calculating...</span>
+                                </div>
+                                <div id="milestone-250k" class="flex justify-between p-2 bg-gray-700/30 rounded">
+                                    <span class="text-gray-400">£250k:</span>
+                                    <span class="text-white" id="date-250k">Calculating...</span>
+                                </div>
+                                <div id="milestone-500k" class="flex justify-between p-2 bg-gray-700/30 rounded">
+                                    <span class="text-gray-400">£500k:</span>
+                                    <span class="text-white" id="date-500k">Calculating...</span>
+                                </div>
+                                <div id="milestone-1m" class="flex justify-between p-2 bg-gray-700/30 rounded">
+                                    <span class="text-gray-400">£1M:</span>
+                                    <span class="text-white" id="date-1m">Calculating...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -548,14 +591,223 @@
         }
     }
     
+    // Compound Interest Prediction Chart
+    let millionPredictionChart = null;
+
+    function calculateCompoundInterestData(currentValue, monthlyInvestment, annualRate, targetAmount) {
+        const monthlyRate = annualRate / 12 / 100;
+        const data = [];
+        const milestones = {
+            100000: null,
+            250000: null,
+            500000: null,
+            1000000: null
+        };
+        
+        let currentAmount = currentValue;
+        let month = 0;
+        const today = new Date();
+        
+        // Add current position
+        data.push({
+            x: new Date(today),
+            y: currentAmount
+        });
+        
+        while (currentAmount < targetAmount && month < 600) { // Max 50 years
+            month++;
+            // Add monthly investment first, then apply compound interest
+            currentAmount = (currentAmount + monthlyInvestment) * (1 + monthlyRate);
+            
+            const futureDate = new Date(today);
+            futureDate.setMonth(futureDate.getMonth() + month);
+            
+            data.push({
+                x: new Date(futureDate),
+                y: Math.round(currentAmount)
+            });
+            
+            // Check for milestones
+            Object.keys(milestones).forEach(milestone => {
+                const target = parseInt(milestone);
+                if (milestones[target] === null && currentAmount >= target) {
+                    milestones[target] = {
+                        date: new Date(futureDate),
+                        month: month
+                    };
+                }
+            });
+            
+            if (currentAmount >= targetAmount) break;
+        }
+        
+        return { data, milestones };
+    }
+
+    function createMillionPredictionChart() {
+        const ctx = document.getElementById('millionPredictionChart');
+        if (!ctx) return;
+        
+        // Get current net worth from the page
+        const currentNetWorth = {{ current_net_worth }};
+        const monthlyInvestment = 1825;
+        const annualReturn = 10;
+        const targetAmount = 1000000;
+        
+        const prediction = calculateCompoundInterestData(currentNetWorth, monthlyInvestment, annualReturn, targetAmount);
+        
+        // Destroy existing chart
+        if (millionPredictionChart) {
+            millionPredictionChart.destroy();
+        }
+        
+        // Create milestone annotations
+        const milestoneData = [];
+        Object.entries(prediction.milestones).forEach(([amount, info]) => {
+            if (info) {
+                milestoneData.push({
+                    x: info.date,
+                    y: parseInt(amount)
+                });
+            }
+        });
+        
+        const config = {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: 'Projected Net Worth',
+                    data: prediction.data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 5
+                }, {
+                    label: 'Milestones',
+                    data: milestoneData,
+                    borderColor: '#f59e0b',
+                    backgroundColor: '#f59e0b',
+                    borderWidth: 0,
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    showLine: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { 
+                            color: '#e5e7eb', 
+                            boxWidth: 12,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                        titleColor: '#f3f4f6',
+                        bodyColor: '#e5e7eb',
+                        borderColor: '#6b7280',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return tooltipItems[0].parsed.x ? 
+                                    new Date(tooltipItems[0].parsed.x).toLocaleDateString('en-GB', { 
+                                        year: 'numeric', 
+                                        month: 'short' 
+                                    }) : '';
+                            },
+                            label: function(context) {
+                                return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'year',
+                            displayFormats: {
+                                year: 'yyyy'
+                            }
+                        },
+                        ticks: { 
+                            color: '#9ca3af',
+                            maxTicksLimit: 8
+                        },
+                        grid: { color: '#374151' }
+                    },
+                    y: {
+                        ticks: { 
+                            color: '#9ca3af',
+                            callback: function(value) { 
+                                return '£' + (value / 1000) + 'k'; 
+                            }
+                        },
+                        grid: { color: '#374151' }
+                    }
+                }
+            }
+        };
+        
+        millionPredictionChart = new Chart(ctx, config);
+        
+        // Update milestone dates in the UI
+        updateMilestoneDisplay(prediction.milestones);
+    }
+    
+    function updateMilestoneDisplay(milestones) {
+        Object.entries(milestones).forEach(([amount, info]) => {
+            const elementId = `date-${amount === '100000' ? '100k' : 
+                                   amount === '250000' ? '250k' : 
+                                   amount === '500000' ? '500k' : '1m'}`;
+            const element = document.getElementById(elementId);
+            
+            if (element && info) {
+                const dateStr = info.date.toLocaleDateString('en-GB', { 
+                    year: 'numeric', 
+                    month: 'short' 
+                });
+                element.textContent = dateStr;
+                
+                // Mark as achieved if current net worth is already above this milestone
+                const currentNetWorth = {{ current_net_worth }};
+                const milestoneParent = element.closest('div');
+                if (currentNetWorth >= parseInt(amount)) {
+                    milestoneParent.classList.remove('bg-gray-700/30');
+                    milestoneParent.classList.add('bg-green-600/20', 'border', 'border-green-500/30');
+                    element.textContent = 'Achieved!';
+                    element.classList.add('text-green-400');
+                }
+            } else if (element) {
+                element.textContent = 'Beyond projection';
+            }
+        });
+    }
+
     // Initialize charts when page loads
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('networthChartSeparate')) {
             loadChartDataSeparate(currentYearFilterSeparate);
+        }
+        
+        if (document.getElementById('millionPredictionChart')) {
+            createMillionPredictionChart();
         }
     });
 </script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 {% endblock %}
