@@ -185,56 +185,8 @@
     </div>
     
     <script>
-        // Chart data for different time ranges
-        const chartData = {
-            '2023': {
-                line: '0,160 50,150 100,140 150,130 200,120 250,110 300,100 350,90',
-                xLabels: [
-                    {x: 50, text: 'Jan'}, {x: 100, text: 'Mar'}, {x: 150, text: 'May'},
-                    {x: 200, text: 'Jul'}, {x: 250, text: 'Sep'}, {x: 300, text: 'Nov'}
-                ],
-                yLabels: [
-                    {y: 20, text: '£60k'}, {y: 40, text: '£55k'}, {y: 60, text: '£50k'},
-                    {y: 80, text: '£45k'}, {y: 100, text: '£40k'}, {y: 120, text: '£35k'},
-                    {y: 140, text: '£30k'}, {y: 160, text: '£25k'}, {y: 180, text: '£20k'}
-                ]
-            },
-            '2024': {
-                line: '0,140 40,130 80,120 120,110 160,100 200,90 240,80 280,70 320,60',
-                xLabels: [
-                    {x: 40, text: 'Jan'}, {x: 80, text: 'Mar'}, {x: 120, text: 'May'},
-                    {x: 160, text: 'Jul'}, {x: 200, text: 'Sep'}, {x: 240, text: 'Nov'}
-                ],
-                yLabels: [
-                    {y: 20, text: '£110k'}, {y: 40, text: '£100k'}, {y: 60, text: '£90k'},
-                    {y: 80, text: '£80k'}, {y: 100, text: '£70k'}, {y: 120, text: '£60k'},
-                    {y: 140, text: '£50k'}, {y: 160, text: '£40k'}, {y: 180, text: '£30k'}
-                ]
-            },
-            '2025': {
-                line: '0,100 60,90 120,80 180,70 240,60 300,50 360,40',
-                xLabels: [
-                    {x: 60, text: 'Jan'}, {x: 120, text: 'Feb'}, {x: 180, text: 'Mar'},
-                    {x: 240, text: 'Apr'}, {x: 300, text: 'May'}, {x: 360, text: 'Jun'}
-                ],
-                yLabels: [
-                    {y: 20, text: '£130k'}, {y: 35, text: '£125k'}, {y: 50, text: '£120k'},
-                    {y: 65, text: '£115k'}, {y: 80, text: '£110k'}, {y: 95, text: '£105k'},
-                    {y: 110, text: '£100k'}, {y: 125, text: '£95k'}, {y: 140, text: '£90k'}
-                ]
-            },
-            'MAX': {
-                line: '0,160 40,150 80,140 120,120 160,100 200,85 240,70 280,50 320,30',
-                xLabels: [
-                    {x: 60, text: '2023'}, {x: 160, text: '2024'}, {x: 260, text: '2025'}
-                ],
-                yLabels: [
-                    {y: 20, text: '£130k'}, {y: 40, text: '£120k'}, {y: 60, text: '£110k'},
-                    {y: 80, text: '£100k'}, {y: 100, text: '£90k'}, {y: 120, text: '£80k'},
-                    {y: 140, text: '£70k'}, {y: 160, text: '£60k'}, {y: 180, text: '£40k'}
-                ]
-            }
-        };
+        // Use real chart data from server
+        const chartData = {{ chart_data | tojson | safe }};
 
         let currentRange = 'MAX';
 
@@ -272,8 +224,10 @@
             currentRange = range;
         }
 
-        // Initialize chart on page load
+        // Initialize chart on page load with MAX view
         document.addEventListener('DOMContentLoaded', function() {
+            // Force MAX view to be active on load
+            currentRange = '';
             updateChart('MAX');
         });
     </script>

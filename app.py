@@ -43,6 +43,133 @@ def get_data_manager():
     """Get data manager instance (lazy initialization)"""
     return DatabaseDataManager()
 
+def prepare_mobile_chart_data(data_manager):
+    """Prepare chart data for mobile dashboard using real monthly data"""
+    try:
+        chart_data = {}
+        
+        # Get data for all available years
+        available_years = [2023, 2024, 2025]
+        all_months_data = []
+        
+        for year in available_years:
+            try:
+                year_data = data_manager.get_networth_data(year)
+                
+                # Process each month's data
+                months = ['1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
+                         '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec']
+                
+                for i, month in enumerate(months):
+                    if month in year_data:
+                        month_data = year_data[month]
+                        total = 0
+                        
+                        # Calculate total for this month
+                        for platform, value in month_data.items():
+                            if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                total += value
+                        
+                        if total > 0:
+                            all_months_data.append({
+                                'year': year,
+                                'month': i + 1,
+                                'month_name': month.split()[1],
+                                'value': total,
+                                'date': f"{year}-{i+1:02d}-01"
+                            })
+            except Exception as e:
+                logging.error(f"Error processing year {year}: {str(e)}")
+                continue
+        
+        if not all_months_data:
+            return {}
+        
+        # Sort by date
+        all_months_data.sort(key=lambda x: x['date'])
+        
+        # Generate chart data for MAX view (all years)
+        max_points = []
+        max_labels = []
+        
+        # Sample data points for MAX view (every few months)
+        max_data = [d for i, d in enumerate(all_months_data) if i % 3 == 0 or i == len(all_months_data) - 1]
+        
+        if max_data:
+            min_val = min(d['value'] for d in max_data)
+            max_val = max(d['value'] for d in max_data)
+            value_range = max_val - min_val
+            
+            for i, data_point in enumerate(max_data):
+                # Calculate position (0-320 width, 30-160 height range)
+                x = int((i / (len(max_data) - 1)) * 320) if len(max_data) > 1 else 160
+                y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
+                max_points.append(f"{x},{y}")
+                
+                # Add labels for years
+                if i % 3 == 0:
+                    max_labels.append({'x': x, 'text': str(data_point['year'])})
+        
+        chart_data['MAX'] = {
+            'line': ' '.join(max_points),
+            'xLabels': max_labels,
+            'yLabels': generate_y_labels(min_val, max_val) if max_data else []
+        }
+        
+        # Generate data for individual years
+        for year in available_years:
+            year_data = [d for d in all_months_data if d['year'] == year]
+            if year_data:
+                year_points = []
+                year_labels = []
+                
+                min_val = min(d['value'] for d in year_data)
+                max_val = max(d['value'] for d in year_data)
+                value_range = max_val - min_val
+                
+                for i, data_point in enumerate(year_data):
+                    x = int((i / (len(year_data) - 1)) * 320) if len(year_data) > 1 else 160
+                    y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
+                    year_points.append(f"{x},{y}")
+                    
+                    # Add month labels
+                    if i % 2 == 0:  # Every other month
+                        year_labels.append({'x': x, 'text': data_point['month_name']})
+                
+                chart_data[str(year)] = {
+                    'line': ' '.join(year_points),
+                    'xLabels': year_labels,
+                    'yLabels': generate_y_labels(min_val, max_val)
+                }
+        
+        return chart_data
+        
+    except Exception as e:
+        logging.error(f"Error preparing mobile chart data: {str(e)}")
+        return {}
+
+def generate_y_labels(min_val, max_val):
+    """Generate appropriate Y-axis labels for the chart"""
+    try:
+        value_range = max_val - min_val
+        step = value_range / 8  # 8 labels
+        
+        labels = []
+        for i in range(9):  # 9 labels total
+            value = max_val - (i * step)
+            y_pos = 20 + (i * 20)  # Spacing from top
+            
+            if value >= 1000:
+                text = f"£{value/1000:.0f}k"
+            else:
+                text = f"£{value:.0f}"
+                
+            labels.append({'y': y_pos, 'text': text})
+        
+        return labels
+    except:
+        return []
+
 # Create database tables
 with app.app_context():
     # Import models after app context is established
@@ -422,6 +549,9 @@ def mobile_dashboard():
             mom_change = 0
             mom_amount_change = 0
         
+        # Prepare chart data for different time ranges
+        chart_data = prepare_mobile_chart_data(data_manager)
+        
         return render_template('mobile/dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
@@ -430,7 +560,8 @@ def mobile_dashboard():
                              mom_amount_change=mom_amount_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             today=datetime.now())
+                             today=datetime.now(),
+                             chart_data=chart_data)
     except Exception as e:
         logging.error(f"Error in mobile dashboard: {str(e)}")
         return render_template('mobile/dashboard.html', 
@@ -441,7 +572,8 @@ def mobile_dashboard():
                              mom_amount_change=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             today=datetime.now())
+                             today=datetime.now(),
+                             chart_data={})
 
 @app.route('/mobile-info')
 def mobile_info():
