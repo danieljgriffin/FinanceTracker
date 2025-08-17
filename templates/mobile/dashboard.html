@@ -69,11 +69,11 @@
                 <div>
                     <span class="text-gray-400 text-xs uppercase tracking-wide">YEARLY</span>
                     <div class="flex items-center space-x-1">
-                        <span class="text-green-400 font-semibold text-sm">
-                            +£{{ "{:,.0f}".format((current_net_worth - 40000)) }}
+                        <span class="text-{% if yoy_amount_change >= 0 %}green{% else %}red{% endif %}-400 font-semibold text-sm">
+                            {% if yoy_amount_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(yoy_amount_change) }}
                         </span>
-                        <span class="text-green-400 text-xs">
-                            (+{{ "{:.1f}".format(((current_net_worth - 40000) / 40000) * 100) }}%)
+                        <span class="text-{% if yoy_amount_change >= 0 %}green{% else %}red{% endif %}-400 text-xs">
+                            ({% if yoy_amount_change >= 0 %}+{% endif %}{{ "{:.1f}".format(yoy_percentage_change) }}%)
                         </span>
                     </div>
                 </div>
@@ -127,19 +127,7 @@
             </div>
         </div>
         
-        <!-- Search Bar -->
-        <div class="px-4 mb-4">
-            <div class="relative">
-                <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
-                <input type="text" placeholder="Search investments" 
-                       class="w-full bg-gray-800 border border-gray-700 rounded-lg pl-10 pr-4 py-2 text-white text-sm">
-                <div class="absolute right-3 top-2">
-                    <button class="w-6 h-6 bg-gray-700 rounded-full flex items-center justify-center">
-                        <i class="fas fa-minus text-white text-xs"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
+
         
         <!-- Investment List -->
         <div class="px-4 space-y-3">
@@ -149,21 +137,7 @@
                     <!-- Platform Icon -->
                     <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
                          style="background-color: {{ platform_colors[platform] }}">
-                        {% if platform == 'Degiro' %}
-                            <span class="text-white font-bold text-sm">DG</span>
-                        {% elif platform == 'Trading212 ISA' %}
-                            <span class="text-white font-bold text-sm">T2</span>
-                        {% elif platform == 'EQ (GSK shares)' %}
-                            <span class="text-white font-bold text-sm">EQ</span>
-                        {% elif platform == 'InvestEngine ISA' %}
-                            <span class="text-white font-bold text-sm">IE</span>
-                        {% elif platform == 'Crypto' %}
-                            <span class="text-white font-bold text-sm">CR</span>
-                        {% elif platform == 'HL Stocks & Shares LISA' %}
-                            <span class="text-white font-bold text-sm">HL</span>
-                        {% elif platform == 'Cash' %}
-                            <span class="text-white font-bold text-sm">CA</span>
-                        {% endif %}
+                        <!-- Keep the colored icon background only -->
                     </div>
                     
                     <!-- Platform Info -->

@@ -613,6 +613,29 @@ def mobile_dashboard():
             mom_change = 0
             mom_amount_change = 0
         
+        # Calculate year-over-year change (same year comparison, Jan 1st to current)
+        yoy_amount_change = 0
+        yoy_percentage_change = 0
+        try:
+            # Get January 1st data for current year
+            jan_first_data = current_year_data.get("1st Jan", {})
+            jan_first_total = 0
+            
+            # Calculate January 1st total
+            for platform, value in jan_first_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    jan_first_total += value
+            
+            # Calculate year-to-date changes
+            if jan_first_total > 0:
+                yoy_amount_change = current_net_worth - jan_first_total
+                yoy_percentage_change = (yoy_amount_change / jan_first_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating year-over-year change: {str(e)}")
+            yoy_amount_change = 0
+            yoy_percentage_change = 0
+        
         # Prepare chart data for different time ranges
         chart_data = prepare_mobile_chart_data(data_manager)
         
@@ -622,6 +645,8 @@ def mobile_dashboard():
                              platform_percentages=platform_percentages,
                              mom_change=mom_change,
                              mom_amount_change=mom_amount_change,
+                             yoy_amount_change=yoy_amount_change,
+                             yoy_percentage_change=yoy_percentage_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
@@ -634,6 +659,8 @@ def mobile_dashboard():
                              platform_percentages={},
                              mom_change=0,
                              mom_amount_change=0,
+                             yoy_amount_change=0,
+                             yoy_percentage_change=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
