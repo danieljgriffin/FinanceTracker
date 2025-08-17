@@ -79,35 +79,49 @@
             </div>
         </div>
         
-        <!-- Simple Chart -->
-        <div class="px-4 mb-6">
-            <div class="bg-gray-900/50 rounded-xl p-4">
-                <div class="h-20 w-full relative">
-                    <svg viewBox="0 0 300 80" class="w-full h-full">
-                        <defs>
-                            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3" />
-                                <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0" />
-                            </linearGradient>
-                        </defs>
-                        <!-- Chart line -->
-                        <polyline fill="none" stroke="#00d4ff" stroke-width="2" 
-                                  points="10,60 40,55 70,50 100,45 130,40 160,42 190,38 220,35 250,30 280,25"/>
-                        <!-- Fill area -->
-                        <polygon fill="url(#chartGradient)" 
-                                 points="10,60 40,55 70,50 100,45 130,40 160,42 190,38 220,35 250,30 280,25 280,80 10,80"/>
-                    </svg>
-                </div>
-                
-                <!-- Time Range Buttons -->
-                <div class="flex justify-center space-x-1 mt-3">
-                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1D</button>
-                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1W</button>
-                    <button class="px-2 py-1 text-white text-xs bg-gray-600 rounded">1M</button>
-                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">3M</button>
-                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1Y</button>
-                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">MAX</button>
-                </div>
+        <!-- Full Width Chart -->
+        <div class="mb-6">
+            <div class="h-24 w-full relative">
+                <svg viewBox="0 0 400 96" class="w-full h-full">
+                    <defs>
+                        <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3" />
+                            <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0" />
+                        </linearGradient>
+                    </defs>
+                    
+                    <!-- Chart line -->
+                    <polyline fill="none" stroke="#00d4ff" stroke-width="2" 
+                              points="0,70 50,65 100,60 150,55 200,50 250,52 300,48 350,45 400,40"/>
+                    <!-- Fill area -->
+                    <polygon fill="url(#chartGradient)" 
+                             points="0,70 50,65 100,60 150,55 200,50 250,52 300,48 350,45 400,40 400,96 0,96"/>
+                    
+                    <!-- Y-axis value labels (right side) -->
+                    <text x="390" y="15" font-size="10" fill="#9ca3af" text-anchor="end">£{{ "{:,.0f}".format(current_net_worth * 1.1) }}</text>
+                    <text x="390" y="35" font-size="10" fill="#9ca3af" text-anchor="end">£{{ "{:,.0f}".format(current_net_worth) }}</text>
+                    <text x="390" y="55" font-size="10" fill="#9ca3af" text-anchor="end">£{{ "{:,.0f}".format(current_net_worth * 0.9) }}</text>
+                    <text x="390" y="75" font-size="10" fill="#9ca3af" text-anchor="end">£{{ "{:,.0f}".format(current_net_worth * 0.8) }}</text>
+                    
+                    <!-- X-axis month labels (bottom) -->
+                    <text x="50" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Jan</text>
+                    <text x="100" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Feb</text>
+                    <text x="150" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Mar</text>
+                    <text x="200" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Apr</text>
+                    <text x="250" y="90" font-size="9" fill="#6b7280" text-anchor="middle">May</text>
+                    <text x="300" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Jun</text>
+                    <text x="350" y="90" font-size="9" fill="#6b7280" text-anchor="middle">Jul</text>
+                </svg>
+            </div>
+            
+            <!-- Time Range Buttons -->
+            <div class="flex justify-center space-x-1 mt-3 px-4">
+                <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1D</button>
+                <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1W</button>
+                <button class="px-2 py-1 text-white text-xs bg-gray-600 rounded">1M</button>
+                <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">3M</button>
+                <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1Y</button>
+                <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">MAX</button>
             </div>
         </div>
         
