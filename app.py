@@ -112,6 +112,11 @@ PLATFORM_COLORS = {
 @app.route('/')
 def dashboard():
     """Main dashboard showing current net worth and allocations"""
+    # Check if this is a mobile device and redirect to mobile version
+    user_agent = request.headers.get('User-Agent', '').lower()
+    if any(device in user_agent for device in ['mobile', 'android', 'iphone', 'ipad', 'tablet']):
+        return mobile_dashboard()
+    
     try:
         # Get current net worth data
         data_manager = get_data_manager()
