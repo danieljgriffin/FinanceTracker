@@ -49,21 +49,31 @@
         
         <!-- Portfolio Value -->
         <div class="px-4 mb-6">
-            <div class="flex items-baseline space-x-2 mb-2">
+            <div class="mb-4">
                 <span class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</span>
-                <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
             </div>
             
-            <!-- Return Stats -->
-            <div class="flex space-x-6">
+            <!-- Monthly and Yearly Stats -->
+            <div class="flex space-x-8 mb-2">
                 <div>
-                    <span class="text-gray-400 text-sm uppercase tracking-wide">RETURN</span>
+                    <span class="text-gray-400 text-xs uppercase tracking-wide">MONTHLY</span>
                     <div class="flex items-center space-x-1">
-                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 font-semibold">
+                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 font-semibold text-sm">
                             {% if mom_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(mom_amount_change) }}
                         </span>
-                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 text-sm">
-                            ({% if mom_change >= 0 %}+{% endif %}{{ "{:.2f}".format(mom_change) }}%)
+                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 text-xs">
+                            ({% if mom_change >= 0 %}+{% endif %}{{ "{:.1f}".format(mom_change) }}%)
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <span class="text-gray-400 text-xs uppercase tracking-wide">YEARLY</span>
+                    <div class="flex items-center space-x-1">
+                        <span class="text-green-400 font-semibold text-sm">
+                            +£{{ "{:,.0f}".format((current_net_worth - 40000)) }}
+                        </span>
+                        <span class="text-green-400 text-xs">
+                            (+{{ "{:.1f}".format(((current_net_worth - 40000) / 40000) * 100) }}%)
                         </span>
                     </div>
                 </div>
@@ -77,9 +87,8 @@
                     <!-- Chart elements will be dynamically updated -->
                 </svg>
                 
-                <!-- Interactive overlay for touch/hover - constrained to chart area -->
-                <div id="chartOverlay" class="absolute bg-transparent cursor-pointer" 
-                     style="left: 5%; right: 5%; top: 15%; bottom: 15%;"
+                <!-- Interactive overlay for touch/hover - aligned with chart data points -->
+                <div id="chartOverlay" class="absolute inset-0 bg-transparent cursor-pointer"
                      onmousedown="startInteraction(event)"
                      onmousemove="updateHoverPosition(event)"
                      onmouseup="endInteraction()"
@@ -113,10 +122,7 @@
         <div class="px-4 mb-4">
             <div class="flex">
                 <button class="flex-1 py-3 text-center text-white border-b-2 border-blue-400">
-                    <span class="font-medium">Investments</span>
-                </button>
-                <button class="flex-1 py-3 text-center text-gray-400">
-                    <span class="font-medium">Pies</span>
+                    <span class="font-medium">Net Worth Breakdown</span>
                 </button>
             </div>
         </div>
@@ -320,22 +326,15 @@
                 if (!currentChartData || !isInteracting) return;
                 
                 const rect = overlay.getBoundingClientRect();
-                const parentRect = overlay.parentElement.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const x = clientX - rect.left;
-                const xPercent = x / rect.width;
                 
-                // Calculate chart position (20-340 range in SVG viewBox)
-                // Since overlay is constrained to chart area, xPercent directly maps to chart
-                const chartX = 20 + (xPercent * 320);
-                
-                // Find closest data point and snap to it
-                const closestPoint = getClosestDataPoint(chartX);
+                // Find closest data point by actual screen distance to dots
+                const closestPoint = findClosestPointByScreenDistance(x, rect.width);
                 
                 if (closestPoint) {
-                    // Calculate snap position relative to parent container (full chart area)
-                    const parentWidth = parentRect.width;
-                    const snapX = ((closestPoint.x - 20) / 320) * (parentWidth * 0.9) + (parentWidth * 0.05);
+                    // Position indicator at exact dot position
+                    const snapX = ((closestPoint.x - 20) / 320) * rect.width;
                     indicator.style.left = `${snapX}px`;
                     
                     // Get value for this specific point
@@ -347,8 +346,8 @@
                         document.getElementById('tooltipDate').textContent = dateInfo.includes('*') ? dateInfo : `1st ${dateInfo}`;
                         tooltip.style.opacity = '1';
                         
-                        // Position tooltip at snapped position relative to parent
-                        const tooltipX = Math.max(0, Math.min(parentWidth - 80, snapX - 40));
+                        // Position tooltip at snapped position
+                        const tooltipX = Math.max(0, Math.min(rect.width - 80, snapX - 40));
                         tooltip.style.left = `${tooltipX}px`;
                         tooltip.style.top = '10px';
                     } else {
@@ -357,6 +356,30 @@
                 } else {
                     tooltip.style.opacity = '0';
                 }
+            }
+            
+            function findClosestPointByScreenDistance(touchX, overlayWidth) {
+                if (!currentChartData || !currentChartData.dataPoints) return null;
+                
+                const points = currentChartData.dataPoints;
+                if (points.length === 0) return null;
+                
+                let closestPoint = null;
+                let minScreenDistance = Infinity;
+                
+                for (const point of points) {
+                    // Convert SVG coordinate to screen coordinate
+                    const screenX = ((point.x - 20) / 320) * overlayWidth;
+                    const distance = Math.abs(touchX - screenX);
+                    
+                    if (distance < minScreenDistance) {
+                        minScreenDistance = distance;
+                        closestPoint = point;
+                    }
+                }
+                
+                // Return closest point if within reasonable touch distance (50px)
+                return minScreenDistance <= 50 ? closestPoint : null;
             }
             
             function getClosestDataPoint(chartX) {
