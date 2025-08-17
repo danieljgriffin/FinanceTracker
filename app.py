@@ -674,8 +674,12 @@ def mobile_dashboard():
         # Prepare chart data for different time ranges
         chart_data = prepare_mobile_chart_data(data_manager)
         
-        # Get last updated time from global variable
+        # Get last updated time from global variable and convert to BST
         global last_price_update
+        last_updated_bst = None
+        if last_price_update:
+            bst = pytz.timezone('Europe/London')
+            last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
         
         return render_template('mobile/dashboard.html', 
                              current_net_worth=current_net_worth,
@@ -690,7 +694,7 @@ def mobile_dashboard():
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
                              chart_data=chart_data,
-                             last_updated=last_price_update)
+                             last_updated=last_updated_bst)
     except Exception as e:
         logging.error(f"Error in mobile dashboard: {str(e)}")
         return render_template('mobile/dashboard.html', 
