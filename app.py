@@ -676,7 +676,6 @@ def mobile_dashboard():
         
         # Get last updated time from global variable
         global last_price_update
-        last_updated = last_price_update
         
         return render_template('mobile/dashboard.html', 
                              current_net_worth=current_net_worth,
@@ -691,7 +690,7 @@ def mobile_dashboard():
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
                              chart_data=chart_data,
-                             last_updated=last_updated)
+                             last_updated=last_price_update)
     except Exception as e:
         logging.error(f"Error in mobile dashboard: {str(e)}")
         return render_template('mobile/dashboard.html', 
