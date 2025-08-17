@@ -1350,6 +1350,7 @@ def update_all_prices():
                 except Exception as e:
                     logging.error(f"Error updating database for {symbol}: {str(e)}")
         
+        global last_price_update
         last_price_update = datetime.now()
         logging.info(f'Background price update completed: {updated_count}/{len(symbols_to_update)} prices updated')
         
