@@ -267,6 +267,7 @@
                 };
             });
             currentChartData.dataPoints = points;
+            currentChartData.hasCurrentValue = data.hasCurrentValue;
             
             setupChartInteraction();
         }
@@ -318,26 +319,33 @@
                 // Calculate chart position (0-320 range in SVG viewBox)
                 const chartX = xPercent * 320;
                 
-                // Position indicator line
-                indicator.style.left = `${x}px`;
+                // Find closest data point and snap to it
+                const closestPoint = getClosestDataPoint(chartX);
                 
-                // Find closest actual data point (no interpolation)
-                const value = interpolateValue(chartX);
-                const dateInfo = getDateInfo(chartX);
-                
-                // Only show tooltip if we have actual data
-                if (value !== null && dateInfo) {
-                    document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
-                    document.getElementById('tooltipDate').textContent = `1st ${dateInfo}`;
-                    tooltip.style.opacity = '1';
+                if (closestPoint) {
+                    // Snap indicator to the exact dot position
+                    const snapX = (closestPoint.x / 320) * rect.width;
+                    indicator.style.left = `${snapX}px`;
+                    
+                    // Get value for this specific point
+                    const value = interpolateValue(closestPoint.x);
+                    const dateInfo = closestPoint.label;
+                    
+                    if (value !== null && dateInfo) {
+                        document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
+                        document.getElementById('tooltipDate').textContent = dateInfo.includes('*') ? dateInfo : `1st ${dateInfo}`;
+                        tooltip.style.opacity = '1';
+                        
+                        // Position tooltip at snapped position
+                        const tooltipX = Math.max(0, Math.min(rect.width - 80, snapX - 40));
+                        tooltip.style.left = `${tooltipX}px`;
+                        tooltip.style.top = '10px';
+                    } else {
+                        tooltip.style.opacity = '0';
+                    }
                 } else {
                     tooltip.style.opacity = '0';
                 }
-                
-                // Position tooltip
-                const tooltipX = Math.max(0, Math.min(rect.width - 80, x - 40));
-                tooltip.style.left = `${tooltipX}px`;
-                tooltip.style.top = '10px';
             }
             
             function getClosestDataPoint(chartX) {
@@ -358,8 +366,8 @@
                     }
                 }
                 
-                // Only return if we're close enough to an actual data point (within 20px)
-                if (minDistance > 20) return null;
+                // Increase snap range for easier touch interaction (within 40px)
+                if (minDistance > 40) return null;
                 
                 return closestPoint;
             }

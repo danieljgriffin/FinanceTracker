@@ -151,7 +151,8 @@ def prepare_mobile_chart_data(data_manager):
         chart_data['MAX'] = {
             'line': ' '.join(max_points),
             'xLabels': max_labels,
-            'yLabels': generate_y_labels(min_val, max_val) if max_data else []
+            'yLabels': generate_y_labels(min_val, max_val) if max_data else [],
+            'hasCurrentValue': True  # MAX view always has current value
         }
         
         # Generate data for individual years
