@@ -292,13 +292,18 @@
                 // Position indicator line
                 indicator.style.left = `${x}px`;
                 
-                // Find closest data point and interpolate value
+                // Find closest actual data point (no interpolation)
                 const value = interpolateValue(chartX);
                 const dateInfo = getDateInfo(chartX);
                 
-                // Update tooltip
-                document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
-                document.getElementById('tooltipDate').textContent = dateInfo;
+                // Only show tooltip if we have actual data
+                if (value !== null && dateInfo) {
+                    document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
+                    document.getElementById('tooltipDate').textContent = `1st ${dateInfo}`;
+                    tooltip.style.opacity = '1';
+                } else {
+                    tooltip.style.opacity = '0';
+                }
                 
                 // Position tooltip
                 const tooltipX = Math.max(0, Math.min(rect.width - 80, x - 40));
@@ -307,44 +312,38 @@
             }
             
             function interpolateValue(chartX) {
-                if (!currentChartData || !currentChartData.line) return 0;
+                if (!currentChartData || !currentChartData.line) return null;
                 
                 const points = currentChartData.line.split(' ').map(point => {
                     const [x, y] = point.split(',').map(Number);
                     return { x, y };
                 });
                 
-                if (points.length === 0) return 0;
+                if (points.length === 0) return null;
                 
-                // Find surrounding points
-                let leftPoint = points[0];
-                let rightPoint = points[points.length - 1];
+                // Find the closest actual data point (no interpolation)
+                let closestPoint = points[0];
+                let minDistance = Math.abs(chartX - points[0].x);
                 
-                for (let i = 0; i < points.length - 1; i++) {
-                    if (chartX >= points[i].x && chartX <= points[i + 1].x) {
-                        leftPoint = points[i];
-                        rightPoint = points[i + 1];
-                        break;
+                for (const point of points) {
+                    const distance = Math.abs(chartX - point.x);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestPoint = point;
                     }
                 }
                 
-                // Linear interpolation of Y position
-                let interpolatedY;
-                if (leftPoint.x === rightPoint.x) {
-                    interpolatedY = leftPoint.y;
-                } else {
-                    const ratio = (chartX - leftPoint.x) / (rightPoint.x - leftPoint.x);
-                    interpolatedY = leftPoint.y + (rightPoint.y - leftPoint.y) * ratio;
-                }
+                // Only show value if we're close enough to an actual data point (within 15px)
+                if (minDistance > 15) return null;
                 
-                // Convert Y position back to value (reverse of chart calculation)
+                // Convert Y position back to actual value
                 // Chart Y range: 30-160 (130px range)
                 const yRange = 130;
-                const yFromTop = interpolatedY - 30;
+                const yFromTop = closestPoint.y - 30;
                 const valuePercent = 1 - (yFromTop / yRange); // Invert because Y increases downward
                 
                 // Get value range from Y labels
-                if (!currentChartData.yLabels || currentChartData.yLabels.length === 0) return 0;
+                if (!currentChartData.yLabels || currentChartData.yLabels.length === 0) return null;
                 
                 const maxValue = parseFloat(currentChartData.yLabels[0].text.replace('£', '').replace('k', '')) * 1000;
                 const minValue = parseFloat(currentChartData.yLabels[currentChartData.yLabels.length - 1].text.replace('£', '').replace('k', '')) * 1000;
@@ -358,19 +357,19 @@
                 const labels = currentChartData.xLabels;
                 if (labels.length === 0) return '';
                 
-                // Find closest label
-                let closestLabel = labels[0];
-                let minDistance = Math.abs(chartX - labels[0].x);
+                // Find closest label that corresponds to actual data
+                let closestLabel = null;
+                let minDistance = Infinity;
                 
                 for (const label of labels) {
                     const distance = Math.abs(chartX - label.x);
-                    if (distance < minDistance) {
+                    if (distance < minDistance && distance <= 15) { // Must be close to actual data point
                         minDistance = distance;
                         closestLabel = label;
                     }
                 }
                 
-                return closestLabel.text;
+                return closestLabel ? closestLabel.text : '';
             }
         }
 
