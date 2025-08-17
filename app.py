@@ -579,9 +579,11 @@ def mobile_dashboard():
             for platform, amount in platform_allocations.items():
                 platform_percentages[platform] = (amount / total_allocation) * 100
         
-        # Calculate month-on-month change
+        # Calculate month-on-month change and platform-specific changes
         mom_change = 0
         mom_amount_change = 0
+        platform_monthly_changes = {}
+        
         try:
             current_year = datetime.now().year
             current_month = datetime.now().month
@@ -603,15 +605,41 @@ def mobile_dashboard():
                 if platform != 'total_net_worth' and isinstance(value, (int, float)):
                     month_start_total += value
             
-            # Calculate changes
+            # Calculate overall portfolio changes
             if month_start_total > 0:
                 mom_amount_change = current_net_worth - month_start_total
                 mom_change = (mom_amount_change / month_start_total) * 100
+            
+            # Calculate platform-specific monthly changes
+            for platform in platform_allocations.keys():
+                try:
+                    current_platform_value = platform_allocations[platform]
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if month_start_platform_value > 0:
+                        platform_change_amount = current_platform_value - month_start_platform_value
+                        platform_change_percent = (platform_change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': platform_change_amount,
+                            'percent': platform_change_percent
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {
+                            'amount': 0,
+                            'percent': 0
+                        }
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {
+                        'amount': 0,
+                        'percent': 0
+                    }
             
         except Exception as e:
             logging.error(f"Error calculating month-on-month change: {str(e)}")
             mom_change = 0
             mom_amount_change = 0
+            platform_monthly_changes = {}
         
         # Calculate year-over-year change (same year comparison, Jan 1st to current)
         yoy_amount_change = 0
@@ -643,6 +671,7 @@ def mobile_dashboard():
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
+                             platform_monthly_changes=platform_monthly_changes,
                              mom_change=mom_change,
                              mom_amount_change=mom_amount_change,
                              yoy_amount_change=yoy_amount_change,
@@ -657,6 +686,7 @@ def mobile_dashboard():
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
+                             platform_monthly_changes={},
                              mom_change=0,
                              mom_amount_change=0,
                              yoy_amount_change=0,
