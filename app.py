@@ -259,13 +259,18 @@ def dashboard():
         # Get next financial target - closest to current day
         next_target = None
         progress_info = None
+        upcoming_targets = []
         try:
             today = datetime.now().date()
             # Get all active goals and find the closest one to today (future or current)
-            active_goals = Goal.query.filter_by(status='active').all()
+            active_goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
             if active_goals:
                 # Find the closest goal to today's date
                 next_target = min(active_goals, key=lambda g: abs((g.target_date - today).days))
+                
+                # Get upcoming targets (next 2-3 after the current target)
+                current_target_index = active_goals.index(next_target)
+                upcoming_targets = active_goals[current_target_index + 1:current_target_index + 4]  # Next 3 targets
                 
                 # Calculate progress
                 remaining_amount = next_target.target_amount - current_net_worth
@@ -296,9 +301,11 @@ def dashboard():
                              yearly_amount_change=yearly_amount_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
                              last_price_update=last_price_update,
                              next_target=next_target,
-                             progress_info=progress_info)
+                             progress_info=progress_info,
+                             upcoming_targets=upcoming_targets)
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
@@ -313,9 +320,11 @@ def dashboard():
                              yearly_amount_change=0,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
                              last_price_update=None,
                              next_target=None,
-                             progress_info=None)
+                             progress_info=None,
+                             upcoming_targets=[])
 
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
