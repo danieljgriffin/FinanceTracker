@@ -34,19 +34,7 @@
             color: #00d4ff !important;
         }
         
-        .chart-container {
-            background: rgba(15, 15, 15, 0.8);
-            border-radius: 12px;
-            padding: 16px;
-            overflow: hidden;
-        }
-        
-        canvas {
-            max-height: 96px !important;
-            height: 96px !important;
-            width: 100% !important;
-            max-width: 350px !important;
-        }
+
     </style>
 </head>
 <body class="bg-black text-white min-h-screen">
@@ -91,21 +79,34 @@
             </div>
         </div>
         
-        <!-- Chart -->
+        <!-- Simple Chart -->
         <div class="px-4 mb-6">
-            <div class="chart-container">
-                <div class="h-24 w-full relative overflow-hidden">
-                    <canvas id="portfolioChart" width="350" height="96"></canvas>
+            <div class="bg-gray-900/50 rounded-xl p-4">
+                <div class="h-20 w-full relative">
+                    <svg viewBox="0 0 300 80" class="w-full h-full">
+                        <defs>
+                            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:0" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Chart line -->
+                        <polyline fill="none" stroke="#00d4ff" stroke-width="2" 
+                                  points="10,60 40,55 70,50 100,45 130,40 160,42 190,38 220,35 250,30 280,25"/>
+                        <!-- Fill area -->
+                        <polygon fill="url(#chartGradient)" 
+                                 points="10,60 40,55 70,50 100,45 130,40 160,42 190,38 220,35 250,30 280,25 280,80 10,80"/>
+                    </svg>
                 </div>
                 
                 <!-- Time Range Buttons -->
-                <div class="flex justify-center space-x-1 mt-4">
-                    <button class="px-3 py-1 text-gray-400 text-xs bg-gray-800 rounded">1D</button>
-                    <button class="px-3 py-1 text-gray-400 text-xs bg-gray-800 rounded">1W</button>
-                    <button class="px-3 py-1 text-white text-xs bg-gray-600 rounded">1M</button>
-                    <button class="px-3 py-1 text-gray-400 text-xs bg-gray-800 rounded">3M</button>
-                    <button class="px-3 py-1 text-gray-400 text-xs bg-gray-800 rounded">1Y</button>
-                    <button class="px-3 py-1 text-gray-400 text-xs bg-gray-800 rounded">MAX</button>
+                <div class="flex justify-center space-x-1 mt-3">
+                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1D</button>
+                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1W</button>
+                    <button class="px-2 py-1 text-white text-xs bg-gray-600 rounded">1M</button>
+                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">3M</button>
+                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">1Y</button>
+                    <button class="px-2 py-1 text-gray-400 text-xs bg-gray-800 rounded">MAX</button>
                 </div>
             </div>
         </div>
@@ -208,65 +209,9 @@
     </div>
     
     <script>
-        // Wait for DOM to be ready
+        // Simple mobile interactions
         document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('portfolioChart');
-            if (!canvas) return;
-            
-            const ctx = canvas.getContext('2d');
-            
-            // Set fixed canvas size
-            canvas.width = 350;
-            canvas.height = 96;
-            canvas.style.width = '100%';
-            canvas.style.height = '96px';
-            canvas.style.maxHeight = '96px';
-            
-            // Generate sample data for the chart
-            const baseValue = {{ current_net_worth }};
-            const data = [];
-            
-            // Generate 30 days of upward trending data
-            for (let i = 0; i < 30; i++) {
-                const trend = 1 + (i / 30) * 0.05; // 5% growth over 30 days
-                const noise = 1 + (Math.random() - 0.5) * 0.02; // ±1% daily variation
-                data.push(baseValue * trend * noise);
-            }
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array(30).fill(''),
-                    datasets: [{
-                        data: data,
-                        borderColor: '#00d4ff',
-                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0,
-                        pointHoverRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: false,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false }
-                    },
-                    scales: {
-                        x: { display: false },
-                        y: { display: false }
-                    },
-                    elements: {
-                        point: { radius: 0 }
-                    },
-                    layout: {
-                        padding: 8
-                    }
-                }
-            });
+            console.log('Mobile dashboard loaded');
         });
     </script>
 </body>
