@@ -42,8 +42,10 @@
         }
         
         canvas {
-            max-height: 120px !important;
-            height: 120px !important;
+            max-height: 96px !important;
+            height: 96px !important;
+            width: 100% !important;
+            max-width: 350px !important;
         }
     </style>
 </head>
@@ -92,8 +94,8 @@
         <!-- Chart -->
         <div class="px-4 mb-6">
             <div class="chart-container">
-                <div style="height: 120px; position: relative;">
-                    <canvas id="portfolioChart"></canvas>
+                <div class="h-24 w-full relative overflow-hidden">
+                    <canvas id="portfolioChart" width="350" height="96"></canvas>
                 </div>
                 
                 <!-- Time Range Buttons -->
@@ -206,77 +208,65 @@
     </div>
     
     <script>
-        // Mobile Chart
-        const ctx = document.getElementById('portfolioChart').getContext('2d');
-        
-        // Generate sample data for the chart
-        const generateChartData = () => {
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('portfolioChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Set fixed canvas size
+            canvas.width = 350;
+            canvas.height = 96;
+            canvas.style.width = '100%';
+            canvas.style.height = '96px';
+            canvas.style.maxHeight = '96px';
+            
+            // Generate sample data for the chart
             const baseValue = {{ current_net_worth }};
             const data = [];
-            const labels = [];
             
-            // Generate 30 days of data
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }));
-                
-                // Add some realistic variation
-                const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
-                const value = baseValue * (1 + variation * (30 - i) / 30);
-                data.push(value);
+            // Generate 30 days of upward trending data
+            for (let i = 0; i < 30; i++) {
+                const trend = 1 + (i / 30) * 0.05; // 5% growth over 30 days
+                const noise = 1 + (Math.random() - 0.5) * 0.02; // ±1% daily variation
+                data.push(baseValue * trend * noise);
             }
             
-            return { labels, data };
-        };
-        
-        const chartData = generateChartData();
-        
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: chartData.labels,
-                datasets: [{
-                    data: chartData.data,
-                    borderColor: '#00d4ff',
-                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    pointBackgroundColor: '#00d4ff',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(30).fill(''),
+                    datasets: [{
+                        data: data,
+                        borderColor: '#00d4ff',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    }]
                 },
-                scales: {
-                    x: {
-                        display: false
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false }
                     },
-                    y: {
-                        display: false
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                },
-                layout: {
-                    padding: 0
-                },
-                elements: {
-                    point: {
-                        radius: 0
+                    scales: {
+                        x: { display: false },
+                        y: { display: false }
+                    },
+                    elements: {
+                        point: { radius: 0 }
+                    },
+                    layout: {
+                        padding: 8
                     }
                 }
-            }
+            });
         });
     </script>
 </body>
