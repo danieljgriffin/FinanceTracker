@@ -342,6 +342,106 @@ def dashboard():
                              upcoming_targets=[],
                              is_mobile=is_mobile_device())
 
+@app.route('/mobile')
+def mobile_dashboard():
+    """Mobile-only dashboard with Trading212-style interface"""
+    try:
+        # Get current net worth data
+        data_manager = get_data_manager()
+        networth_data = get_data_manager().get_networth_data()
+        investments_data = get_data_manager().get_investments_data()
+        
+        # Calculate current net worth using shared function
+        current_net_worth = calculate_current_net_worth()
+        
+        # Calculate platform allocations using current investment values
+        platform_allocations = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys only
+                
+            platform_total = 0
+            
+            # Calculate investment values (skip for Cash platform since it has no investments)
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            # Add cash balance (for all platforms including Cash)
+            platform_total += get_data_manager().get_platform_cash(platform)
+            
+            if platform_total > 0:  # Only include platforms with value
+                platform_allocations[platform] = platform_total
+        
+        # Calculate percentage allocations
+        total_allocation = sum(platform_allocations.values())
+        platform_percentages = {}
+        if total_allocation > 0:
+            for platform, amount in platform_allocations.items():
+                platform_percentages[platform] = (amount / total_allocation) * 100
+        
+        # Calculate month-on-month change
+        mom_change = 0
+        mom_amount_change = 0
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            
+            # Get current month's 1st day data
+            month_start_data = current_year_data.get(current_month_name, {})
+            month_start_total = 0
+            
+            # Calculate month start total
+            for platform, value in month_start_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    month_start_total += value
+            
+            # Calculate changes
+            if month_start_total > 0:
+                mom_amount_change = current_net_worth - month_start_total
+                mom_change = (mom_amount_change / month_start_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            mom_change = 0
+            mom_amount_change = 0
+        
+        return render_template('mobile/dashboard.html', 
+                             current_net_worth=current_net_worth,
+                             platform_allocations=platform_allocations,
+                             platform_percentages=platform_percentages,
+                             mom_change=mom_change,
+                             mom_amount_change=mom_amount_change,
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now())
+    except Exception as e:
+        logging.error(f"Error in mobile dashboard: {str(e)}")
+        return render_template('mobile/dashboard.html', 
+                             current_net_worth=0,
+                             platform_allocations={},
+                             platform_percentages={},
+                             mom_change=0,
+                             mom_amount_change=0,
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now())
+
+@app.route('/mobile-info')
+def mobile_info():
+    """Information page about the mobile app"""
+    return render_template('mobile_info.html')
+
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
 def yearly_tracker(year=None):
