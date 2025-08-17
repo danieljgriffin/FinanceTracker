@@ -73,35 +73,17 @@
         <!-- Full Width Chart -->
         <div class="mb-6">
             <div class="h-48 w-full relative">
-                <svg viewBox="0 0 400 192" class="w-full h-full">
-                    <!-- Chart line showing dramatic growth from 40k to 122k -->
-                    <polyline fill="none" stroke="#00d4ff" stroke-width="3" 
-                              points="0,160 40,150 80,140 120,120 160,100 200,85 240,70 280,50 320,30"/>
-                    
-                    <!-- Y-axis value labels showing full growth range -->
-                    <text x="390" y="20" font-size="11" fill="#9ca3af" text-anchor="end">£130k</text>
-                    <text x="390" y="40" font-size="11" fill="#9ca3af" text-anchor="end">£120k</text>
-                    <text x="390" y="60" font-size="11" fill="#9ca3af" text-anchor="end">£110k</text>
-                    <text x="390" y="80" font-size="11" fill="#9ca3af" text-anchor="end">£100k</text>
-                    <text x="390" y="100" font-size="11" fill="#9ca3af" text-anchor="end">£90k</text>
-                    <text x="390" y="120" font-size="11" fill="#9ca3af" text-anchor="end">£80k</text>
-                    <text x="390" y="140" font-size="11" fill="#9ca3af" text-anchor="end">£70k</text>
-                    <text x="390" y="160" font-size="11" fill="#9ca3af" text-anchor="end">£60k</text>
-                    <text x="390" y="180" font-size="11" fill="#9ca3af" text-anchor="end">£40k</text>
-                    
-                    <!-- X-axis time labels showing growth over years -->
-                    <text x="60" y="185" font-size="10" fill="#6b7280" text-anchor="middle">2023</text>
-                    <text x="160" y="185" font-size="10" fill="#6b7280" text-anchor="middle">2024</text>
-                    <text x="260" y="185" font-size="10" fill="#6b7280" text-anchor="middle">2025</text>
+                <svg viewBox="0 0 400 192" class="w-full h-full" id="portfolioChart">
+                    <!-- Chart elements will be dynamically updated -->
                 </svg>
             </div>
             
             <!-- Time Range Options -->
             <div class="flex justify-center space-x-6 mt-3 px-4">
-                <span class="text-gray-400 text-sm">2023</span>
-                <span class="text-gray-400 text-sm">2024</span>
-                <span class="text-gray-400 text-sm">2025</span>
-                <span class="text-white text-sm font-semibold">MAX</span>
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
+                <span class="text-white text-sm font-semibold cursor-pointer" id="activeRange">MAX</span>
             </div>
         </div>
         
@@ -203,9 +185,96 @@
     </div>
     
     <script>
-        // Mobile dashboard loaded
+        // Chart data for different time ranges
+        const chartData = {
+            '2023': {
+                line: '0,160 50,150 100,140 150,130 200,120 250,110 300,100 350,90',
+                xLabels: [
+                    {x: 50, text: 'Jan'}, {x: 100, text: 'Mar'}, {x: 150, text: 'May'},
+                    {x: 200, text: 'Jul'}, {x: 250, text: 'Sep'}, {x: 300, text: 'Nov'}
+                ],
+                yLabels: [
+                    {y: 20, text: '£60k'}, {y: 40, text: '£55k'}, {y: 60, text: '£50k'},
+                    {y: 80, text: '£45k'}, {y: 100, text: '£40k'}, {y: 120, text: '£35k'},
+                    {y: 140, text: '£30k'}, {y: 160, text: '£25k'}, {y: 180, text: '£20k'}
+                ]
+            },
+            '2024': {
+                line: '0,140 40,130 80,120 120,110 160,100 200,90 240,80 280,70 320,60',
+                xLabels: [
+                    {x: 40, text: 'Jan'}, {x: 80, text: 'Mar'}, {x: 120, text: 'May'},
+                    {x: 160, text: 'Jul'}, {x: 200, text: 'Sep'}, {x: 240, text: 'Nov'}
+                ],
+                yLabels: [
+                    {y: 20, text: '£110k'}, {y: 40, text: '£100k'}, {y: 60, text: '£90k'},
+                    {y: 80, text: '£80k'}, {y: 100, text: '£70k'}, {y: 120, text: '£60k'},
+                    {y: 140, text: '£50k'}, {y: 160, text: '£40k'}, {y: 180, text: '£30k'}
+                ]
+            },
+            '2025': {
+                line: '0,100 60,90 120,80 180,70 240,60 300,50 360,40',
+                xLabels: [
+                    {x: 60, text: 'Jan'}, {x: 120, text: 'Feb'}, {x: 180, text: 'Mar'},
+                    {x: 240, text: 'Apr'}, {x: 300, text: 'May'}, {x: 360, text: 'Jun'}
+                ],
+                yLabels: [
+                    {y: 20, text: '£130k'}, {y: 35, text: '£125k'}, {y: 50, text: '£120k'},
+                    {y: 65, text: '£115k'}, {y: 80, text: '£110k'}, {y: 95, text: '£105k'},
+                    {y: 110, text: '£100k'}, {y: 125, text: '£95k'}, {y: 140, text: '£90k'}
+                ]
+            },
+            'MAX': {
+                line: '0,160 40,150 80,140 120,120 160,100 200,85 240,70 280,50 320,30',
+                xLabels: [
+                    {x: 60, text: '2023'}, {x: 160, text: '2024'}, {x: 260, text: '2025'}
+                ],
+                yLabels: [
+                    {y: 20, text: '£130k'}, {y: 40, text: '£120k'}, {y: 60, text: '£110k'},
+                    {y: 80, text: '£100k'}, {y: 100, text: '£90k'}, {y: 120, text: '£80k'},
+                    {y: 140, text: '£70k'}, {y: 160, text: '£60k'}, {y: 180, text: '£40k'}
+                ]
+            }
+        };
+
+        let currentRange = 'MAX';
+
+        function updateChart(range) {
+            if (range === currentRange) return;
+            
+            const svg = document.getElementById('portfolioChart');
+            const data = chartData[range];
+            
+            // Update active range styling
+            document.querySelectorAll('[onclick^="updateChart"]').forEach(el => {
+                el.className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
+            });
+            
+            if (range === 'MAX') {
+                document.getElementById('activeRange').className = 'text-white text-sm font-semibold cursor-pointer';
+                document.getElementById('activeRange').textContent = 'MAX';
+            } else {
+                event.target.className = 'text-white text-sm font-semibold cursor-pointer';
+                document.getElementById('activeRange').className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
+                document.getElementById('activeRange').onclick = () => updateChart('MAX');
+            }
+            
+            // Update chart
+            svg.innerHTML = `
+                <polyline fill="none" stroke="#00d4ff" stroke-width="3" points="${data.line}"/>
+                ${data.yLabels.map(label => 
+                    `<text x="390" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
+                ).join('')}
+                ${data.xLabels.map(label => 
+                    `<text x="${label.x}" y="185" font-size="10" fill="#6b7280" text-anchor="middle">${label.text}</text>`
+                ).join('')}
+            `;
+            
+            currentRange = range;
+        }
+
+        // Initialize chart on page load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Mobile dashboard ready');
+            updateChart('MAX');
         });
     </script>
 </body>
