@@ -38,6 +38,12 @@
             background: rgba(15, 15, 15, 0.8);
             border-radius: 12px;
             padding: 16px;
+            overflow: hidden;
+        }
+        
+        canvas {
+            max-height: 120px !important;
+            height: 120px !important;
         }
     </style>
 </head>
@@ -86,7 +92,9 @@
         <!-- Chart -->
         <div class="px-4 mb-6">
             <div class="chart-container">
-                <canvas id="portfolioChart" height="120"></canvas>
+                <div style="height: 120px; position: relative;">
+                    <canvas id="portfolioChart"></canvas>
+                </div>
                 
                 <!-- Time Range Buttons -->
                 <div class="flex justify-center space-x-1 mt-4">
@@ -259,6 +267,14 @@
                 interaction: {
                     intersect: false,
                     mode: 'index'
+                },
+                layout: {
+                    padding: 0
+                },
+                elements: {
+                    point: {
+                        radius: 0
+                    }
                 }
             }
         });
