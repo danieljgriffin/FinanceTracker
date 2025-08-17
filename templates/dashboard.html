@@ -672,6 +672,12 @@
             }
         });
         
+        // Current position marker
+        const currentPositionData = [{
+            x: new Date(),
+            y: currentNetWorth
+        }];
+        
         const config = {
             type: 'line',
             data: {
@@ -685,6 +691,16 @@
                     tension: 0.1,
                     pointRadius: 0,
                     pointHoverRadius: 5
+                }, {
+                    label: 'Current Position',
+                    data: currentPositionData,
+                    borderColor: '#10b981',
+                    backgroundColor: '#10b981',
+                    borderWidth: 0,
+                    pointRadius: 8,
+                    pointHoverRadius: 10,
+                    showLine: false,
+                    pointStyle: 'rectRot'
                 }, {
                     label: 'Milestones',
                     data: milestoneData,
@@ -727,7 +743,11 @@
                                     }) : '';
                             },
                             label: function(context) {
-                                return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                let label = context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                if (context.dataset.label === 'Current Position') {
+                                    label += ' (Today)';
+                                }
+                                return label;
                             }
                         }
                     }
@@ -741,6 +761,7 @@
                                 year: 'yyyy'
                             }
                         },
+                        min: new Date('2025-01-01'),
                         ticks: { 
                             color: '#9ca3af',
                             maxTicksLimit: 8
