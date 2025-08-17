@@ -56,28 +56,42 @@ def prepare_mobile_chart_data(data_manager):
             try:
                 year_data = data_manager.get_networth_data(year)
                 
-                # Process each month's data
-                months = ['1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
-                         '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec']
+                # Process each month's data - check both 1st and 31st entries
+                months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 
                 for i, month in enumerate(months):
-                    if month in year_data:
-                        month_data = year_data[month]
-                        total = 0
-                        
-                        # Calculate total for this month
-                        for platform, value in month_data.items():
-                            if platform != 'total_net_worth' and isinstance(value, (int, float)):
-                                total += value
-                        
-                        if total > 0:
-                            all_months_data.append({
-                                'year': year,
-                                'month': i + 1,
-                                'month_name': month.split()[1],
-                                'value': total,
-                                'date': f"{year}-{i+1:02d}-01"
-                            })
+                    # Try 1st of month first, then 31st/30th if needed
+                    month_keys = [f'1st {month}', f'31st {month}']
+                    if month in ['Apr', 'Jun', 'Sep', 'Nov']:
+                        month_keys.append(f'30th {month}')
+                    if month == 'Feb':
+                        month_keys.extend([f'28th {month}', f'29th {month}'])
+                    
+                    total = 0
+                    found_data = False
+                    
+                    for month_key in month_keys:
+                        if month_key in year_data:
+                            month_data = year_data[month_key]
+                            
+                            # Calculate total for this month
+                            for platform, value in month_data.items():
+                                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                    total += value
+                            
+                            if total > 0:
+                                found_data = True
+                                break
+                    
+                    if found_data:
+                        all_months_data.append({
+                            'year': year,
+                            'month': i + 1,
+                            'month_name': month,
+                            'value': total,
+                            'date': f"{year}-{i+1:02d}-01"
+                        })
             except Exception as e:
                 logging.error(f"Error processing year {year}: {str(e)}")
                 continue
@@ -92,13 +106,16 @@ def prepare_mobile_chart_data(data_manager):
         max_points = []
         max_labels = []
         
-        # Sample data points for MAX view (every few months)
-        max_data = [d for i, d in enumerate(all_months_data) if i % 3 == 0 or i == len(all_months_data) - 1]
+        # Sample data points for MAX view (every 6 months to avoid crowding)
+        max_data = [d for i, d in enumerate(all_months_data) if i % 6 == 0 or i == len(all_months_data) - 1]
         
         if max_data:
             min_val = min(d['value'] for d in max_data)
             max_val = max(d['value'] for d in max_data)
             value_range = max_val - min_val
+            
+            # Track years already added to avoid duplicates
+            years_added = set()
             
             for i, data_point in enumerate(max_data):
                 # Calculate position (0-320 width, 30-160 height range)
@@ -106,9 +123,10 @@ def prepare_mobile_chart_data(data_manager):
                 y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
                 max_points.append(f"{x},{y}")
                 
-                # Add labels for years
-                if i % 3 == 0:
+                # Add year labels only once per year
+                if data_point['year'] not in years_added:
                     max_labels.append({'x': x, 'text': str(data_point['year'])})
+                    years_added.add(data_point['year'])
         
         chart_data['MAX'] = {
             'line': ' '.join(max_points),
@@ -127,14 +145,31 @@ def prepare_mobile_chart_data(data_manager):
                 max_val = max(d['value'] for d in year_data)
                 value_range = max_val - min_val
                 
+                # Create full 12-month grid for positioning
+                month_positions = {}
                 for i, data_point in enumerate(year_data):
-                    x = int((i / (len(year_data) - 1)) * 320) if len(year_data) > 1 else 160
-                    y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
-                    year_points.append(f"{x},{y}")
+                    month_positions[data_point['month']] = data_point
+                
+                # Generate points and labels for all 12 months
+                month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                
+                for month_num in range(1, 13):
+                    x = int(((month_num - 1) / 11) * 320)  # Spread across full width
                     
-                    # Add month labels
-                    if i % 2 == 0:  # Every other month
-                        year_labels.append({'x': x, 'text': data_point['month_name']})
+                    if month_num in month_positions:
+                        # We have data for this month
+                        data_point = month_positions[month_num]
+                        y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
+                        year_points.append(f"{x},{y}")
+                    else:
+                        # No data for this month - interpolate or skip
+                        if year_points:  # Use last known position
+                            last_y = int(year_points[-1].split(',')[1])
+                            year_points.append(f"{x},{last_y}")
+                    
+                    # Add all month labels
+                    year_labels.append({'x': x, 'text': month_names[month_num - 1]})
                 
                 chart_data[str(year)] = {
                     'line': ' '.join(year_points),
