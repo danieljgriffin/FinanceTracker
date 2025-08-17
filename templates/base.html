@@ -74,13 +74,6 @@
                 <span class="text-xl font-bold text-white">Net Worth Tracker</span>
             </div>
             
-            <!-- Privacy Toggle (above navigation) -->
-            <div class="flex justify-center mb-6" style="overflow: hidden;">
-                <button id="privacy-toggle" class="text-gray-400 hover:text-white transition-colors duration-200 p-2" title="Toggle privacy mode" style="overflow: hidden;">
-                    <i class="fas fa-eye text-xl"></i>
-                </button>
-            </div>
-            
             <!-- Navigation Links -->
             <nav class="space-y-2">
                 <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
@@ -109,8 +102,16 @@
                 </a>
             </nav>
             
+            <!-- Privacy Toggle Button -->
+            <div class="mt-6 pt-4 border-t border-gray-600/30">
+                <button id="privacy-toggle" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 text-gray-300 hover:text-white bg-slate-700/50 hover:bg-slate-600/60" title="Toggle privacy mode">
+                    <i id="privacy-icon" class="fas fa-eye mr-2"></i>
+                    <span id="privacy-text">Privacy Mode</span>
+                </button>
+            </div>
+            
             <!-- Update Prices Button -->
-            <div class="mt-8 pt-6 border-t border-gray-600/30">
+            <div class="mt-4">
                 <a href="{{ url_for('update_prices') }}" class="w-full flex items-center justify-center px-4 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important; box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4) !important;">
                     <i class="fas fa-sync-alt mr-2"></i>
                     Update Prices
@@ -223,35 +224,55 @@
             // Force initialize after a short delay to ensure it works
             setTimeout(initializeMobile, 100);
             
-            // Privacy Toggle Functionality
+            // Privacy Mode Toggle
             const privacyToggle = document.getElementById('privacy-toggle');
-            const privacyIcon = privacyToggle.querySelector('i');
-            let isPrivacyMode = localStorage.getItem('privacyMode') === 'true';
+            const privacyIcon = document.getElementById('privacy-icon');
+            const privacyText = document.getElementById('privacy-text');
             
             // Initialize privacy mode state
-            function initializePrivacyMode() {
-                if (isPrivacyMode) {
-                    document.body.classList.add('privacy-mode');
-                    privacyIcon.classList.remove('fa-eye');
-                    privacyIcon.classList.add('fa-eye-slash');
-                    privacyToggle.title = 'Show financial figures';
+            let privacyMode = localStorage.getItem('privacyMode') === 'true';
+            
+            function updatePrivacyButton() {
+                if (privacyMode) {
+                    privacyIcon.className = 'fas fa-eye-slash mr-2';
+                    privacyText.textContent = 'Privacy On';
+                    privacyToggle.classList.add('bg-blue-600/70', 'text-white');
+                    privacyToggle.classList.remove('bg-slate-700/50', 'text-gray-300');
                 } else {
-                    document.body.classList.remove('privacy-mode');
-                    privacyIcon.classList.remove('fa-eye-slash');
-                    privacyIcon.classList.add('fa-eye');
-                    privacyToggle.title = 'Hide financial figures';
+                    privacyIcon.className = 'fas fa-eye mr-2';
+                    privacyText.textContent = 'Privacy Mode';
+                    privacyToggle.classList.remove('bg-blue-600/70', 'text-white');
+                    privacyToggle.classList.add('bg-slate-700/50', 'text-gray-300');
                 }
             }
             
-            // Toggle privacy mode
-            privacyToggle.addEventListener('click', function() {
-                isPrivacyMode = !isPrivacyMode;
-                localStorage.setItem('privacyMode', isPrivacyMode);
-                initializePrivacyMode();
-            });
+            function togglePrivacyMode() {
+                privacyMode = !privacyMode;
+                localStorage.setItem('privacyMode', privacyMode);
+                updatePrivacyButton();
+                applyPrivacyMode();
+            }
             
-            // Initialize on page load
-            initializePrivacyMode();
+            function applyPrivacyMode() {
+                const elements = document.querySelectorAll('.privacy-sensitive');
+                elements.forEach(element => {
+                    if (privacyMode) {
+                        element.style.filter = 'blur(8px)';
+                        element.style.transition = 'filter 0.3s ease';
+                    } else {
+                        element.style.filter = 'none';
+                        element.style.transition = 'filter 0.3s ease';
+                    }
+                });
+            }
+            
+            if (privacyToggle) {
+                privacyToggle.addEventListener('click', togglePrivacyMode);
+                updatePrivacyButton();
+                // Apply privacy mode on page load
+                setTimeout(applyPrivacyMode, 100);
+            }
+
         });
     </script>
     

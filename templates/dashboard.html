@@ -29,7 +29,7 @@
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Current Net Worth</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">£{{ "{:,.2f}".format(current_net_worth) }}</p>
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate privacy-sensitive">£{{ "{:,.2f}".format(current_net_worth) }}</p>
                 </div>
             </div>
         </div>
@@ -77,7 +77,7 @@
                                         <div class="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 mt-1" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
                                         <h3 class="font-medium text-white text-base">{{ platform }}</h3>
                                     </div>
-                                    <div class="font-bold text-white text-sm">£{{ "{:,.0f}".format(amount) }}</div>
+                                    <div class="font-bold text-white text-sm privacy-sensitive">£{{ "{:,.0f}".format(amount) }}</div>
                                 </div>
                                 
                                 <!-- Secondary row with percentage and change -->
@@ -157,20 +157,20 @@
                                          style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb) !important;">
                                         <!-- Current Value Inside Bar -->
                                         {% if progress_info.progress_percentage > 20 %}
-                                        <span class="text-white font-semibold text-sm drop-shadow-lg">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span class="text-white font-semibold text-sm drop-shadow-lg privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                         {% endif %}
                                     </div>
                                     
                                     <!-- Current Value Outside Bar (if bar too small) -->
                                     {% if progress_info.progress_percentage <= 20 %}
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                     </div>
                                     {% endif %}
                                     
                                     <!-- Target Amount at End -->
                                     <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-gray-200 font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded">£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
+                                        <span class="text-gray-200 font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded privacy-sensitive">£{{ "{:,.0f}".format(next_target.target_amount) }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -182,7 +182,7 @@
                             <div class="bg-gradient-to-br from-purple-500/15 to-purple-600/25 rounded-lg p-2 border border-purple-400/20 backdrop-blur-sm">
                                 <div class="text-center">
                                     <div class="text-purple-300 text-xs font-medium mb-1 uppercase tracking-wide">Days Remaining</div>
-                                    <div class="text-xl font-semibold text-purple-200">
+                                    <div class="text-xl font-semibold text-purple-200 privacy-sensitive">
                                         {{ progress_info.days_remaining if progress_info.days_remaining > 0 else 0 }}
                                     </div>
                                 </div>
@@ -192,7 +192,7 @@
                             <div class="bg-gradient-to-br from-blue-500/15 to-blue-600/25 rounded-lg p-2 border border-blue-400/20 backdrop-blur-sm">
                                 <div class="text-center">
                                     <div class="text-blue-300 text-xs font-medium mb-1 uppercase tracking-wide">Amount Remaining</div>
-                                    <div class="text-xl font-semibold text-blue-200">
+                                    <div class="text-xl font-semibold text-blue-200 privacy-sensitive">
                                         £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
                                     </div>
                                 </div>
@@ -283,7 +283,7 @@
                         </div>
                     </div>
                     <div class="p-3 sm:p-4">
-                        <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
+                        <div class="relative h-80 bg-gray-800/50 rounded-xl p-4 privacy-sensitive">
                             <canvas id="millionPredictionChart" width="400" height="300"></canvas>
                         </div>
                         <div id="predictionChartLoading" class="text-center py-8 hidden">
@@ -292,7 +292,7 @@
                         </div>
                         
                         <!-- Key Milestones -->
-                        <div class="mt-4 space-y-2">
+                        <div class="mt-4 space-y-2 privacy-sensitive">
                             <h3 class="text-sm font-semibold text-gray-300 mb-3">Key Milestones</h3>
                             <div class="grid grid-cols-2 gap-3 text-xs">
                                 <div id="milestone-100k" class="flex justify-between p-2 bg-gray-700/30 rounded">
@@ -350,7 +350,7 @@
                         <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
                     </div>
                 </div>
-                <div class="relative h-96 bg-gray-800/50 rounded-xl p-4">
+                <div class="relative h-96 bg-gray-800/50 rounded-xl p-4 privacy-sensitive">
                     <canvas id="networthChartSeparate" width="400" height="300"></canvas>
                 </div>
                 <div id="chartLoadingSeparate" class="text-center py-8">
