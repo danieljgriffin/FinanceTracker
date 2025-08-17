@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>{% block title %}Net Worth Tracker{% endblock %}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NetWorth">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/icons/icon-192x192.svg">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        /* Mobile-specific liquid glass effects */
+        .mobile-glass {
+            background: rgba(255, 255, 255, 0.08) !important;
+            backdrop-filter: blur(20px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        
+        .mobile-card {
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(15px) !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        
+        /* Mobile navigation styles */
+        .mobile-nav-item {
+            transition: all 0.3s ease;
+        }
+        
+        .mobile-nav-item.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+        }
+        
+        .mobile-nav-item.active i {
+            color: #3b82f6;
+        }
+        
+        /* Hide scrollbars but keep functionality */
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Mobile-optimized animations */
+        .mobile-bounce {
+            animation: mobileBounce 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        @keyframes mobileBounce {
+            0%, 20%, 53%, 80%, 100% { transform: translate3d(0, 0, 0); }
+            40%, 43% { transform: translate3d(0, -8px, 0); }
+            70% { transform: translate3d(0, -4px, 0); }
+            90% { transform: translate3d(0, -2px, 0); }
+        }
+        
+        /* Privacy mode for mobile */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 min-h-screen text-white">
+    <!-- Mobile Main Content -->
+    <div class="pb-20 min-h-screen">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 mobile-glass border-t-0 z-50">
+        <div class="flex justify-around items-center py-3 px-2">
+            <!-- Dashboard -->
+            <a href="{{ url_for('dashboard') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-pie text-lg mb-1 {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <span class="text-xs {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}">Dashboard</span>
+            </a>
+            
+            <!-- Goals -->
+            <a href="{{ url_for('goals') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'goals' %}active{% endif %}">
+                <i class="fas fa-bullseye text-lg mb-1 {% if request.endpoint == 'goals' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <span class="text-xs {% if request.endpoint == 'goals' %}text-blue-400{% else %}text-gray-400{% endif %}">Goals</span>
+            </a>
+            
+            <!-- Yearly Tracker -->
+            <a href="{{ url_for('yearly_tracker') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'yearly_tracker' %}active{% endif %}">
+                <i class="fas fa-calendar-alt text-lg mb-1 {% if request.endpoint == 'yearly_tracker' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <span class="text-xs {% if request.endpoint == 'yearly_tracker' %}text-blue-400{% else %}text-gray-400{% endif %}">Yearly</span>
+            </a>
+            
+            <!-- Portfolio -->
+            <a href="{{ url_for('portfolio') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'portfolio' %}active{% endif %}">
+                <i class="fas fa-briefcase text-lg mb-1 {% if request.endpoint == 'portfolio' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <span class="text-xs {% if request.endpoint == 'portfolio' %}text-blue-400{% else %}text-gray-400{% endif %}">Portfolio</span>
+            </a>
+            
+            <!-- Settings/More -->
+            <button onclick="showMobileMenu()" 
+                    class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-ellipsis-h text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">More</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-60 hidden" onclick="hideMobileMenu()"></div>
+    <div id="mobileMenu" class="fixed bottom-0 left-0 right-0 mobile-glass rounded-t-3xl p-6 z-70 transform translate-y-full transition-transform duration-300">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-white">Options</h3>
+            <button onclick="hideMobileMenu()" class="text-gray-400 hover:text-white">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4">
+            <!-- Privacy Toggle -->
+            <button onclick="togglePrivacyMode()" 
+                    class="w-full flex items-center justify-between p-4 mobile-card rounded-xl">
+                <div class="flex items-center">
+                    <i id="privacyIcon" class="fas fa-eye text-blue-400 w-6"></i>
+                    <span id="privacyText" class="ml-3 text-white">Privacy Mode</span>
+                </div>
+                <div class="w-12 h-6 bg-gray-600 rounded-full relative transition-colors duration-300" id="privacyToggle">
+                    <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform duration-300" id="privacySlider"></div>
+                </div>
+            </button>
+            
+            <!-- Update Prices -->
+            <button onclick="updatePrices(); hideMobileMenu();" 
+                    class="w-full flex items-center p-4 mobile-card rounded-xl hover:bg-gray-700/30 transition-colors">
+                <i class="fas fa-sync-alt text-green-400 w-6"></i>
+                <span class="ml-3 text-white">Update Prices</span>
+            </button>
+            
+            <!-- Monthly Breakdown -->
+            <a href="{{ url_for('monthly_breakdown') }}" 
+               class="w-full flex items-center p-4 mobile-card rounded-xl hover:bg-gray-700/30 transition-colors">
+                <i class="fas fa-chart-bar text-purple-400 w-6"></i>
+                <span class="ml-3 text-white">Monthly Breakdown</span>
+            </a>
+            
+            <!-- Settings -->
+            <button onclick="showSettings()" 
+                    class="w-full flex items-center p-4 mobile-card rounded-xl hover:bg-gray-700/30 transition-colors">
+                <i class="fas fa-cog text-gray-400 w-6"></i>
+                <span class="ml-3 text-white">Settings</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- PWA Install Prompt -->
+    <div id="pwaInstallPrompt" class="fixed bottom-24 left-4 right-4 mobile-glass rounded-xl p-4 z-50 hidden">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <h4 class="text-white font-medium">Install App</h4>
+                <p class="text-gray-300 text-sm">Add to home screen for better experience</p>
+            </div>
+            <div class="flex space-x-2 ml-4">
+                <button onclick="hidePWAPrompt()" class="px-3 py-1 text-gray-300 text-sm">Later</button>
+                <button onclick="installPWA()" class="px-3 py-1 bg-blue-600 text-white rounded text-sm">Install</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript -->
+    <script>
+        // PWA Installation
+        let deferredPrompt;
+        let privacyMode = localStorage.getItem('privacyMode') === 'true';
+        
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => console.log('SW registered'))
+                    .catch(error => console.log('SW registration failed'));
+            });
+        }
+        
+        // PWA Install Prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('pwaInstallPrompt').classList.remove('hidden');
+        });
+        
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((result) => {
+                    deferredPrompt = null;
+                    hidePWAPrompt();
+                });
+            }
+        }
+        
+        function hidePWAPrompt() {
+            document.getElementById('pwaInstallPrompt').classList.add('hidden');
+        }
+        
+        // Mobile Menu Functions
+        function showMobileMenu() {
+            document.getElementById('mobileMenuOverlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('mobileMenu').style.transform = 'translateY(0)';
+            }, 10);
+        }
+        
+        function hideMobileMenu() {
+            document.getElementById('mobileMenu').style.transform = 'translateY(100%)';
+            setTimeout(() => {
+                document.getElementById('mobileMenuOverlay').classList.add('hidden');
+            }, 300);
+        }
+        
+        // Privacy Mode Functions
+        function togglePrivacyMode() {
+            privacyMode = !privacyMode;
+            localStorage.setItem('privacyMode', privacyMode);
+            updatePrivacyUI();
+            applyPrivacyMode();
+        }
+        
+        function updatePrivacyUI() {
+            const icon = document.getElementById('privacyIcon');
+            const text = document.getElementById('privacyText');
+            const toggle = document.getElementById('privacyToggle');
+            const slider = document.getElementById('privacySlider');
+            
+            if (privacyMode) {
+                icon.className = 'fas fa-eye-slash text-blue-400 w-6';
+                text.textContent = 'Privacy On';
+                toggle.classList.add('bg-blue-600');
+                toggle.classList.remove('bg-gray-600');
+                slider.style.transform = 'translateX(24px)';
+            } else {
+                icon.className = 'fas fa-eye text-blue-400 w-6';
+                text.textContent = 'Privacy Mode';
+                toggle.classList.remove('bg-blue-600');
+                toggle.classList.add('bg-gray-600');
+                slider.style.transform = 'translateX(0)';
+            }
+        }
+        
+        function applyPrivacyMode() {
+            const elements = document.querySelectorAll('.privacy-sensitive');
+            elements.forEach(element => {
+                if (privacyMode) {
+                    element.classList.add('privacy-blur');
+                } else {
+                    element.classList.remove('privacy-blur');
+                }
+            });
+        }
+        
+        // Update Prices Function
+        function updatePrices() {
+            fetch('/update-prices', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePrivacyUI();
+            applyPrivacyMode();
+        });
+        
+        {% block scripts %}{% endblock %}
+    </script>
+</body>
+</html>

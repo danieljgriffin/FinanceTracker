@@ -1,8 +1,9 @@
 import os
 import logging
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
+from utils.device_detector import get_template_path, is_mobile_device
 from datetime import datetime, timedelta
 import pytz
 import json
@@ -53,6 +54,19 @@ with app.app_context():
 
 # Price refresh settings
 PRICE_REFRESH_INTERVAL = 900  # 15 minutes in seconds
+
+# PWA Routes
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory('static', 'manifest.json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    return send_from_directory('static', 'service-worker.js')
+
+@app.route('/static/icons/<path:filename>')
+def app_icons(filename):
+    return send_from_directory('static/icons', filename)
 last_price_update = None
 price_update_thread = None
 
@@ -290,7 +304,7 @@ def dashboard():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
-        return render_template('dashboard.html', 
+        return render_template(get_template_path('dashboard.html'), 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -305,11 +319,12 @@ def dashboard():
                              last_price_update=last_price_update,
                              next_target=next_target,
                              progress_info=progress_info,
-                             upcoming_targets=upcoming_targets)
+                             upcoming_targets=upcoming_targets,
+                             is_mobile=is_mobile_device())
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
-        return render_template('dashboard.html', 
+        return render_template(get_template_path('dashboard.html'), 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
@@ -324,7 +339,8 @@ def dashboard():
                              last_price_update=None,
                              next_target=None,
                              progress_info=None,
-                             upcoming_targets=[])
+                             upcoming_targets=[],
+                             is_mobile=is_mobile_device())
 
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')

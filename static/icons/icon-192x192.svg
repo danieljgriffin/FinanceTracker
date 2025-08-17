@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <!-- Background Circle -->
+  <circle cx="96" cy="96" r="88" fill="#1a1a2e"/>
+  <circle cx="96" cy="96" r="80" fill="url(#gradient)"/>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Currency Symbol -->
+  <text x="96" y="110" font-family="Arial, sans-serif" font-size="56" font-weight="bold" text-anchor="middle" fill="white">£</text>
+  
+  <!-- Chart Lines -->
+  <path d="M40 130 L60 120 L80 110 L100 100 L120 90 L140 80 L160 70" stroke="white" stroke-width="3" fill="none" opacity="0.8"/>
+  <circle cx="160" cy="70" r="3" fill="white"/>
+</svg>

@@ -15,6 +15,7 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: Tailwind CSS for responsive design and Font Awesome for icons.
 - **Interactivity**: Minimal vanilla JavaScript.
 - **UI/UX Decisions**: Liquid glass modal system, consistent rounded corners across all UI elements (cards, forms, buttons), dark mode with multi-layered gradient background, and a fixed left sidebar navigation with active state highlighting. Custom iPhone home screen icon.
+- **Progressive Web App (PWA)**: Separate mobile templates with bottom tab navigation, installable app experience, offline functionality, and mobile-optimized layouts. Device detection automatically serves appropriate templates.
 
 ### Backend
 - **Framework**: Flask (Python).
@@ -28,7 +29,8 @@ Preferred communication style: Simple, everyday language.
 - **Real-time Price Fetching**: Utilizes `yfinance` for stocks and a custom CoinGecko integration for cryptocurrencies. Includes specialized web scraping for specific HL LISA funds and automatic USD to GBP conversion for US stocks, and pence to pounds conversion for UK stocks. Features automatic background price updates every 15 minutes with status display and manual override.
 - **Editable Interface**: Allows in-app editing of financial data (income, monthly values, investments) with immediate persistence.
 - **Goals Tracking**: Comprehensive goal tracking system with progress visualization, compound interest calculator, and quarterly milestone tracking similar to the user's Google Sheets approach.
-- **Comprehensive Responsiveness**: Mobile-first design ensures compatibility across devices, including optimized mobile navigation and touch interactions.
+- **PWA Mobile Experience**: Separate mobile templates with bottom tab navigation, touch-optimized interactions, installable app functionality, and privacy mode. Device detection serves appropriate templates automatically.
+- **Privacy Mode**: Toggle functionality to blur sensitive financial data while preserving growth metrics, works across both desktop and mobile versions.
 
 ## External Dependencies
 

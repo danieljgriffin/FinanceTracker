@@ -1,0 +1,312 @@
+{% extends "mobile/base.html" %}
+
+{% block title %}Dashboard - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<!-- Mobile Header -->
+<div class="sticky top-0 z-40 mobile-glass">
+    <div class="flex items-center justify-between p-4">
+        <div>
+            <h1 class="text-xl font-bold text-white">Dashboard</h1>
+            <p class="text-sm text-gray-300">{{ current_date }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            {% if last_price_update %}
+            <div class="text-xs text-gray-400">
+                <i class="fas fa-clock mr-1"></i>
+                Updated {{ last_price_update.strftime('%H:%M') }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Content Container -->
+<div class="px-4 space-y-4">
+    
+    <!-- Current Net Worth Card -->
+    <div class="mobile-card rounded-2xl p-6">
+        <div class="text-center">
+            <p class="text-sm text-gray-300 mb-2">Current Net Worth</p>
+            <h2 class="text-3xl font-bold text-white privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</h2>
+            
+            <!-- Changes Row -->
+            <div class="flex justify-center space-x-6 mt-4">
+                <!-- Month-on-Month -->
+                <div class="text-center">
+                    <p class="text-xs text-gray-400">Month-on-Month</p>
+                    <p class="text-lg font-semibold {% if mom_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if mom_change >= 0 %}+{% endif %}{{ "{:.1f}".format(mom_change) }}%
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        {% if mom_amount_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(mom_amount_change) }}
+                    </p>
+                </div>
+                
+                <!-- Yearly Change -->
+                <div class="text-center">
+                    <p class="text-xs text-gray-400">Yearly</p>
+                    <p class="text-lg font-semibold {% if yearly_increase >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if yearly_increase >= 0 %}+{% endif %}{{ "{:.1f}".format(yearly_increase) }}%
+                    </p>
+                    <p class="text-xs text-gray-500">
+                        {% if yearly_amount_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(yearly_amount_change) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Target Progress (Mobile Optimized) -->
+    {% if next_target and progress_info %}
+    <div class="mobile-card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-white">Next Target</h3>
+            <span class="text-xs bg-blue-600/20 text-blue-300 px-2 py-1 rounded-full">
+                {{ progress_info.days_remaining }} days left
+            </span>
+        </div>
+        
+        <!-- Target Info -->
+        <div class="mb-4">
+            <h4 class="text-white font-medium privacy-sensitive">{{ next_target.title }}</h4>
+            <div class="flex justify-between items-end mt-2">
+                <span class="text-gray-400 text-sm">Progress</span>
+                <span class="text-white font-semibold privacy-sensitive">
+                    £{{ "{:,.0f}".format(current_net_worth) }} / £{{ "{:,.0f}".format(next_target.target_amount) }}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-gray-700 rounded-full h-3 mb-4">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-400 h-3 rounded-full transition-all duration-500" 
+                 style="width: {{ progress_info.progress_percentage }}%"></div>
+        </div>
+        
+        <!-- Stats Row -->
+        <div class="grid grid-cols-2 gap-4">
+            <div class="text-center">
+                <p class="text-xs text-gray-400">Remaining</p>
+                <p class="text-lg font-semibold text-blue-300 privacy-sensitive">
+                    £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
+                </p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-gray-400">Completion</p>
+                <p class="text-lg font-semibold text-green-400">
+                    {{ "{:.1f}".format(progress_info.progress_percentage) }}%
+                </p>
+            </div>
+        </div>
+        
+        <!-- Action Button -->
+        <div class="mt-4">
+            <a href="{{ url_for('goals') }}" 
+               class="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white py-3 px-4 rounded-xl font-medium transition-all duration-300 flex items-center justify-center">
+                <i class="fas fa-bullseye mr-2"></i>
+                View All Goals
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Portfolio Breakdown -->
+    <div class="mobile-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Portfolio Breakdown</h3>
+        
+        <div class="space-y-3">
+            {% for platform, amount in platform_allocations.items() %}
+            <div class="flex items-center justify-between p-3 bg-gray-800/30 rounded-xl">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 rounded-full mr-3" style="background-color: {{ platform_colors[platform] }}"></div>
+                    <div>
+                        <p class="text-white font-medium text-sm">{{ platform }}</p>
+                        <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-white font-semibold privacy-sensitive">£{{ "{:,.0f}".format(amount) }}</p>
+                    {% if platform in platform_monthly_changes %}
+                    {% set change = platform_monthly_changes[platform] %}
+                    <p class="text-xs {% if change.amount >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        {% if change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(change.amount) }}
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Upcoming Targets (Mobile) -->
+    {% if upcoming_targets %}
+    <div class="mobile-card rounded-2xl p-6 privacy-sensitive">
+        <h3 class="text-lg font-semibold text-white mb-4">
+            <i class="fas fa-clock mr-2 text-blue-400"></i>
+            Upcoming Targets
+        </h3>
+        
+        <div class="space-y-3">
+            {% for target in upcoming_targets %}
+            <div class="flex items-center justify-between p-3 bg-gray-800/30 rounded-xl">
+                <div class="flex-1">
+                    <p class="text-white font-medium text-sm">{{ target.title }}</p>
+                    <p class="text-xs text-gray-400">
+                        {{ target.target_date.strftime('%b %Y') }} • £{{ "{:,.0f}".format(target.target_amount) }}
+                    </p>
+                </div>
+                <div class="text-right">
+                    {% set days_from_now = (target.target_date - today.date()).days %}
+                    {% set months_away = (days_from_now / 30) | round | int %}
+                    <span class="text-xs bg-gray-700/50 text-gray-300 px-2 py-1 rounded-full">
+                        {% if months_away <= 1 %}
+                            Soon
+                        {% elif months_away < 12 %}
+                            {{ months_away }}m
+                        {% else %}
+                            {{ (months_away / 12) | round | int }}y
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Quick Actions -->
+    <div class="mobile-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
+        
+        <div class="grid grid-cols-2 gap-3">
+            <a href="{{ url_for('portfolio') }}" 
+               class="bg-gray-800/40 hover:bg-gray-700/40 p-4 rounded-xl transition-colors flex flex-col items-center">
+                <i class="fas fa-briefcase text-2xl text-blue-400 mb-2"></i>
+                <span class="text-white text-sm font-medium">Portfolio</span>
+            </a>
+            
+            <a href="{{ url_for('monthly_breakdown') }}" 
+               class="bg-gray-800/40 hover:bg-gray-700/40 p-4 rounded-xl transition-colors flex flex-col items-center">
+                <i class="fas fa-chart-bar text-2xl text-purple-400 mb-2"></i>
+                <span class="text-white text-sm font-medium">Monthly</span>
+            </a>
+            
+            <button onclick="updatePrices()" 
+                    class="bg-gray-800/40 hover:bg-gray-700/40 p-4 rounded-xl transition-colors flex flex-col items-center">
+                <i class="fas fa-sync-alt text-2xl text-green-400 mb-2"></i>
+                <span class="text-white text-sm font-medium">Update</span>
+            </button>
+            
+            <button onclick="showMobileMenu()" 
+                    class="bg-gray-800/40 hover:bg-gray-700/40 p-4 rounded-xl transition-colors flex flex-col items-center">
+                <i class="fas fa-cog text-2xl text-gray-400 mb-2"></i>
+                <span class="text-white text-sm font-medium">Settings</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Mobile Chart Section -->
+    <div class="mobile-card rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-white mb-4">Net Worth Trend</h3>
+        
+        <div class="relative h-64 privacy-sensitive">
+            <canvas id="mobileNetWorthChart" width="400" height="200"></canvas>
+        </div>
+        
+        <div id="mobileChartLoading" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+            <p class="text-gray-400 text-sm">Loading chart data...</p>
+        </div>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Mobile Chart Implementation
+document.addEventListener('DOMContentLoaded', function() {
+    // Mobile-optimized chart
+    const mobileCtx = document.getElementById('mobileNetWorthChart').getContext('2d');
+    
+    // Simplified chart for mobile
+    fetch('/api/chart-data')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('mobileChartLoading').style.display = 'none';
+            
+            new Chart(mobileCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels.slice(-12), // Last 12 months only
+                    datasets: [{
+                        label: 'Net Worth',
+                        data: data.values.slice(-12),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#9ca3af',
+                                maxTicksLimit: 6
+                            }
+                        },
+                        y: {
+                            display: true,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#9ca3af',
+                                callback: function(value) {
+                                    return '£' + (value / 1000).toFixed(0) + 'k';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error loading mobile chart:', error);
+            document.getElementById('mobileChartLoading').innerHTML = 
+                '<p class="text-red-400 text-sm">Error loading chart</p>';
+        });
+});
+
+// Mobile-specific interactions
+function showSettings() {
+    alert('Settings functionality coming soon!');
+}
+
+// Touch-friendly interactions
+document.addEventListener('touchstart', function() {}, true);
+</script>
+{% endblock %}

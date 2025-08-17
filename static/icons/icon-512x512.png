@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Background Circle -->
+  <circle cx="256" cy="256" r="240" fill="#1a1a2e"/>
+  <circle cx="256" cy="256" r="220" fill="url(#gradient)"/>
+  
+  <!-- Gradient Definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1d4ed8;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Currency Symbol -->
+  <text x="256" y="300" font-family="Arial, sans-serif" font-size="150" font-weight="bold" text-anchor="middle" fill="white">£</text>
+  
+  <!-- Chart Lines -->
+  <path d="M100 350 L150 330 L200 310 L250 290 L300 270 L350 250 L400 230" stroke="white" stroke-width="8" fill="none" opacity="0.8"/>
+  <circle cx="400" cy="230" r="8" fill="white"/>
+  
+  <!-- Additional decorative elements -->
+  <path d="M120 380 L170 365 L220 350 L270 335 L320 320" stroke="white" stroke-width="4" fill="none" opacity="0.4"/>
+  <path d="M140 400 L190 390 L240 380 L290 370" stroke="white" stroke-width="3" fill="none" opacity="0.3"/>
+</svg>
