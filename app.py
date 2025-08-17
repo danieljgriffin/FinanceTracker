@@ -138,9 +138,9 @@ def prepare_mobile_chart_data(data_manager):
             years_added = set()
             
             for i, data_point in enumerate(max_data):
-                # Calculate position (0-320 width, 30-160 height range)
-                x = int((i / (len(max_data) - 1)) * 320) if len(max_data) > 1 else 160
-                y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
+                # Calculate position (20-340 width to leave margin, 40-200 height range)
+                x = 20 + int((i / (len(max_data) - 1)) * 320) if len(max_data) > 1 else 180
+                y = 200 - int(((data_point['value'] - min_val) / value_range) * 160) if value_range > 0 else 120
                 max_points.append(f"{x},{y}")
                 
                 # Add year labels only once per year
@@ -185,12 +185,12 @@ def prepare_mobile_chart_data(data_manager):
                 
                 for month_num in range(1, month_range + 1):
                     if month_num in month_positions:
-                        # Calculate X position based on available month range
-                        x = int(((month_num - 1) / (month_range - 1)) * 320) if month_range > 1 else 160
+                        # Calculate X position with margins (20-340 range)
+                        x = 20 + int(((month_num - 1) / (month_range - 1)) * 320) if month_range > 1 else 180
                         
-                        # Calculate Y position
+                        # Calculate Y position with increased height (40-200 range)
                         data_point = month_positions[month_num]
-                        y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
+                        y = 200 - int(((data_point['value'] - min_val) / value_range) * 160) if value_range > 0 else 120
                         year_points.append(f"{x},{y}")
                         
                         # Add month label

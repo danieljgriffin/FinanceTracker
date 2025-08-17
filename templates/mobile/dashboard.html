@@ -72,8 +72,8 @@
         
         <!-- Full Width Chart -->
         <div class="mb-6">
-            <div class="h-48 w-full relative">
-                <svg viewBox="0 0 400 192" class="w-full h-full" id="portfolioChart">
+            <div class="h-64 w-full relative">
+                <svg viewBox="0 0 400 256" class="w-full h-full" id="portfolioChart">
                     <!-- Chart elements will be dynamically updated -->
                 </svg>
                 
@@ -246,10 +246,10 @@
                 ${dataPoints}
                 ${currentPointMarkup}
                 ${data.yLabels.map(label => 
-                    `<text x="390" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
+                    `<text x="385" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
                 ).join('')}
                 ${data.xLabels.map(label => 
-                    `<text x="${label.x}" y="185" font-size="10" fill="${label.text.includes('*') ? '#00d4ff' : '#6b7280'}" text-anchor="middle">${label.text}</text>`
+                    `<text x="${label.x}" y="240" font-size="10" fill="${label.text.includes('*') ? '#00d4ff' : '#6b7280'}" text-anchor="middle">${label.text}</text>`
                 ).join('')}
             `;
             
@@ -316,8 +316,8 @@
                 const x = clientX - rect.left;
                 const xPercent = x / rect.width;
                 
-                // Calculate chart position (0-320 range in SVG viewBox)
-                const chartX = xPercent * 320;
+                // Calculate chart position (20-340 range in SVG viewBox with margins)
+                const chartX = 20 + (xPercent * 320);
                 
                 // Find closest data point and snap to it
                 const closestPoint = getClosestDataPoint(chartX);
