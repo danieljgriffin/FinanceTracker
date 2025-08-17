@@ -32,6 +32,12 @@
         .nav-icon.active {
             color: #00d4ff !important;
         }
+
+        /* Privacy mode styles */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
         
 
     </style>
@@ -49,8 +55,11 @@
         
         <!-- Portfolio Value -->
         <div class="px-4 mb-6">
-            <div class="mb-4">
-                <span class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</span>
+            <div class="mb-4 flex items-center justify-between">
+                <span id="portfolioValue" class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</span>
+                <button onclick="togglePrivacy()" class="ml-3 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
+                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
+                </button>
             </div>
             
             <!-- Monthly and Yearly Stats -->
@@ -82,7 +91,7 @@
         
         <!-- Full Width Chart -->
         <div class="mb-6">
-            <div class="h-64 w-full relative">
+            <div id="chartContainer" class="h-64 w-full relative">
                 <svg viewBox="0 0 400 256" class="w-full h-full" id="portfolioChart">
                     <!-- Chart elements will be dynamically updated -->
                 </svg>
@@ -132,7 +141,7 @@
         <!-- Investment List -->
         <div class="px-4 space-y-3">
             {% for platform, amount in platform_allocations.items() %}
-            <div class="flex items-center justify-between py-3">
+            <div class="flex items-center justify-between py-3 breakdown-item">
                 <div class="flex items-center space-x-3">
                     <!-- Platform Icon -->
                     <div class="w-10 h-10 rounded-lg flex items-center justify-center" 
@@ -149,7 +158,7 @@
                 
                 <!-- Value and Change -->
                 <div class="text-right">
-                    <div class="text-white font-semibold">£{{ "{:,.2f}".format(amount) }}</div>
+                    <div class="text-white font-semibold breakdown-value">£{{ "{:,.2f}".format(amount) }}</div>
                     {% set platform_change = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0}) %}
                     <div class="text-{% if platform_change.amount >= 0 %}green{% else %}red{% endif %}-400 text-sm">
                         {% if platform_change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_change.amount) }}
@@ -417,6 +426,31 @@
                 e.preventDefault();
             }, { passive: false });
         });
+
+        // Privacy toggle functionality
+        let privacyMode = false;
+
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            const icon = document.getElementById('privacyIcon');
+            const portfolioValue = document.getElementById('portfolioValue');
+            const chartContainer = document.getElementById('chartContainer');
+            const breakdownValues = document.querySelectorAll('.breakdown-value');
+
+            if (privacyMode) {
+                // Enable privacy mode
+                icon.className = 'fas fa-eye-slash text-blue-400 text-lg';
+                portfolioValue.classList.add('privacy-blur');
+                chartContainer.classList.add('privacy-blur');
+                breakdownValues.forEach(el => el.classList.add('privacy-blur'));
+            } else {
+                // Disable privacy mode
+                icon.className = 'fas fa-eye text-gray-400 text-lg';
+                portfolioValue.classList.remove('privacy-blur');
+                chartContainer.classList.remove('privacy-blur');
+                breakdownValues.forEach(el => el.classList.remove('privacy-blur'));
+            }
+        }
     </script>
 </body>
 </html>
