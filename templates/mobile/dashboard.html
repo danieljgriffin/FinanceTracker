@@ -77,8 +77,16 @@
                     <!-- Chart elements will be dynamically updated -->
                 </svg>
                 
-                <!-- Interactive overlay for touch/hover -->
-                <div id="chartOverlay" class="absolute inset-0 bg-transparent"></div>
+                <!-- Interactive overlay for touch/hover - constrained to chart area -->
+                <div id="chartOverlay" class="absolute bg-transparent cursor-pointer" 
+                     style="left: 5%; right: 5%; top: 15%; bottom: 15%;"
+                     onmousedown="startInteraction(event)"
+                     onmousemove="updateHoverPosition(event)"
+                     onmouseup="endInteraction()"
+                     onmouseleave="endInteraction()"
+                     ontouchstart="startInteraction(event)"
+                     ontouchmove="updateHoverPosition(event)"
+                     ontouchend="endInteraction()"></div>
                 
                 <!-- Hover indicator line and value display -->
                 <div id="hoverIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
@@ -312,19 +320,22 @@
                 if (!currentChartData || !isInteracting) return;
                 
                 const rect = overlay.getBoundingClientRect();
+                const parentRect = overlay.parentElement.getBoundingClientRect();
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const x = clientX - rect.left;
                 const xPercent = x / rect.width;
                 
-                // Calculate chart position (20-340 range in SVG viewBox with margins)
+                // Calculate chart position (20-340 range in SVG viewBox)
+                // Since overlay is constrained to chart area, xPercent directly maps to chart
                 const chartX = 20 + (xPercent * 320);
                 
                 // Find closest data point and snap to it
                 const closestPoint = getClosestDataPoint(chartX);
                 
                 if (closestPoint) {
-                    // Snap indicator to the exact dot position
-                    const snapX = (closestPoint.x / 320) * rect.width;
+                    // Calculate snap position relative to parent container (full chart area)
+                    const parentWidth = parentRect.width;
+                    const snapX = ((closestPoint.x - 20) / 320) * (parentWidth * 0.9) + (parentWidth * 0.05);
                     indicator.style.left = `${snapX}px`;
                     
                     // Get value for this specific point
@@ -336,8 +347,8 @@
                         document.getElementById('tooltipDate').textContent = dateInfo.includes('*') ? dateInfo : `1st ${dateInfo}`;
                         tooltip.style.opacity = '1';
                         
-                        // Position tooltip at snapped position
-                        const tooltipX = Math.max(0, Math.min(rect.width - 80, snapX - 40));
+                        // Position tooltip at snapped position relative to parent
+                        const tooltipX = Math.max(0, Math.min(parentWidth - 80, snapX - 40));
                         tooltip.style.left = `${tooltipX}px`;
                         tooltip.style.top = '10px';
                     } else {
