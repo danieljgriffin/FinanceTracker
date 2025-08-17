@@ -36,6 +36,9 @@ price_fetcher = PriceFetcher()
 price_cache = {}
 CACHE_DURATION = 300  # 5 minutes cache for API calls
 
+# Global variable to track last price update
+last_price_update = None
+
 # Initialize data manager
 from utils.db_data_manager import DatabaseDataManager
 
@@ -671,6 +674,10 @@ def mobile_dashboard():
         # Prepare chart data for different time ranges
         chart_data = prepare_mobile_chart_data(data_manager)
         
+        # Get last updated time from global variable
+        global last_price_update
+        last_updated = last_price_update
+        
         return render_template('mobile/dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
@@ -683,7 +690,8 @@ def mobile_dashboard():
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
-                             chart_data=chart_data)
+                             chart_data=chart_data,
+                             last_updated=last_updated)
     except Exception as e:
         logging.error(f"Error in mobile dashboard: {str(e)}")
         return render_template('mobile/dashboard.html', 

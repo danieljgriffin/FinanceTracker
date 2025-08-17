@@ -55,11 +55,16 @@
         
         <!-- Portfolio Value -->
         <div class="px-4 mb-6">
-            <div class="mb-4 flex items-center justify-between">
+            <div class="mb-2 flex items-center justify-between">
                 <span id="portfolioValue" class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</span>
                 <button onclick="togglePrivacy()" class="ml-3 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
                     <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
                 </button>
+            </div>
+            
+            <!-- Last Updated Info -->
+            <div class="mb-4">
+                <span class="text-gray-400 text-xs">Last updated {{ last_updated.strftime('%H:%M') if last_updated else 'Never' }}</span>
             </div>
             
             <!-- Monthly and Yearly Stats -->
