@@ -93,40 +93,40 @@
     <!-- Mobile Bottom Navigation -->
     <div class="fixed bottom-0 left-0 right-0 mobile-glass border-t-0 z-50">
         <div class="flex justify-around items-center py-3 px-2">
-            <!-- Dashboard -->
+            <!-- Home -->
             <a href="{{ url_for('dashboard') }}" 
                class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                <i class="fas fa-chart-pie text-lg mb-1 {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
-                <span class="text-xs {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}">Dashboard</span>
+                <i class="fas fa-home text-lg mb-1 {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <span class="text-xs {% if request.endpoint == 'dashboard' %}text-blue-400{% else %}text-gray-400{% endif %}">Home</span>
+            </a>
+            
+            <!-- Investment Manager -->
+            <a href="#" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-briefcase text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Investments</span>
+            </a>
+            
+            <!-- Year Month Tracker -->
+            <a href="#" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-calendar-alt text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Tracker</span>
             </a>
             
             <!-- Goals -->
-            <a href="{{ url_for('goals') }}" 
-               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'goals' %}active{% endif %}">
-                <i class="fas fa-bullseye text-lg mb-1 {% if request.endpoint == 'goals' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
-                <span class="text-xs {% if request.endpoint == 'goals' %}text-blue-400{% else %}text-gray-400{% endif %}">Goals</span>
+            <a href="#" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-target text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Goals</span>
             </a>
             
-            <!-- Yearly Tracker -->
-            <a href="{{ url_for('yearly_tracker') }}" 
-               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'yearly_tracker' %}active{% endif %}">
-                <i class="fas fa-calendar-alt text-lg mb-1 {% if request.endpoint == 'yearly_tracker' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
-                <span class="text-xs {% if request.endpoint == 'yearly_tracker' %}text-blue-400{% else %}text-gray-400{% endif %}">Yearly</span>
+            <!-- Monthly Breakdown -->
+            <a href="#" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-chart-bar text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Breakdown</span>
             </a>
-            
-            <!-- Portfolio -->
-            <a href="{{ url_for('portfolio') }}" 
-               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'portfolio' %}active{% endif %}">
-                <i class="fas fa-briefcase text-lg mb-1 {% if request.endpoint == 'portfolio' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
-                <span class="text-xs {% if request.endpoint == 'portfolio' %}text-blue-400{% else %}text-gray-400{% endif %}">Portfolio</span>
-            </a>
-            
-            <!-- Settings/More -->
-            <button onclick="showMobileMenu()" 
-                    class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
-                <i class="fas fa-ellipsis-h text-lg mb-1 text-gray-400"></i>
-                <span class="text-xs text-gray-400">More</span>
-            </button>
         </div>
     </div>
     
