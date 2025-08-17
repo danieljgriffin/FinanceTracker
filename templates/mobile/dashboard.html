@@ -227,14 +227,19 @@
             }
             
             // Update chart
+            const hasCurrentValue = data.hasCurrentValue || false;
+            const points = data.line.split(' ');
+            const lastPoint = points[points.length - 1];
+            
             svg.innerHTML = `
                 <polyline fill="none" stroke="#00d4ff" stroke-width="3" points="${data.line}"/>
                 ${data.yLabels.map(label => 
                     `<text x="390" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
                 ).join('')}
                 ${data.xLabels.map(label => 
-                    `<text x="${label.x}" y="185" font-size="10" fill="#6b7280" text-anchor="middle">${label.text}</text>`
+                    `<text x="${label.x}" y="185" font-size="10" fill="${label.text.includes('*') ? '#00d4ff' : '#6b7280'}" text-anchor="middle">${label.text}</text>`
                 ).join('')}
+                ${hasCurrentValue && lastPoint ? `<circle cx="${lastPoint.split(',')[0]}" cy="${lastPoint.split(',')[1]}" r="4" fill="#00d4ff" stroke="#1a1a1a" stroke-width="2"/>` : ''}
             `;
             
             currentRange = range;

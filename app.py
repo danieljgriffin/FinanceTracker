@@ -48,6 +48,11 @@ def prepare_mobile_chart_data(data_manager):
     try:
         chart_data = {}
         
+        # Get current live portfolio value
+        current_live_value = calculate_current_net_worth()
+        current_month = datetime.now().month
+        current_year = datetime.now().year
+        
         # Get data for all available years
         available_years = [2023, 2024, 2025]
         all_months_data = []
@@ -90,8 +95,23 @@ def prepare_mobile_chart_data(data_manager):
                             'month': i + 1,
                             'month_name': month,
                             'value': total,
-                            'date': f"{year}-{i+1:02d}-01"
+                            'date': f"{year}-{i+1:02d}-01",
+                            'is_historical': True
                         })
+                
+                # Add current live value as endpoint for current year
+                if year == current_year and current_month <= 12:
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    all_months_data.append({
+                        'year': current_year,
+                        'month': current_month,
+                        'month_name': month_names[current_month - 1],
+                        'value': current_live_value,
+                        'date': f"{current_year}-{current_month:02d}-01",
+                        'is_historical': False,
+                        'is_current': True
+                    })
             except Exception as e:
                 logging.error(f"Error processing year {year}: {str(e)}")
                 continue
@@ -145,36 +165,44 @@ def prepare_mobile_chart_data(data_manager):
                 max_val = max(d['value'] for d in year_data)
                 value_range = max_val - min_val
                 
-                # Create full 12-month grid for positioning
+                # Create month positions map
                 month_positions = {}
-                for i, data_point in enumerate(year_data):
+                max_month_with_data = 0
+                for data_point in year_data:
                     month_positions[data_point['month']] = data_point
+                    max_month_with_data = max(max_month_with_data, data_point['month'])
                 
-                # Generate points and labels for all 12 months
+                # For current year, limit to months with actual data + current month
+                if year == current_year:
+                    month_range = max_month_with_data
+                else:
+                    month_range = 12  # Full year for historical years
+                
+                # Generate points and labels only for months with data
                 month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
                               'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
                 
-                for month_num in range(1, 13):
-                    x = int(((month_num - 1) / 11) * 320)  # Spread across full width
-                    
+                for month_num in range(1, month_range + 1):
                     if month_num in month_positions:
-                        # We have data for this month
+                        # Calculate X position based on available month range
+                        x = int(((month_num - 1) / (month_range - 1)) * 320) if month_range > 1 else 160
+                        
+                        # Calculate Y position
                         data_point = month_positions[month_num]
                         y = 160 - int(((data_point['value'] - min_val) / value_range) * 130) if value_range > 0 else 100
                         year_points.append(f"{x},{y}")
-                    else:
-                        # No data for this month - interpolate or skip
-                        if year_points:  # Use last known position
-                            last_y = int(year_points[-1].split(',')[1])
-                            year_points.append(f"{x},{last_y}")
-                    
-                    # Add all month labels
-                    year_labels.append({'x': x, 'text': month_names[month_num - 1]})
+                        
+                        # Add month label
+                        label_text = month_names[month_num - 1]
+                        if data_point.get('is_current'):
+                            label_text += '*'  # Mark current month
+                        year_labels.append({'x': x, 'text': label_text})
                 
                 chart_data[str(year)] = {
                     'line': ' '.join(year_points),
                     'xLabels': year_labels,
-                    'yLabels': generate_y_labels(min_val, max_val)
+                    'yLabels': generate_y_labels(min_val, max_val),
+                    'hasCurrentValue': any(d.get('is_current', False) for d in year_data)
                 }
         
         return chart_data
