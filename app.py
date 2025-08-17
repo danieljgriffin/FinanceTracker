@@ -365,36 +365,40 @@ def dashboard():
         platform_monthly_changes = {}
         try:
             current_year = datetime.now().year
-            current_month_num = datetime.now().month
+            current_month = datetime.now().month
             
-            # Get the previous month's data
-            if current_month_num == 1:
-                # January - compare to December of previous year
-                prev_year = current_year - 1
-                prev_month_name = '1st Dec'
-            else:
-                # Other months - use current year
-                prev_year = current_year
-                month_names = ['', '1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
-                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec']
-                prev_month_name = month_names[current_month_num - 1]
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
             
-            # Get previous month's data
-            prev_year_data = get_data_manager().get_networth_data(prev_year)
-            prev_month_data = prev_year_data.get(prev_month_name, {})
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
             
-            # Calculate changes for each platform
+            # Get current month's 1st day data
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            # Calculate platform-specific monthly changes
             for platform, current_value in platform_allocations.items():
-                prev_value = prev_month_data.get(platform, 0)
-                if isinstance(prev_value, (int, float)) and prev_value > 0:
-                    change_amount = current_value - prev_value
-                    change_percent = (change_amount / prev_value) * 100
-                    platform_monthly_changes[platform] = {
-                        'amount': change_amount,
-                        'percent': change_percent,
-                        'previous': prev_value
-                    }
-                else:
+                try:
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if isinstance(month_start_platform_value, (int, float)) and month_start_platform_value > 0:
+                        change_amount = current_value - month_start_platform_value
+                        change_percent = (change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': change_amount,
+                            'percent': change_percent,
+                            'previous': month_start_platform_value
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {
+                            'amount': 0,
+                            'percent': 0,
+                            'previous': 0
+                        }
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
                     platform_monthly_changes[platform] = {
                         'amount': 0,
                         'percent': 0,
