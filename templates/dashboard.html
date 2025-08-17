@@ -746,8 +746,11 @@
                     backgroundColor: '#f59e0b',
                     borderWidth: 0,
                     pointRadius: 6,
-                    pointHoverRadius: 8,
-                    showLine: false
+                    pointHoverRadius: 10,
+                    showLine: false,
+                    pointHoverBackgroundColor: '#fbbf24',
+                    pointHoverBorderColor: '#f59e0b',
+                    pointHoverBorderWidth: 2
                 }]
             },
             options: {
@@ -755,7 +758,7 @@
                 maintainAspectRatio: false,
                 interaction: {
                     intersect: false,
-                    mode: 'index'
+                    mode: 'nearest'
                 },
                 plugins: {
                     legend: {
@@ -784,6 +787,12 @@
                                 let label = context.dataset.label + ': £' + context.parsed.y.toLocaleString();
                                 if (context.dataset.label === 'Current Position') {
                                     label += ' (Today)';
+                                } else if (context.dataset.label === 'Milestones') {
+                                    const amount = context.parsed.y;
+                                    if (amount === 100000) label = '£100k Milestone';
+                                    else if (amount === 250000) label = '£250k Milestone';
+                                    else if (amount === 500000) label = '£500k Milestone';
+                                    else if (amount === 1000000) label = '£1M Milestone';
                                 }
                                 return label;
                             }
