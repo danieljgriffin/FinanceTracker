@@ -270,8 +270,17 @@
                 <!-- Right Half: £1M Prediction Chart -->
                 <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
                     <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
-                        <h2 class="text-lg sm:text-xl font-semibold text-white">£1M Journey Prediction</h2>
-                        <p class="text-sm text-gray-400 mt-1">Based on 10% annual return + £1,825 monthly investment</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h2 class="text-lg sm:text-xl font-semibold text-white">£1M Journey Prediction</h2>
+                                <p class="text-sm text-gray-400 mt-1">Based on <span id="display-annual-return">10</span>% annual return + £<span id="display-monthly-investment">1,825</span> monthly investment</p>
+                            </div>
+                            <button onclick="openPredictionSettings()" 
+                                    class="p-2 text-gray-400 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200 group"
+                                    title="Edit prediction settings">
+                                <i class="fas fa-cog text-sm group-hover:rotate-90 transition-transform duration-300"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="p-3 sm:p-4">
                         <div class="relative h-80 bg-gray-800/50 rounded-xl p-4">
@@ -682,14 +691,12 @@
         return { data, milestones };
     }
 
-    function createMillionPredictionChart() {
+    function createMillionPredictionChart(annualReturn = 10, monthlyInvestment = 1825) {
         const ctx = document.getElementById('millionPredictionChart');
         if (!ctx) return;
         
         // Get current net worth from the page
         const currentNetWorth = {{ current_net_worth }};
-        const monthlyInvestment = 1825;
-        const annualReturn = 10;
         const targetAmount = 1000000;
         
         const prediction = calculateCompoundInterestData(currentNetWorth, monthlyInvestment, annualReturn, targetAmount);
@@ -830,6 +837,9 @@
         
         millionPredictionChart = new Chart(ctx, config);
         
+        // Store chart reference globally for updates
+        window.millionPredictionChart = millionPredictionChart;
+        
         // Update milestone dates in the UI
         updateMilestoneDisplay(prediction.milestones);
     }
@@ -873,7 +883,87 @@
             createMillionPredictionChart();
         }
     });
+    
+    // Prediction settings modal functions
+    function openPredictionSettings() {
+        document.getElementById('prediction-settings-modal').classList.remove('hidden');
+        // Set current values
+        document.getElementById('annual-return-input').value = document.getElementById('display-annual-return').textContent;
+        document.getElementById('monthly-investment-input').value = document.getElementById('display-monthly-investment').textContent.replace(',', '');
+    }
+    
+    function closePredictionSettings() {
+        document.getElementById('prediction-settings-modal').classList.add('hidden');
+    }
+    
+    // Handle prediction settings form submission
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('prediction-settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const annualReturn = parseFloat(document.getElementById('annual-return-input').value);
+            const monthlyInvestment = parseInt(document.getElementById('monthly-investment-input').value);
+            
+            // Update display values
+            document.getElementById('display-annual-return').textContent = annualReturn;
+            document.getElementById('display-monthly-investment').textContent = monthlyInvestment.toLocaleString();
+            
+            // Recreate the chart with new parameters
+            if (window.millionPredictionChart) {
+                window.millionPredictionChart.destroy();
+            }
+            createMillionPredictionChart(annualReturn, monthlyInvestment);
+            
+            closePredictionSettings();
+        });
+    });
 </script>
+
+<!-- Prediction Settings Modal -->
+<div id="prediction-settings-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div class="liquid-glass-modal max-w-md w-full">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-semibold text-white">Prediction Settings</h3>
+            <button onclick="closePredictionSettings()" class="text-gray-400 hover:text-white text-xl">×</button>
+        </div>
+        
+        <form id="prediction-settings-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Annual Return (%)</label>
+                <input type="number" 
+                       id="annual-return-input" 
+                       value="10" 
+                       step="0.1" 
+                       min="0" 
+                       max="30"
+                       class="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Monthly Investment (£)</label>
+                <input type="number" 
+                       id="monthly-investment-input" 
+                       value="1825" 
+                       step="25" 
+                       min="0" 
+                       max="10000"
+                       class="w-full px-3 py-2 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-blue-500 transition-colors">
+            </div>
+            
+            <div class="flex space-x-3 pt-4">
+                <button type="button" 
+                        onclick="closePredictionSettings()" 
+                        class="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    Update Chart
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
