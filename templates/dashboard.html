@@ -62,28 +62,28 @@
     <!-- Main Layout: Sidebar + Right Column -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="background: transparent !important;">
         <!-- Net Worth Breakdown (Left Third) -->
-        <div class="card lg:col-span-1 flex flex-col" style="background: rgba(255, 255, 255, 0.05) !important;">
+        <div class="card lg:col-span-1" style="background: rgba(255, 255, 255, 0.05) !important;">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
             </div>
-            <div class="flex-1 flex flex-col p-3 sm:p-4 lg:p-6">
+            <div class="p-3 sm:p-4 lg:p-6">
                 {% if platform_allocations %}
-                    <div class="space-y-4 flex-1">
+                    <div class="space-y-2">
                         {% for platform, amount in platform_allocations.items() %}
-                            <div class="py-3 px-3 bg-gray-800/30 rounded-lg border border-gray-700/20">
+                            <div class="py-1.5">
                                 <!-- Main row with platform name and amount -->
-                                <div class="flex items-baseline justify-between mb-2">
+                                <div class="flex items-baseline justify-between">
                                     <div class="flex items-baseline">
-                                        <div class="w-3 h-3 rounded-full mr-3 flex-shrink-0 mt-1" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                        <h3 class="font-semibold text-white text-sm">{{ platform }}</h3>
+                                        <div class="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 mt-1" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                        <h3 class="font-medium text-white text-xs">{{ platform }}</h3>
                                     </div>
-                                    <div class="font-bold text-white text-lg">£{{ "{:,.0f}".format(amount) }}</div>
+                                    <div class="font-bold text-white text-sm">£{{ "{:,.0f}".format(amount) }}</div>
                                 </div>
                                 
                                 <!-- Secondary row with percentage and change -->
-                                <div class="flex justify-between items-end">
-                                    <div class="ml-6">
-                                        <p class="text-xs text-gray-400 font-medium">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
+                                <div class="flex justify-between mt-0.5">
+                                    <div class="ml-5">
+                                        <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
                                     </div>
                                     <div class="text-right">
                                         {% set change_data = platform_monthly_changes.get(platform, {}) %}
@@ -91,12 +91,12 @@
                                             {% set change_amount = change_data.get('amount', 0) %}
                                             {% set change_percent = change_data.get('percent', 0) %}
                                             {% if change_amount > 0 %}
-                                                <span class="inline-flex items-center text-green-400 text-xs font-semibold">
+                                                <span class="inline-flex items-center text-green-500 text-xs font-medium">
                                                     <i class="fas fa-arrow-up mr-1"></i>
                                                     +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
                                                 </span>
                                             {% elif change_amount < 0 %}
-                                                <span class="inline-flex items-center text-red-400 text-xs font-semibold">
+                                                <span class="inline-flex items-center text-red-500 text-xs font-medium">
                                                     <i class="fas fa-arrow-down mr-1"></i>
                                                     -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
                                                 </span>
@@ -111,30 +111,12 @@
                                 </div>
                             </div>
                         {% endfor %}
-                        
-                        <!-- Add summary section at bottom to fill space -->
-                        <div class="mt-6 pt-4 border-t border-gray-600/30">
-                            <div class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg p-4 border border-blue-400/20">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm font-semibold text-blue-300">Total Portfolio</p>
-                                        <p class="text-xs text-gray-400 mt-1">{{ platform_allocations|length }} platforms</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <p class="text-lg font-bold text-white">£{{ "{:,.0f}".format(current_net_worth) }}</p>
-                                        <p class="text-xs text-blue-300 mt-1">
-                                            <i class="fas fa-chart-line mr-1"></i>Diversified
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 {% else %}
-                    <div class="text-center py-16 flex-1 flex flex-col justify-center">
-                        <i class="fas fa-chart-pie text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-400 text-base font-medium mb-2">No allocation data available</p>
-                        <p class="text-sm text-gray-500">Add investments to see net worth allocation</p>
+                    <div class="text-center py-6 sm:py-8">
+                        <i class="fas fa-chart-pie text-gray-400 text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4"></i>
+                        <p class="text-gray-400 text-sm sm:text-base">No allocation data available</p>
+                        <p class="text-xs sm:text-sm text-gray-500">Add investments to see net worth allocation</p>
                     </div>
                 {% endif %}
             </div>
