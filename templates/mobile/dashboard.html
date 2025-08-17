@@ -76,6 +76,20 @@
                 <svg viewBox="0 0 400 192" class="w-full h-full" id="portfolioChart">
                     <!-- Chart elements will be dynamically updated -->
                 </svg>
+                
+                <!-- Interactive overlay for touch/hover -->
+                <div id="chartOverlay" class="absolute inset-0 bg-transparent"></div>
+                
+                <!-- Hover indicator line and value display -->
+                <div id="hoverIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
+                    <div class="w-px h-full bg-white bg-opacity-50"></div>
+                </div>
+                
+                <!-- Value tooltip -->
+                <div id="valueTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-200 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
+                    <div id="tooltipValue"></div>
+                    <div id="tooltipDate" class="text-gray-300"></div>
+                </div>
             </div>
             
             <!-- Time Range Options -->
@@ -189,6 +203,8 @@
         const chartData = {{ chart_data | tojson | safe }};
 
         let currentRange = 'MAX';
+        let currentChartData = null;
+        let isInteracting = false;
 
         function updateChart(range) {
             if (range === currentRange) return;
@@ -222,6 +238,140 @@
             `;
             
             currentRange = range;
+            currentChartData = data;
+            setupChartInteraction();
+        }
+
+        function setupChartInteraction() {
+            const overlay = document.getElementById('chartOverlay');
+            const indicator = document.getElementById('hoverIndicator');
+            const tooltip = document.getElementById('valueTooltip');
+            const chartContainer = overlay.parentElement;
+            
+            // Touch and mouse events
+            overlay.addEventListener('touchstart', handleInteractionStart);
+            overlay.addEventListener('mousedown', handleInteractionStart);
+            overlay.addEventListener('touchmove', handleInteractionMove);
+            overlay.addEventListener('mousemove', handleInteractionMove);
+            overlay.addEventListener('touchend', handleInteractionEnd);
+            overlay.addEventListener('mouseup', handleInteractionEnd);
+            overlay.addEventListener('mouseleave', handleInteractionEnd);
+            
+            function handleInteractionStart(e) {
+                e.preventDefault();
+                isInteracting = true;
+                indicator.style.opacity = '1';
+                tooltip.style.opacity = '1';
+                updateHoverPosition(e);
+            }
+            
+            function handleInteractionMove(e) {
+                if (!isInteracting) return;
+                e.preventDefault();
+                updateHoverPosition(e);
+            }
+            
+            function handleInteractionEnd(e) {
+                e.preventDefault();
+                isInteracting = false;
+                indicator.style.opacity = '0';
+                tooltip.style.opacity = '0';
+            }
+            
+            function updateHoverPosition(e) {
+                if (!currentChartData || !isInteracting) return;
+                
+                const rect = overlay.getBoundingClientRect();
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const x = clientX - rect.left;
+                const xPercent = x / rect.width;
+                
+                // Calculate chart position (0-320 range in SVG viewBox)
+                const chartX = xPercent * 320;
+                
+                // Position indicator line
+                indicator.style.left = `${x}px`;
+                
+                // Find closest data point and interpolate value
+                const value = interpolateValue(chartX);
+                const dateInfo = getDateInfo(chartX);
+                
+                // Update tooltip
+                document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
+                document.getElementById('tooltipDate').textContent = dateInfo;
+                
+                // Position tooltip
+                const tooltipX = Math.max(0, Math.min(rect.width - 80, x - 40));
+                tooltip.style.left = `${tooltipX}px`;
+                tooltip.style.top = '10px';
+            }
+            
+            function interpolateValue(chartX) {
+                if (!currentChartData || !currentChartData.line) return 0;
+                
+                const points = currentChartData.line.split(' ').map(point => {
+                    const [x, y] = point.split(',').map(Number);
+                    return { x, y };
+                });
+                
+                if (points.length === 0) return 0;
+                
+                // Find surrounding points
+                let leftPoint = points[0];
+                let rightPoint = points[points.length - 1];
+                
+                for (let i = 0; i < points.length - 1; i++) {
+                    if (chartX >= points[i].x && chartX <= points[i + 1].x) {
+                        leftPoint = points[i];
+                        rightPoint = points[i + 1];
+                        break;
+                    }
+                }
+                
+                // Linear interpolation of Y position
+                let interpolatedY;
+                if (leftPoint.x === rightPoint.x) {
+                    interpolatedY = leftPoint.y;
+                } else {
+                    const ratio = (chartX - leftPoint.x) / (rightPoint.x - leftPoint.x);
+                    interpolatedY = leftPoint.y + (rightPoint.y - leftPoint.y) * ratio;
+                }
+                
+                // Convert Y position back to value (reverse of chart calculation)
+                // Chart Y range: 30-160 (130px range)
+                const yRange = 130;
+                const yFromTop = interpolatedY - 30;
+                const valuePercent = 1 - (yFromTop / yRange); // Invert because Y increases downward
+                
+                // Get value range from Y labels
+                if (!currentChartData.yLabels || currentChartData.yLabels.length === 0) return 0;
+                
+                const maxValue = parseFloat(currentChartData.yLabels[0].text.replace('£', '').replace('k', '')) * 1000;
+                const minValue = parseFloat(currentChartData.yLabels[currentChartData.yLabels.length - 1].text.replace('£', '').replace('k', '')) * 1000;
+                
+                return minValue + (maxValue - minValue) * valuePercent;
+            }
+            
+            function getDateInfo(chartX) {
+                if (!currentChartData || !currentChartData.xLabels) return '';
+                
+                const labels = currentChartData.xLabels;
+                if (labels.length === 0) return '';
+                
+                // Find closest label
+                let closestLabel = labels[0];
+                let minDistance = Math.abs(chartX - labels[0].x);
+                
+                for (const label of labels) {
+                    const distance = Math.abs(chartX - label.x);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        closestLabel = label;
+                    }
+                }
+                
+                return closestLabel.text;
+            }
         }
 
         // Initialize chart on page load with MAX view
@@ -229,6 +379,11 @@
             // Force MAX view to be active on load
             currentRange = '';
             updateChart('MAX');
+            
+            // Prevent default touch behaviors on chart area
+            document.getElementById('chartOverlay').addEventListener('touchstart', function(e) {
+                e.preventDefault();
+            }, { passive: false });
         });
     </script>
 </body>
