@@ -1451,10 +1451,11 @@ def update_all_prices():
         return 0
 
 def collect_historical_data():
-    """Collect current net worth data for historical tracking"""
+    """Collect current net worth data for historical tracking with clean timestamps"""
     global last_historical_collection
     try:
         from models import HistoricalNetWorth, db
+        import pytz
         
         # Calculate current net worth and platform breakdown
         current_net_worth = calculate_current_net_worth()
@@ -1480,9 +1481,26 @@ def collect_historical_data():
             if platform_total > 0:
                 platform_breakdown[platform] = platform_total
         
-        # Store historical data point
+        # Create clean timestamp on the hour or half-hour
+        now = datetime.now()
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = now.astimezone(uk_tz)
+        
+        # Round to nearest 30-minute interval (clean timestamps)
+        minute = uk_now.minute
+        if minute < 15:
+            clean_minute = 0
+        elif minute < 45:
+            clean_minute = 30
+        else:
+            clean_minute = 0
+            uk_now = uk_now + timedelta(hours=1)
+        
+        clean_timestamp = uk_now.replace(minute=clean_minute, second=0, microsecond=0)
+        
+        # Store historical data point with clean timestamp
         historical_entry = HistoricalNetWorth(
-            timestamp=datetime.now(),
+            timestamp=clean_timestamp,
             net_worth=current_net_worth,
             platform_breakdown=platform_breakdown
         )
@@ -1491,7 +1509,7 @@ def collect_historical_data():
         db.session.commit()
         
         last_historical_collection = datetime.now()
-        logging.info(f"Historical data collected: £{current_net_worth:,.2f}")
+        logging.info(f"Historical data collected: £{current_net_worth:,.2f} at {clean_timestamp.strftime('%H:%M')}")
         
     except Exception as e:
         logging.error(f"Error collecting historical data: {str(e)}")
@@ -1525,12 +1543,13 @@ def background_price_updater():
                 current_minute = uk_now.minute
                 current_second = uk_now.second
                 
-                # Collect on the hour (0 minutes) or half-hour (30 minutes) with 1-minute grace period
-                if (current_minute == 0 or current_minute == 30) and current_second < 60:
+                # Collect on the hour (0 minutes) or half-hour (30 minutes) exactly - clean timestamps
+                if (current_minute == 0 or current_minute == 30) and current_second <= 30:
                     # Make sure we haven't collected in the last 25 minutes to avoid duplicates
                     time_since_last = (now - last_historical_collection).total_seconds()
                     if time_since_last >= 1500:  # 25 minutes minimum gap
                         should_collect = True
+                        logging.info(f"Historical collection triggered at UK time: {uk_now.strftime('%H:%M:%S')}")
                 
                 if should_collect:
                     collect_historical_data()
