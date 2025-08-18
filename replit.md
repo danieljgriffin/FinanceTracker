@@ -8,6 +8,7 @@ This Flask-based web application provides a comprehensive personal finance track
 
 Preferred communication style: Simple, everyday language.
 Data integrity: Only use real collected data, never backfill or create synthetic historical data for charts.
+BST timezone requirement: User wants data collection and display in BST (British Summer Time) with clean hour/half-hour intervals (20:00, 20:30, 21:00, etc).
 
 ## System Architecture
 
