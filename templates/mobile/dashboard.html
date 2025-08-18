@@ -123,9 +123,12 @@
                 </div>
             </div>
             
-            <!-- Time Range Options - Removed as requested -->
-            <div class="flex justify-center mt-3 px-4">
-                <span class="text-white text-sm font-semibold">Portfolio Growth</span>
+            <!-- Time Range Options -->
+            <div class="flex justify-center space-x-6 mt-3 px-4">
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
+                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
+                <span class="text-white text-sm font-semibold cursor-pointer" id="activeRange">MAX</span>
             </div>
         </div>
         
@@ -207,6 +210,7 @@
         let isInteracting = false;
 
         function updateChart(range) {
+            console.log('updateChart called with range:', range, 'current:', currentRange);
             if (range === currentRange) return;
             
             const svg = document.getElementById('portfolioChart');
@@ -220,13 +224,21 @@
                 el.className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
             });
             
+            // Update current range indicator
+            currentRange = range;
+            
             if (range === 'MAX') {
                 document.getElementById('activeRange').className = 'text-white text-sm font-semibold cursor-pointer';
                 document.getElementById('activeRange').textContent = 'MAX';
             } else {
-                event.target.className = 'text-white text-sm font-semibold cursor-pointer';
+                // Find and highlight the clicked year
+                const yearElements = document.querySelectorAll('[onclick^="updateChart"]');
+                yearElements.forEach(el => {
+                    if (el.textContent === range) {
+                        el.className = 'text-white text-sm font-semibold cursor-pointer';
+                    }
+                });
                 document.getElementById('activeRange').className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
-                document.getElementById('activeRange').onclick = () => updateChart('MAX');
             }
             
             // Check if data exists for this range
@@ -471,39 +483,58 @@
 
         // Auto-refresh functionality for seamless updates
         function startAutoRefresh() {
-            // Update values every 30 seconds (less frequent than price updates to reduce load)
+            console.log('Starting auto-refresh...');
+            
+            // Update values every 10 seconds for testing (will change to 30 later)
             setInterval(async function() {
                 try {
+                    console.log('Fetching live values...');
                     const response = await fetch('/api/live-values');
                     if (response.ok) {
                         const data = await response.json();
+                        console.log('Received live data:', data);
                         
-                        // Update portfolio value
+                        // Update portfolio value (only if not in privacy mode)
                         const portfolioValue = document.getElementById('portfolioValue');
                         if (portfolioValue && !privacyMode) {
-                            portfolioValue.textContent = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            if (portfolioValue.textContent !== newValue) {
+                                portfolioValue.textContent = newValue;
+                                console.log('Updated portfolio value to:', newValue);
+                            }
                         }
                         
                         // Update last updated time
                         const lastUpdatedElement = document.querySelector('.text-gray-400.text-xs');
                         if (lastUpdatedElement && data.last_updated) {
-                            lastUpdatedElement.textContent = `Last updated ${data.last_updated}`;
+                            const newTime = `Last updated ${data.last_updated}`;
+                            if (lastUpdatedElement.textContent !== newTime) {
+                                lastUpdatedElement.textContent = newTime;
+                                console.log('Updated last updated time to:', newTime);
+                            }
                         }
                         
                         // Update breakdown values
                         const breakdownElements = document.querySelectorAll('.breakdown-value');
+                        const platformNames = Object.keys(data.platform_allocations);
                         breakdownElements.forEach((element, index) => {
-                            const platformName = Object.keys(data.platform_allocations)[index];
+                            const platformName = platformNames[index];
                             if (platformName && data.platform_allocations[platformName] && !privacyMode) {
-                                element.textContent = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                if (element.textContent !== newValue) {
+                                    element.textContent = newValue;
+                                    console.log(`Updated ${platformName} value to:`, newValue);
+                                }
                             }
                         });
                         
+                    } else {
+                        console.error('Failed to fetch live values:', response.status);
                     }
                 } catch (error) {
-                    console.log('Auto-refresh error:', error);
+                    console.error('Auto-refresh error:', error);
                 }
-            }, 30000); // Update every 30 seconds
+            }, 10000); // Update every 10 seconds for testing
         }
     </script>
 </body>
