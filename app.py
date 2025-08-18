@@ -1393,6 +1393,51 @@ def update_prices():
     else:
         return redirect(url_for('dashboard'))
 
+@app.route('/api/live-values')
+def live_values():
+    """API endpoint for live value updates"""
+    try:
+        # Get current net worth data
+        current_net_worth = calculate_current_net_worth()
+        
+        # Get platform allocations
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_allocations = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue
+                
+            platform_total = 0
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            if platform_total > 0:
+                platform_allocations[platform] = platform_total
+        
+        # Get last updated time
+        global last_price_update
+        last_updated_str = None
+        if last_price_update:
+            bst = pytz.timezone('Europe/London')
+            last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
+            last_updated_str = last_updated_bst.strftime('%d/%m/%Y %H:%M')
+        
+        return {
+            'current_net_worth': current_net_worth,
+            'platform_allocations': platform_allocations,
+            'last_updated': last_updated_str
+        }
+    except Exception as e:
+        logging.error(f"Error in live values API: {str(e)}")
+        return {'error': str(e)}, 500
+
 @app.route('/api/price-status')
 def price_status():
     """API endpoint to check when prices were last updated"""

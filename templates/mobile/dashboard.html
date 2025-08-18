@@ -123,12 +123,9 @@
                 </div>
             </div>
             
-            <!-- Time Range Options -->
-            <div class="flex justify-center space-x-6 mt-3 px-4">
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
-                <span class="text-white text-sm font-semibold cursor-pointer" id="activeRange">MAX</span>
+            <!-- Time Range Options - Removed as requested -->
+            <div class="flex justify-center mt-3 px-4">
+                <span class="text-white text-sm font-semibold">Portfolio Growth</span>
             </div>
         </div>
         
@@ -215,6 +212,9 @@
             const svg = document.getElementById('portfolioChart');
             const data = chartData[range];
             
+            console.log('Updating chart with range:', range);
+            console.log('Chart data for range:', data);
+            
             // Update active range styling
             document.querySelectorAll('[onclick^="updateChart"]').forEach(el => {
                 el.className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
@@ -227,6 +227,13 @@
                 event.target.className = 'text-white text-sm font-semibold cursor-pointer';
                 document.getElementById('activeRange').className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
                 document.getElementById('activeRange').onclick = () => updateChart('MAX');
+            }
+            
+            // Check if data exists for this range
+            if (!data || !data.line) {
+                console.warn('No chart data for range:', range);
+                svg.innerHTML = '<text x="200" y="120" text-anchor="middle" fill="#666" font-size="14">No data available</text>';
+                return;
             }
             
             // Update chart
@@ -422,6 +429,8 @@
 
         // Initialize chart on page load with MAX view
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Chart data:', chartData);
+            
             // Force MAX view to be active on load
             currentRange = '';
             updateChart('MAX');
@@ -430,6 +439,9 @@
             document.getElementById('chartOverlay').addEventListener('touchstart', function(e) {
                 e.preventDefault();
             }, { passive: false });
+            
+            // Start auto-refresh for live updates
+            startAutoRefresh();
         });
 
         // Privacy toggle functionality
@@ -455,6 +467,43 @@
                 chartContainer.classList.remove('privacy-blur');
                 breakdownValues.forEach(el => el.classList.remove('privacy-blur'));
             }
+        }
+
+        // Auto-refresh functionality for seamless updates
+        function startAutoRefresh() {
+            // Update values every 30 seconds (less frequent than price updates to reduce load)
+            setInterval(async function() {
+                try {
+                    const response = await fetch('/api/live-values');
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Update portfolio value
+                        const portfolioValue = document.getElementById('portfolioValue');
+                        if (portfolioValue && !privacyMode) {
+                            portfolioValue.textContent = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        }
+                        
+                        // Update last updated time
+                        const lastUpdatedElement = document.querySelector('.text-gray-400.text-xs');
+                        if (lastUpdatedElement && data.last_updated) {
+                            lastUpdatedElement.textContent = `Last updated ${data.last_updated}`;
+                        }
+                        
+                        // Update breakdown values
+                        const breakdownElements = document.querySelectorAll('.breakdown-value');
+                        breakdownElements.forEach((element, index) => {
+                            const platformName = Object.keys(data.platform_allocations)[index];
+                            if (platformName && data.platform_allocations[platformName] && !privacyMode) {
+                                element.textContent = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            }
+                        });
+                        
+                    }
+                } catch (error) {
+                    console.log('Auto-refresh error:', error);
+                }
+            }, 30000); // Update every 30 seconds
         }
     </script>
 </body>
