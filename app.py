@@ -1481,12 +1481,12 @@ def collect_historical_data():
             if platform_total > 0:
                 platform_breakdown[platform] = platform_total
         
-        # Create clean timestamp on the hour or half-hour
+        # Create clean timestamp on the hour or half-hour in user's BST timezone
         now = datetime.now()
         uk_tz = pytz.timezone('Europe/London')
         uk_now = now.astimezone(uk_tz)
         
-        # Round to nearest 30-minute interval (clean timestamps)
+        # Round to nearest 30-minute interval for clean BST timestamps
         minute = uk_now.minute
         if minute < 15:
             clean_minute = 0
@@ -1496,6 +1496,7 @@ def collect_historical_data():
             clean_minute = 0
             uk_now = uk_now + timedelta(hours=1)
         
+        # Create clean timestamp in BST
         clean_timestamp = uk_now.replace(minute=clean_minute, second=0, microsecond=0)
         
         # Store historical data point with clean timestamp
@@ -1536,20 +1537,20 @@ def background_price_updater():
                 # - Clean timing for better user experience
                 should_collect = False
                 
-                # Convert to UK timezone for timing
+                # Convert to UK timezone (BST/GMT) for timing - user's local time
                 import pytz
                 uk_tz = pytz.timezone('Europe/London')
                 uk_now = now.astimezone(uk_tz)
                 current_minute = uk_now.minute
                 current_second = uk_now.second
                 
-                # Collect on the hour (0 minutes) or half-hour (30 minutes) exactly - clean timestamps
-                if (current_minute == 0 or current_minute == 30) and current_second <= 30:
+                # Collect on the hour (0 minutes) or half-hour (30 minutes) with wider window
+                if (current_minute == 0 or current_minute == 30) and current_second <= 60:
                     # Make sure we haven't collected in the last 25 minutes to avoid duplicates
                     time_since_last = (now - last_historical_collection).total_seconds()
                     if time_since_last >= 1500:  # 25 minutes minimum gap
                         should_collect = True
-                        logging.info(f"Historical collection triggered at UK time: {uk_now.strftime('%H:%M:%S')}")
+                        logging.info(f"Historical collection triggered at BST time: {uk_now.strftime('%H:%M:%S')}")
                 
                 if should_collect:
                     collect_historical_data()
