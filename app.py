@@ -1860,33 +1860,40 @@ def get_historical_chart_data(time_range, chart_type):
             .order_by(HistoricalNetWorth.timestamp.asc())\
             .all()
         
+        # Convert UTC timestamps to BST for user-friendly display
+        import pytz
+        bst_tz = pytz.timezone('Europe/London')
+        
+        labels = []
+        values = []
+        
+        for entry in historical_data:
+            # Convert UTC timestamp to BST for display
+            utc_time = entry.timestamp.replace(tzinfo=pytz.UTC)
+            bst_time = utc_time.astimezone(bst_tz)
+            
+            # Format time based on range
+            if time_range == '1d':
+                # For 1-day view, show BST time as HH:MM (e.g., "20:00", "20:30")
+                time_label = bst_time.strftime('%H:%M')
+            elif time_range == '1w':
+                # For 1-week view, show day and time
+                time_label = bst_time.strftime('%a %H:%M')
+            else:
+                # For longer ranges, show date
+                time_label = bst_time.strftime('%d/%m')
+            
+            labels.append(time_label)
+            values.append(round(entry.net_worth, 2))
+        
         if not historical_data:
             # Return current data point if no historical data available
             current_net_worth = calculate_current_net_worth()
-            data_manager = get_data_manager()
-            investments_data = data_manager.get_investments_data()
+            current_bst = datetime.now(bst_tz)
             
-            platform_breakdown = {}
-            for platform, investments in investments_data.items():
-                if platform.endswith('_cash'):
-                    continue
-                    
-                platform_total = 0
-                if platform != 'Cash':
-                    platform_total = sum(
-                        investment.get('holdings', 0) * investment.get('current_price', 0)
-                        for investment in investments
-                    )
-                
-                platform_total += data_manager.get_platform_cash(platform)
-                
-                if platform_total > 0:
-                    platform_breakdown[platform] = platform_total
-            
-            # Return single point data
             if chart_type == 'line':
                 return {
-                    'labels': [now.strftime('%d/%m %H:%M')],
+                    'labels': [current_bst.strftime('%H:%M')],
                     'values': [current_net_worth]
                 }
             else:
@@ -1917,24 +1924,11 @@ def get_historical_chart_data(time_range, chart_type):
                     'datasets': datasets
                 }
         
-        # Process historical data
+        # Return the formatted data
         if chart_type == 'line':
-            # Line chart: simple time series of net worth
-            labels = []
-            data_points = []
-            
-            for entry in historical_data:
-                if time_range == '1d':
-                    labels.append(entry.timestamp.strftime('%H:%M'))
-                elif time_range == '1w':
-                    labels.append(entry.timestamp.strftime('%a %d'))
-                else:
-                    labels.append(entry.timestamp.strftime('%d/%m'))
-                data_points.append(entry.net_worth)
-            
             return {
                 'labels': labels,
-                'values': data_points
+                'values': values
             }
         
         else:
@@ -1958,14 +1952,18 @@ def get_historical_chart_data(time_range, chart_type):
             datasets = []
             labels = []
             
-            # Create labels
+            # Create BST labels for bar charts
+            labels = []
             for entry in historical_data:
+                utc_time = entry.timestamp.replace(tzinfo=pytz.UTC)
+                bst_time = utc_time.astimezone(bst_tz)
+                
                 if time_range == '1d':
-                    labels.append(entry.timestamp.strftime('%H:%M'))
+                    labels.append(bst_time.strftime('%H:%M'))
                 elif time_range == '1w':
-                    labels.append(entry.timestamp.strftime('%a %d'))
+                    labels.append(bst_time.strftime('%a %H:%M'))
                 else:
-                    labels.append(entry.timestamp.strftime('%d/%m'))
+                    labels.append(bst_time.strftime('%d/%m'))
             
             # Create dataset for each platform
             for platform in sorted(all_platforms):
