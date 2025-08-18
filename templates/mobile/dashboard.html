@@ -124,11 +124,15 @@
             </div>
             
             <!-- Time Range Options -->
-            <div class="flex justify-center space-x-6 mt-3 px-4">
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
-                <span class="text-gray-400 text-sm cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
-                <span class="text-white text-sm font-semibold cursor-pointer" id="activeRange">MAX</span>
+            <div class="flex justify-center space-x-4 mt-3 px-4 text-xs">
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1d')">1D</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1w')">1W</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('3m')">3M</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('6m')">6M</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
+                <span class="text-white font-semibold cursor-pointer" onclick="updateChart('2025')">2025</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('MAX')" id="activeRange">MAX</span>
             </div>
         </div>
         

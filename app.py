@@ -39,8 +39,12 @@ CACHE_DURATION = 300  # 5 minutes cache for API calls
 # Global variable to track last price update
 last_price_update = None
 
+# Global variable to track last historical data collection
+last_historical_collection = None
+
 # Initialize data manager
 from utils.db_data_manager import DatabaseDataManager
+from datetime import timedelta
 
 def get_data_manager():
     """Get data manager instance (lazy initialization)"""
@@ -1360,14 +1364,71 @@ def update_all_prices():
         logging.error(f"Error updating prices: {str(e)}")
         return 0
 
+def collect_historical_data():
+    """Collect current net worth data for historical tracking"""
+    global last_historical_collection
+    try:
+        from models import HistoricalNetWorth, db
+        
+        # Calculate current net worth and platform breakdown
+        current_net_worth = calculate_current_net_worth()
+        
+        # Get platform allocations
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_breakdown = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue
+                
+            platform_total = 0
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            if platform_total > 0:
+                platform_breakdown[platform] = platform_total
+        
+        # Store historical data point
+        historical_entry = HistoricalNetWorth(
+            timestamp=datetime.now(),
+            net_worth=current_net_worth,
+            platform_breakdown=platform_breakdown
+        )
+        
+        db.session.add(historical_entry)
+        db.session.commit()
+        
+        last_historical_collection = datetime.now()
+        logging.info(f"Historical data collected: £{current_net_worth:,.2f}")
+        
+    except Exception as e:
+        logging.error(f"Error collecting historical data: {str(e)}")
+
 def background_price_updater():
-    """Background thread function to update prices every 15 minutes"""
+    """Background thread function to update prices every 15 minutes and collect historical data every 12 hours"""
+    global last_historical_collection
+    
+    # Set initial collection time to trigger first collection
+    last_historical_collection = datetime.now() - timedelta(hours=13)
+    
     while True:
         try:
             time.sleep(PRICE_REFRESH_INTERVAL)
             # Create Flask application context for database access
             with app.app_context():
                 update_all_prices()
+                
+                # Check if we should collect historical data (every 12 hours)
+                now = datetime.now()
+                if last_historical_collection is None or (now - last_historical_collection).total_seconds() >= 43200:  # 12 hours = 43200 seconds
+                    collect_historical_data()
+                    
         except Exception as e:
             logging.error(f"Error in background price updater: {str(e)}")
             time.sleep(60)  # Wait 1 minute before retrying
@@ -1438,6 +1499,17 @@ def live_values():
         logging.error(f"Error in live values API: {str(e)}")
         return {'error': str(e)}, 500
 
+@app.route('/api/collect-historical-data', methods=['POST'])
+def manual_collect_historical_data():
+    """Manual endpoint to trigger historical data collection"""
+    try:
+        with app.app_context():
+            collect_historical_data()
+        return jsonify({'success': True, 'message': 'Historical data collected successfully'})
+    except Exception as e:
+        logging.error(f"Error in manual historical data collection: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/price-status')
 def price_status():
     """API endpoint to check when prices were last updated"""
@@ -1475,19 +1547,23 @@ def price_status():
 
 @app.route('/api/networth-chart-data')
 def networth_chart_data():
-    """API endpoint to get net worth chart data for different years"""
+    """API endpoint to get net worth chart data for different years and historical time ranges"""
     try:
         year_param = request.args.get('year', '2025')
         chart_type = request.args.get('type', 'line')  # line or bar
         data_manager = get_data_manager()
+        
+        # Check if this is a new historical time range
+        if year_param in ['1d', '1w', '3m', '6m']:
+            return jsonify(get_historical_chart_data(year_param, chart_type))
         
         labels = []
         values = []
         platform_data = {}  # For stacked bar chart
         
         if year_param == 'all':
-            # Get data from all years (2023, 2024, 2025)
-            years_to_include = [2023, 2024, 2025]
+            # Get data from all years (2023, 2024, 2025) - enhanced with historical data
+            return jsonify(get_enhanced_all_years_chart_data(chart_type))
         elif year_param == '2024-2025':
             # Get data from 2024 and 2025
             years_to_include = [2024, 2025]
@@ -1593,6 +1669,301 @@ def networth_chart_data():
     except Exception as e:
         logging.error(f"Error in networth_chart_data: {str(e)}")
         return jsonify({'labels': [], 'values': []}), 500
+
+def get_historical_chart_data(time_range, chart_type):
+    """Get chart data using historical net worth data for recent time ranges"""
+    try:
+        from models import HistoricalNetWorth, db
+        from datetime import datetime, timedelta
+        
+        # Calculate cutoff date based on time range
+        now = datetime.now()
+        if time_range == '1d':
+            cutoff = now - timedelta(days=1)
+        elif time_range == '1w':
+            cutoff = now - timedelta(days=7)
+        elif time_range == '3m':
+            cutoff = now - timedelta(days=90)
+        elif time_range == '6m':
+            cutoff = now - timedelta(days=180)
+        else:
+            cutoff = now - timedelta(days=30)  # Default to 1 month
+        
+        # Query historical data
+        historical_data = db.session.query(HistoricalNetWorth)\
+            .filter(HistoricalNetWorth.timestamp >= cutoff)\
+            .order_by(HistoricalNetWorth.timestamp.asc())\
+            .all()
+        
+        if not historical_data:
+            # Return current data point if no historical data available
+            current_net_worth = calculate_current_net_worth()
+            data_manager = get_data_manager()
+            investments_data = data_manager.get_investments_data()
+            
+            platform_breakdown = {}
+            for platform, investments in investments_data.items():
+                if platform.endswith('_cash'):
+                    continue
+                    
+                platform_total = 0
+                if platform != 'Cash':
+                    platform_total = sum(
+                        investment.get('holdings', 0) * investment.get('current_price', 0)
+                        for investment in investments
+                    )
+                
+                platform_total += data_manager.get_platform_cash(platform)
+                
+                if platform_total > 0:
+                    platform_breakdown[platform] = platform_total
+            
+            # Return single point data
+            if chart_type == 'line':
+                return {
+                    'labels': [now.strftime('%d/%m %H:%M')],
+                    'values': [current_net_worth]
+                }
+            else:
+                # For bar charts, convert to platform datasets
+                colors = {
+                    'Degiro': '#1e3a8a',
+                    'Trading212 ISA': '#0d9488',
+                    'EQ (GSK shares)': '#dc2626',
+                    'InvestEngine ISA': '#ea580c',
+                    'Crypto': '#7c3aed',
+                    'HL Stocks & Shares LISA': '#0ea5e9',
+                    'Cash': '#22c55e'
+                }
+                
+                datasets = []
+                for platform, value in platform_breakdown.items():
+                    color = colors.get(platform, '#6b7280')
+                    datasets.append({
+                        'label': platform,
+                        'data': [value],
+                        'backgroundColor': color,
+                        'borderColor': color,
+                        'borderWidth': 1
+                    })
+                
+                return {
+                    'labels': ['Now'],
+                    'datasets': datasets
+                }
+        
+        # Process historical data
+        if chart_type == 'line':
+            # Line chart: simple time series of net worth
+            labels = []
+            data_points = []
+            
+            for entry in historical_data:
+                if time_range == '1d':
+                    labels.append(entry.timestamp.strftime('%H:%M'))
+                elif time_range == '1w':
+                    labels.append(entry.timestamp.strftime('%a %d'))
+                else:
+                    labels.append(entry.timestamp.strftime('%d/%m'))
+                data_points.append(entry.net_worth)
+            
+            return {
+                'labels': labels,
+                'values': data_points
+            }
+        
+        else:
+            # Bar chart: platform breakdown over time
+            colors = {
+                'Degiro': '#1e3a8a',
+                'Trading212 ISA': '#0d9488',
+                'EQ (GSK shares)': '#dc2626',
+                'InvestEngine ISA': '#ea580c',
+                'Crypto': '#7c3aed',
+                'HL Stocks & Shares LISA': '#0ea5e9',
+                'Cash': '#22c55e'
+            }
+            
+            # Get all unique platforms
+            all_platforms = set()
+            for entry in historical_data:
+                all_platforms.update(entry.platform_breakdown.keys())
+            
+            # Create datasets for each platform
+            datasets = []
+            labels = []
+            
+            # Create labels
+            for entry in historical_data:
+                if time_range == '1d':
+                    labels.append(entry.timestamp.strftime('%H:%M'))
+                elif time_range == '1w':
+                    labels.append(entry.timestamp.strftime('%a %d'))
+                else:
+                    labels.append(entry.timestamp.strftime('%d/%m'))
+            
+            # Create dataset for each platform
+            for platform in sorted(all_platforms):
+                color = colors.get(platform, '#6b7280')
+                platform_data = []
+                
+                for entry in historical_data:
+                    value = entry.platform_breakdown.get(platform, 0)
+                    platform_data.append(value)
+                
+                datasets.append({
+                    'label': platform,
+                    'data': platform_data,
+                    'backgroundColor': color,
+                    'borderColor': color,
+                    'borderWidth': 1
+                })
+            
+            return {
+                'labels': labels,
+                'datasets': datasets
+            }
+    
+    except Exception as e:
+        logging.error(f"Error getting historical chart data: {str(e)}")
+        # Fallback to empty data
+        return {
+            'labels': [],
+            'values': [] if chart_type == 'line' else {'datasets': []}
+        }
+
+def get_enhanced_all_years_chart_data(chart_type):
+    """Get all years chart data enhanced with historical data for recent periods"""
+    try:
+        data_manager = get_data_manager()
+        
+        # Use existing logic but enhanced with historical data
+        labels = []
+        values = []
+        platform_data = {}
+        years_to_include = [2023, 2024, 2025]
+        
+        for year in years_to_include:
+            try:
+                year_data = data_manager.get_networth_data(year)
+                
+                # Process each month in chronological order - including both December entries
+                month_order = ['1st Jan', '1st Feb', '1st Mar', '1st Apr', '1st May', '1st Jun',
+                              '1st Jul', '1st Aug', '1st Sep', '1st Oct', '1st Nov', '1st Dec', '31st Dec']
+                
+                for month in month_order:
+                    if month in year_data:
+                        month_data = year_data[month]
+                        
+                        # Calculate total for this month
+                        month_total = 0
+                        month_platforms = {}
+                        
+                        for platform, value in month_data.items():
+                            if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                month_total += value
+                                # Store platform data for stacked bar chart
+                                if chart_type == 'bar':
+                                    month_platforms[platform] = value
+                        
+                        # Only add if there's actual data
+                        if month_total > 0:
+                            # Format label
+                            if month == '1st Dec':
+                                label = f"1st Dec {year}"
+                            elif month == '31st Dec':
+                                label = f"31st Dec {year}"
+                            else:
+                                month_short = month.replace('1st ', '').replace('st', '').replace('nd', '').replace('rd', '').replace('th', '')
+                                label = f"{month_short} {year}"
+                            
+                            labels.append(label)
+                            values.append(month_total)
+                            
+                            # Store platform data for stacked bar chart
+                            if chart_type == 'bar':
+                                for platform, value in month_platforms.items():
+                                    if platform not in platform_data:
+                                        platform_data[platform] = []
+                                    platform_data[platform].append(value)
+                
+            except Exception as e:
+                logging.error(f"Error processing year {year}: {str(e)}")
+                continue
+        
+        # Add recent historical data points to extend the chart (last 3 months)
+        try:
+            from models import HistoricalNetWorth, db
+            from datetime import datetime, timedelta
+            
+            cutoff = datetime.now() - timedelta(days=90)
+            recent_historical = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
+            
+            for entry in recent_historical:
+                label = entry.timestamp.strftime('%d %b %Y')
+                # Avoid duplicates
+                if label not in labels:
+                    labels.append(label)
+                    values.append(entry.net_worth)
+                    
+                    # Add platform data for bar charts
+                    if chart_type == 'bar':
+                        for platform, value in entry.platform_breakdown.items():
+                            if platform not in platform_data:
+                                platform_data[platform] = [0] * (len(labels) - 1)  # Fill previous entries with 0
+                            platform_data[platform].append(value)
+                        
+                        # Fill missing platforms with 0 for this entry
+                        for platform in platform_data:
+                            if platform not in entry.platform_breakdown:
+                                platform_data[platform].append(0)
+        
+        except Exception as e:
+            logging.error(f"Error adding historical data to all years view: {str(e)}")
+        
+        if chart_type == 'bar':
+            # Convert platform_data to datasets format
+            colors = {
+                'Degiro': '#1e3a8a',
+                'Trading212 ISA': '#0d9488',
+                'EQ (GSK shares)': '#dc2626',
+                'InvestEngine ISA': '#ea580c',
+                'Crypto': '#7c3aed',
+                'HL Stocks & Shares LISA': '#0ea5e9',
+                'Cash': '#22c55e'
+            }
+            
+            datasets = []
+            for platform, data in platform_data.items():
+                color = colors.get(platform, '#6b7280')
+                datasets.append({
+                    'label': platform,
+                    'data': data,
+                    'backgroundColor': color,
+                    'borderColor': color,
+                    'borderWidth': 1
+                })
+            
+            return {
+                'labels': labels,
+                'datasets': datasets
+            }
+        else:
+            # Return line chart data
+            return {
+                'labels': labels,
+                'values': values
+            }
+            
+    except Exception as e:
+        logging.error(f"Error getting enhanced all years chart data: {str(e)}")
+        return {
+            'labels': [],
+            'values': [] if chart_type == 'line' else {'datasets': []}
+        }
 
 def get_platform_color(platform):
     """Get consistent color for each platform - uses same colors as PLATFORM_COLORS"""

@@ -341,8 +341,12 @@
                         </div>
                     </div>
                     
-                    <!-- Year Filters -->
+                    <!-- Time Range Filters -->
                     <div class="flex flex-wrap gap-2 justify-center">
+                        <button onclick="filterYearCharts('1d')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="1d">Last Day</button>
+                        <button onclick="filterYearCharts('1w')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="1w">Last Week</button>
+                        <button onclick="filterYearCharts('3m')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="3m">Last 3 Months</button>
+                        <button onclick="filterYearCharts('6m')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="6m">Last 6 Months</button>
                         <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
                         <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
                         <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>

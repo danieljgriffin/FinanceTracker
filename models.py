@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 import json
 
@@ -218,3 +219,21 @@ class Goal(db.Model):
             return 'blue'
         else:
             return 'gray'
+
+class HistoricalNetWorth(db.Model):
+    __tablename__ = 'historical_net_worth'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    net_worth = db.Column(db.Float, nullable=False)
+    platform_breakdown = db.Column(JSONB, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'net_worth': self.net_worth,
+            'platform_breakdown': self.platform_breakdown,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
