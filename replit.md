@@ -7,6 +7,7 @@ This Flask-based web application provides a comprehensive personal finance track
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Data integrity: Only use real collected data, never backfill or create synthetic historical data for charts.
 
 ## System Architecture
 
