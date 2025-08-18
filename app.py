@@ -1882,43 +1882,73 @@ def get_enhanced_all_years_chart_data(chart_type):
                             
                             # Store platform data for stacked bar chart
                             if chart_type == 'bar':
+                                # First, ensure all existing platforms have placeholder for this month
+                                for existing_platform in platform_data:
+                                    if existing_platform not in month_platforms:
+                                        platform_data[existing_platform].append(0)
+                                
+                                # Then add the actual data for platforms that have values
                                 for platform, value in month_platforms.items():
                                     if platform not in platform_data:
-                                        platform_data[platform] = []
+                                        # New platform - backfill with zeros for all previous months
+                                        platform_data[platform] = [0] * (len(labels) - 1)
                                     platform_data[platform].append(value)
+                                
+                                # Finally, ensure all platforms now have the same number of data points
+                                expected_length = len(labels)
+                                for platform in platform_data:
+                                    while len(platform_data[platform]) < expected_length:
+                                        platform_data[platform].append(0)
                 
             except Exception as e:
                 logging.error(f"Error processing year {year}: {str(e)}")
                 continue
         
-        # Add recent historical data points to extend the chart (last 3 months)
+        # Add recent historical data points but with smart filtering to avoid daily spam
         try:
             from models import HistoricalNetWorth, db
             from datetime import datetime, timedelta
             
-            cutoff = datetime.now() - timedelta(days=90)
+            # Only add today's data point if we're looking at current month/year
+            # This prevents the chart from being cluttered with daily dates
+            now = datetime.now()
+            current_month = now.strftime('%b %Y')  # e.g., "Aug 2025"
+            
+            # Check if current month data exists in monthly tracker
+            current_month_in_monthly = any(current_month in label for label in labels)
+            
+            # Only add historical data if:
+            # 1. We don't have current month in monthly tracker yet, OR
+            # 2. We want to show current value as the latest point
+            cutoff = datetime.now() - timedelta(days=1)  # Only today's data
             recent_historical = db.session.query(HistoricalNetWorth)\
                 .filter(HistoricalNetWorth.timestamp >= cutoff)\
-                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .order_by(HistoricalNetWorth.timestamp.desc())\
+                .limit(1)\
                 .all()
             
-            for entry in recent_historical:
-                label = entry.timestamp.strftime('%d %b %Y')
-                # Avoid duplicates
+            if recent_historical and not current_month_in_monthly:
+                entry = recent_historical[0]
+                # Use month format instead of daily format for consistency
+                label = entry.timestamp.strftime('%b %Y')  # e.g., "Aug 2025"
+                
+                # Only add if not already present
                 if label not in labels:
                     labels.append(label)
                     values.append(entry.net_worth)
                     
                     # Add platform data for bar charts
                     if chart_type == 'bar':
+                        # Add any new platforms that weren't in previous entries first
                         for platform, value in entry.platform_breakdown.items():
                             if platform not in platform_data:
                                 platform_data[platform] = [0] * (len(labels) - 1)  # Fill previous entries with 0
-                            platform_data[platform].append(value)
                         
-                        # Fill missing platforms with 0 for this entry
+                        # Now ensure all platforms have the correct data for this new entry
                         for platform in platform_data:
-                            if platform not in entry.platform_breakdown:
+                            if platform in entry.platform_breakdown:
+                                platform_data[platform].append(entry.platform_breakdown[platform])
+                            else:
                                 platform_data[platform].append(0)
         
         except Exception as e:
