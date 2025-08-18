@@ -1513,14 +1513,17 @@ def background_price_updater():
                 
                 now = datetime.now()
                 
-                # Smart historical data collection with round timing:
-                # - Every 30 minutes on the hour/half-hour (7:00, 7:30, 8:00, etc.)
+                # Smart historical data collection with round timing in UK time:
+                # - Every 30 minutes on the hour/half-hour (7:00, 7:30, 8:00, etc.) UK time
                 # - Clean timing for better user experience
                 should_collect = False
                 
-                # Check if we're at a round 30-minute interval
-                current_minute = now.minute
-                current_second = now.second
+                # Convert to UK timezone for timing
+                import pytz
+                uk_tz = pytz.timezone('Europe/London')
+                uk_now = now.astimezone(uk_tz)
+                current_minute = uk_now.minute
+                current_second = uk_now.second
                 
                 # Collect on the hour (0 minutes) or half-hour (30 minutes) with 1-minute grace period
                 if (current_minute == 0 or current_minute == 30) and current_second < 60:

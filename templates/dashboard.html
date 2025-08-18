@@ -405,17 +405,10 @@
             .then(data => {
                 const statusElement = document.getElementById('price-status');
                 if (statusElement) {
-                    if (data.last_updated && data.current_date) {
-                        const statusHtml = `
-                            <div>Last updated: ${data.current_date}</div>
-                            <div>Prices refreshed: ${data.last_updated} (next in ${data.minutes_until_next}m)</div>
-                        `;
-                        statusElement.innerHTML = statusHtml;
+                    if (data.last_updated) {
+                        statusElement.innerHTML = `Last updated: ${data.last_updated}`;
                     } else {
-                        statusElement.innerHTML = `
-                            <div>Last updated: ${data.current_date || 'Unknown'}</div>
-                            <div>Prices refreshed: Never</div>
-                        `;
+                        statusElement.innerHTML = `Last updated: Never`;
                     }
                 }
             })
