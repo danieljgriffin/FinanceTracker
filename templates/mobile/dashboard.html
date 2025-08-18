@@ -569,11 +569,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
                         pointBackgroundColor: '#3b82f6',
+                        pointHoverBackgroundColor: '#60a5fa',
                         pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2
+                        pointHoverBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointHoverBorderWidth: 3
                     }]
                 },
                 options: {
@@ -581,11 +584,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     interaction: {
                         intersect: false,
-                        mode: 'index'
+                        mode: 'nearest',
+                        axis: 'x'
+                    },
+                    onHover: (event, activeElements) => {
+                        // Enable cursor pointer when hovering over data points
+                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
                     },
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            enabled: true,
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            titleColor: '#f3f4f6',
+                            bodyColor: '#e5e7eb',
+                            borderColor: '#6b7280',
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    return '£' + context.parsed.y.toLocaleString('en-GB', {
+                                        minimumFractionDigits: 2,
+                                        maximumFractionDigits: 2
+                                    });
+                                }
+                            }
                         }
                     },
                     scales: {
