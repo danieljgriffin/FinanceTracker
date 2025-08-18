@@ -133,8 +133,8 @@ def prepare_mobile_chart_data(data_manager):
         max_points = []
         max_labels = []
         
-        # Sample data points for MAX view (every 6 months to avoid crowding)
-        max_data = [d for i, d in enumerate(all_months_data) if i % 6 == 0 or i == len(all_months_data) - 1]
+        # Use all data points for MAX view to show smooth curve with all monthly data
+        max_data = all_months_data
         
         if max_data:
             min_val = min(d['value'] for d in max_data)
@@ -147,11 +147,17 @@ def prepare_mobile_chart_data(data_manager):
             for i, data_point in enumerate(max_data):
                 # Calculate position (20-340 width to leave margin, 40-200 height range)
                 x = 20 + int((i / (len(max_data) - 1)) * 320) if len(max_data) > 1 else 180
-                y = 200 - int(((data_point['value'] - min_val) / value_range) * 160) if value_range > 0 else 120
+                
+                # Fix Y scaling to align properly with the right axis labels
+                if value_range > 0:
+                    y = 40 + int(((max_val - data_point['value']) / value_range) * 160)
+                else:
+                    y = 120
+                    
                 max_points.append(f"{x},{y}")
                 
-                # Add year labels only once per year
-                if data_point['year'] not in years_added:
+                # Add year labels only once per year, positioned at January of each year
+                if data_point['year'] not in years_added and data_point['month'] == 1:
                     max_labels.append({'x': x, 'text': str(data_point['year'])})
                     years_added.add(data_point['year'])
         
@@ -195,9 +201,12 @@ def prepare_mobile_chart_data(data_manager):
                         # Calculate X position with margins (20-340 range)
                         x = 20 + int(((month_num - 1) / (month_range - 1)) * 320) if month_range > 1 else 180
                         
-                        # Calculate Y position with increased height (40-200 range)
+                        # Calculate Y position with proper scaling (40-200 range)
                         data_point = month_positions[month_num]
-                        y = 200 - int(((data_point['value'] - min_val) / value_range) * 160) if value_range > 0 else 120
+                        if value_range > 0:
+                            y = 40 + int(((max_val - data_point['value']) / value_range) * 160)
+                        else:
+                            y = 120
                         year_points.append(f"{x},{y}")
                         
                         # Add month label
@@ -220,15 +229,16 @@ def prepare_mobile_chart_data(data_manager):
         return {}
 
 def generate_y_labels(min_val, max_val):
-    """Generate appropriate Y-axis labels for the chart"""
+    """Generate appropriate Y-axis labels for the chart with proper alignment"""
     try:
         value_range = max_val - min_val
-        step = value_range / 8  # 8 labels
+        step = value_range / 8  # 8 intervals = 9 labels
         
         labels = []
-        for i in range(9):  # 9 labels total
+        for i in range(9):  # 9 labels total (0 to 8)
             value = max_val - (i * step)
-            y_pos = 20 + (i * 20)  # Spacing from top
+            # Y position should match the chart's 40-200 range
+            y_pos = 40 + (i * 20)  # Aligned with chart scaling (40-200 range)
             
             if value >= 1000:
                 text = f"£{value/1000:.0f}k"
