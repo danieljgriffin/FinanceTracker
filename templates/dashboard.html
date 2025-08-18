@@ -343,10 +343,9 @@
                     
                     <!-- Year Filters -->
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
-                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
                         <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
-                        <button onclick="filterYearCharts('2024-2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024-2025">2024-25</button>
+                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
+                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
                         <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
                     </div>
                 </div>
@@ -516,9 +515,12 @@
             chartLoadingElement.style.display = 'block';
         }
         
+        console.log('Loading chart data for year:', year, 'type:', currentChartTypeCharts);
+        
         fetch(`/api/networth-chart-data?year=${year}&type=${currentChartTypeCharts}`)
             .then(response => response.json())
             .then(data => {
+                console.log('Received chart data:', data);
                 if (chartLoadingElement) {
                     chartLoadingElement.style.display = 'none';
                 }
@@ -531,10 +533,44 @@
                     networthChartSeparate.destroy();
                 }
                 
-                const chartData = {
-                    labels: data.labels || [],
-                    datasets: data.datasets || []
-                };
+                // Handle different data formats
+                let chartData;
+                if (data.datasets && Array.isArray(data.datasets)) {
+                    // Standard chart format with datasets
+                    chartData = {
+                        labels: data.labels || [],
+                        datasets: data.datasets || []
+                    };
+                } else if (data.values && Array.isArray(data.values)) {
+                    // Simple format with just values and labels
+                    chartData = {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Net Worth',
+                            data: data.values || [],
+                            borderColor: currentChartTypeCharts === 'line' ? '#3b82f6' : 'rgba(59, 130, 246, 0.8)',
+                            backgroundColor: currentChartTypeCharts === 'line' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.6)',
+                            borderWidth: currentChartTypeCharts === 'line' ? 3 : 1,
+                            fill: currentChartTypeCharts === 'line',
+                            tension: currentChartTypeCharts === 'line' ? 0.4 : 0
+                        }]
+                    };
+                } else {
+                    chartData = {
+                        labels: [],
+                        datasets: []
+                    };
+                }
+                
+                console.log('Chart data labels:', chartData.labels);
+                console.log('Chart data datasets:', chartData.datasets);
+                
+                if (chartData.labels.length === 0) {
+                    console.warn('No chart labels found');
+                }
+                if (chartData.datasets.length === 0) {
+                    console.warn('No chart datasets found');
+                }
                 
                 const config = {
                     type: currentChartTypeCharts,
@@ -603,6 +639,7 @@
                 }
                 
                 networthChartSeparate = new Chart(ctx, config);
+                console.log('Chart created successfully');
             })
             .catch(error => {
                 console.error('Error loading chart data:', error);
@@ -610,6 +647,59 @@
                     chartLoadingElement.innerHTML = '<p class="text-red-400 text-sm">Error loading chart data</p>';
                 }
             });
+    }
+    
+    // Auto-refresh functionality for desktop dashboard
+    function startDesktopAutoRefresh() {
+        console.log('Starting desktop auto-refresh...');
+        
+        setInterval(async function() {
+            try {
+                console.log('Fetching live values for desktop...');
+                const response = await fetch('/api/live-values');
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Received desktop live data:', data);
+                    
+                    // Update current net worth
+                    const netWorthElement = document.querySelector('.privacy-sensitive p');
+                    if (netWorthElement) {
+                        const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                        if (netWorthElement.textContent !== newValue) {
+                            netWorthElement.textContent = newValue;
+                            console.log('Updated desktop net worth to:', newValue);
+                        }
+                    }
+                    
+                    // Update breakdown values in the sidebar
+                    const breakdownItems = document.querySelectorAll('.privacy-sensitive');
+                    const platformNames = Object.keys(data.platform_allocations);
+                    
+                    // Find platform amount elements and update them
+                    document.querySelectorAll('.privacy-sensitive').forEach(element => {
+                        // Look for elements that contain £ amounts
+                        if (element.textContent && element.textContent.includes('£') && !element.textContent.includes('%')) {
+                            platformNames.forEach(platformName => {
+                                // Check if this element corresponds to a platform
+                                const parentElement = element.closest('div');
+                                if (parentElement && parentElement.textContent.includes(platformName)) {
+                                    const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                    if (element.textContent !== newValue) {
+                                        element.textContent = newValue;
+                                        console.log(`Updated desktop ${platformName} to:`, newValue);
+                                    }
+                                }
+                            });
+                        }
+                    });
+                    
+                } else {
+                    console.error('Failed to fetch desktop live values:', response.status);
+                }
+            } catch (error) {
+                console.error('Desktop auto-refresh error:', error);
+            }
+        }, 30000); // Update every 30 seconds
     }
     
     // Mark goal as complete
@@ -918,6 +1008,22 @@
             
             closePredictionSettings();
         });
+    });
+    
+    // Initialize dashboard on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Desktop dashboard initializing...');
+        
+        // Load initial chart data
+        loadChartDataSeparate(currentYearFilterSeparate);
+        
+        // Create million prediction chart
+        createMillionPredictionChart();
+        
+        // Start auto-refresh for live updates
+        startDesktopAutoRefresh();
+        
+        console.log('Desktop dashboard initialized');
     });
 </script>
 
