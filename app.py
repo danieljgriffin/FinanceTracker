@@ -1565,6 +1565,16 @@ def update_prices():
     else:
         return redirect(url_for('dashboard'))
 
+@app.route('/manual-collect-data')
+def manual_collect_data():
+    """Manually trigger historical data collection"""
+    try:
+        collect_historical_data()
+        return jsonify({'status': 'success', 'message': 'Historical data collected successfully'})
+    except Exception as e:
+        logging.error(f"Error in manual data collection: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/live-values')
 def live_values():
     """API endpoint for live value updates"""
