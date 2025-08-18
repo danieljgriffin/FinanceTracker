@@ -295,153 +295,10 @@
             currentChartData.dataPoints = points;
             currentChartData.hasCurrentValue = data.hasCurrentValue;
             
-            setupChartInteraction();
+            // setupChartInteraction(); // Disabled - no hover interactions
         }
 
-        function setupChartInteraction() {
-            const overlay = document.getElementById('chartOverlay');
-            const indicator = document.getElementById('hoverIndicator');
-            const tooltip = document.getElementById('valueTooltip');
-            const chartContainer = overlay.parentElement;
-            
-            // Touch and mouse events
-            overlay.addEventListener('touchstart', handleInteractionStart);
-            overlay.addEventListener('mousedown', handleInteractionStart);
-            overlay.addEventListener('touchmove', handleInteractionMove);
-            overlay.addEventListener('mousemove', handleInteractionMove);
-            overlay.addEventListener('touchend', handleInteractionEnd);
-            overlay.addEventListener('mouseup', handleInteractionEnd);
-            overlay.addEventListener('mouseleave', handleInteractionEnd);
-            
-            function handleInteractionStart(e) {
-                e.preventDefault();
-                isInteracting = true;
-                indicator.style.opacity = '1';
-                tooltip.style.opacity = '1';
-                updateHoverPosition(e);
-            }
-            
-            function handleInteractionMove(e) {
-                if (!isInteracting) return;
-                e.preventDefault();
-                updateHoverPosition(e);
-            }
-            
-            function handleInteractionEnd(e) {
-                e.preventDefault();
-                isInteracting = false;
-                indicator.style.opacity = '0';
-                tooltip.style.opacity = '0';
-            }
-            
-            function updateHoverPosition(e) {
-                if (!currentChartData || !isInteracting) return;
-                
-                const rect = overlay.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const x = clientX - rect.left;
-                
-                // Find closest data point by actual screen distance to dots
-                const closestPoint = findClosestPointByScreenDistance(x, rect.width);
-                
-                if (closestPoint) {
-                    // Position indicator at exact dot position
-                    const snapX = ((closestPoint.x - 20) / 320) * rect.width;
-                    indicator.style.left = `${snapX}px`;
-                    
-                    // Get value for this specific point
-                    const value = interpolateValue(closestPoint.x);
-                    const dateInfo = closestPoint.label;
-                    
-                    if (value !== null && dateInfo) {
-                        document.getElementById('tooltipValue').textContent = `£${(value/1000).toFixed(0)}k`;
-                        document.getElementById('tooltipDate').textContent = dateInfo.includes('*') ? dateInfo : `1st ${dateInfo}`;
-                        tooltip.style.opacity = '1';
-                        
-                        // Position tooltip at snapped position
-                        const tooltipX = Math.max(0, Math.min(rect.width - 80, snapX - 40));
-                        tooltip.style.left = `${tooltipX}px`;
-                        tooltip.style.top = '10px';
-                    } else {
-                        tooltip.style.opacity = '0';
-                    }
-                } else {
-                    tooltip.style.opacity = '0';
-                }
-            }
-            
-            function findClosestPointByScreenDistance(touchX, overlayWidth) {
-                if (!currentChartData || !currentChartData.dataPoints) return null;
-                
-                const points = currentChartData.dataPoints;
-                if (points.length === 0) return null;
-                
-                let closestPoint = null;
-                let minScreenDistance = Infinity;
-                
-                for (const point of points) {
-                    // Convert SVG coordinate to screen coordinate
-                    const screenX = ((point.x - 20) / 320) * overlayWidth;
-                    const distance = Math.abs(touchX - screenX);
-                    
-                    if (distance < minScreenDistance) {
-                        minScreenDistance = distance;
-                        closestPoint = point;
-                    }
-                }
-                
-                // Return closest point if within reasonable touch distance (50px)
-                return minScreenDistance <= 50 ? closestPoint : null;
-            }
-            
-            function getClosestDataPoint(chartX) {
-                if (!currentChartData || !currentChartData.dataPoints) return null;
-                
-                const points = currentChartData.dataPoints;
-                if (points.length === 0) return null;
-                
-                // Find the closest actual data point
-                let closestPoint = points[0];
-                let minDistance = Math.abs(chartX - points[0].x);
-                
-                for (const point of points) {
-                    const distance = Math.abs(chartX - point.x);
-                    if (distance < minDistance) {
-                        minDistance = distance;
-                        closestPoint = point;
-                    }
-                }
-                
-                // Increase snap range for easier touch interaction (within 40px)
-                if (minDistance > 40) return null;
-                
-                return closestPoint;
-            }
-            
-            function interpolateValue(chartX) {
-                const closestPoint = getClosestDataPoint(chartX);
-                if (!closestPoint) return null;
-                
-                // Convert Y position back to actual value
-                // Chart Y range: 30-160 (130px range)
-                const yRange = 130;
-                const yFromTop = closestPoint.y - 30;
-                const valuePercent = 1 - (yFromTop / yRange); // Invert because Y increases downward
-                
-                // Get value range from Y labels
-                if (!currentChartData.yLabels || currentChartData.yLabels.length === 0) return null;
-                
-                const maxValue = parseFloat(currentChartData.yLabels[0].text.replace('£', '').replace('k', '')) * 1000;
-                const minValue = parseFloat(currentChartData.yLabels[currentChartData.yLabels.length - 1].text.replace('£', '').replace('k', '')) * 1000;
-                
-                return minValue + (maxValue - minValue) * valuePercent;
-            }
-            
-            function getDateInfo(chartX) {
-                const closestPoint = getClosestDataPoint(chartX);
-                return closestPoint ? closestPoint.label : '';
-            }
-        }
+        // setupChartInteraction function disabled - no hover interactions
 
         // Initialize chart on page load with MAX view
         document.addEventListener('DOMContentLoaded', function() {
@@ -451,10 +308,7 @@
             currentRange = '';
             updateChart('MAX');
             
-            // Prevent default touch behaviors on chart area
-            document.getElementById('chartOverlay').addEventListener('touchstart', function(e) {
-                e.preventDefault();
-            }, { passive: false });
+            // Touch behaviors disabled - no chart interactions
             
             // Start auto-refresh for live updates
             startAutoRefresh();
