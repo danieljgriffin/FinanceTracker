@@ -569,14 +569,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 5,
-                        pointHoverRadius: 8,
+                        pointRadius: 4,
                         pointBackgroundColor: '#3b82f6',
-                        pointHoverBackgroundColor: '#60a5fa',
                         pointBorderColor: '#ffffff',
-                        pointHoverBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointHoverBorderWidth: 3
+                        pointBorderWidth: 2
                     }]
                 },
                 options: {
@@ -584,36 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     maintainAspectRatio: false,
                     interaction: {
                         intersect: false,
-                        mode: 'nearest',
-                        axis: 'x',
-                        includeInvisible: false
-                    },
-                    onHover: (event, activeElements, chart) => {
-                        // Only allow hover within the chart area (excluding Y-axis labels)
-                        const canvasRect = chart.canvas.getBoundingClientRect();
-                        const chartArea = chart.chartArea;
-                        
-                        // Get relative position within canvas
-                        const rect = chart.canvas.getBoundingClientRect();
-                        const x = event.native.clientX - rect.left;
-                        const y = event.native.clientY - rect.top;
-                        
-                        // Check if cursor is within the actual chart plotting area
-                        const isInChartArea = x >= chartArea.left && 
-                                            x <= chartArea.right && 
-                                            y >= chartArea.top && 
-                                            y <= chartArea.bottom;
-                        
-                        if (!isInChartArea) {
-                            // Clear any active elements if outside chart area
-                            chart.setActiveElements([]);
-                            chart.update('none');
-                            event.native.target.style.cursor = 'default';
-                            return;
-                        }
-                        
-                        // Normal hover behavior within chart area
-                        event.native.target.style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                        mode: 'none'
                     },
 
                     plugins: {
@@ -621,42 +588,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             display: false
                         },
                         tooltip: {
-                            enabled: true,
-                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
-                            titleColor: '#f3f4f6',
-                            bodyColor: '#e5e7eb',
-                            borderColor: '#6b7280',
-                            borderWidth: 1,
-                            cornerRadius: 8,
-                            displayColors: false,
-                            filter: function(tooltipItem, data) {
-                                // Only show tooltip within chart area
-                                const chart = tooltipItem.chart;
-                                const chartArea = chart.chartArea;
-                                const event = chart.lastEvent;
-                                
-                                if (!event) return true;
-                                
-                                const rect = chart.canvas.getBoundingClientRect();
-                                const x = event.x !== undefined ? event.x : (event.clientX - rect.left);
-                                const y = event.y !== undefined ? event.y : (event.clientY - rect.top);
-                                
-                                return x >= chartArea.left && 
-                                       x <= chartArea.right && 
-                                       y >= chartArea.top && 
-                                       y <= chartArea.bottom;
-                            },
-                            callbacks: {
-                                title: function(context) {
-                                    return context[0].label;
-                                },
-                                label: function(context) {
-                                    return '£' + context.parsed.y.toLocaleString('en-GB', {
-                                        minimumFractionDigits: 2,
-                                        maximumFractionDigits: 2
-                                    });
-                                }
-                            }
+                            enabled: false
                         }
                     },
                     scales: {
