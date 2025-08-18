@@ -1513,15 +1513,21 @@ def background_price_updater():
                 
                 now = datetime.now()
                 
-                # Smart historical data collection:
-                # - Every 30 minutes for the first 24 hours (for 1D charts)
-                # - Then switches to 12-hour collection for long-term storage
-                time_since_last = (now - last_historical_collection).total_seconds()
+                # Smart historical data collection with round timing:
+                # - Every 30 minutes on the hour/half-hour (7:00, 7:30, 8:00, etc.)
+                # - Clean timing for better user experience
                 should_collect = False
                 
-                # Collect every 30 minutes (1800 seconds)
-                if time_since_last >= 1800:  # 30 minutes
-                    should_collect = True
+                # Check if we're at a round 30-minute interval
+                current_minute = now.minute
+                current_second = now.second
+                
+                # Collect on the hour (0 minutes) or half-hour (30 minutes) with 1-minute grace period
+                if (current_minute == 0 or current_minute == 30) and current_second < 60:
+                    # Make sure we haven't collected in the last 25 minutes to avoid duplicates
+                    time_since_last = (now - last_historical_collection).total_seconds()
+                    if time_since_last >= 1500:  # 25 minutes minimum gap
+                        should_collect = True
                 
                 if should_collect:
                     collect_historical_data()
@@ -1625,9 +1631,9 @@ def price_status():
     current_date_str = current_bst.strftime('%B %d, %Y')
     
     if last_price_update:
-        # Convert UTC to BST
+        # Convert UTC to BST and format like mobile version
         last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
-        last_updated_str = last_updated_bst.strftime('%H:%M:%S')
+        last_updated_str = last_updated_bst.strftime('%d/%m/%Y %H:%M')
         
         # Calculate next update time
         next_update_in = PRICE_REFRESH_INTERVAL - int((datetime.now() - last_price_update).total_seconds())
