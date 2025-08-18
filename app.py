@@ -228,6 +228,82 @@ def prepare_mobile_chart_data(data_manager):
         logging.error(f"Error preparing mobile chart data: {str(e)}")
         return {}
 
+def sample_data_by_interval(data_list, hours):
+    """Sample historical data to get roughly one point per interval"""
+    if not data_list:
+        return []
+    
+    from datetime import timedelta
+    
+    sampled_data = []
+    last_sampled_time = None
+    interval = timedelta(hours=hours)
+    
+    for data_point in data_list:
+        if last_sampled_time is None or (data_point.timestamp - last_sampled_time) >= interval:
+            sampled_data.append(data_point)
+            last_sampled_time = data_point.timestamp
+    
+    # Always include the last data point
+    if data_list and data_list[-1] not in sampled_data:
+        sampled_data.append(data_list[-1])
+    
+    return sampled_data
+
+def cleanup_old_historical_data():
+    """Clean up old high-frequency data based on tiered retention policy"""
+    try:
+        from models import HistoricalNetWorth, db
+        from datetime import datetime, timedelta
+        
+        now = datetime.now()
+        
+        # Delete data older than 24 hours that's more frequent than 6-hour intervals
+        cutoff_24h = now - timedelta(days=1)
+        cutoff_7d = now - timedelta(days=7)
+        
+        # Get data older than 24 hours but newer than 7 days
+        recent_old_data = db.session.query(HistoricalNetWorth)\
+            .filter(HistoricalNetWorth.timestamp < cutoff_24h)\
+            .filter(HistoricalNetWorth.timestamp >= cutoff_7d)\
+            .order_by(HistoricalNetWorth.timestamp.asc())\
+            .all()
+        
+        # Keep only data that's roughly 6 hours apart
+        if recent_old_data:
+            to_keep = sample_data_by_interval(recent_old_data, hours=6)
+            to_keep_ids = [item.id for item in to_keep]
+            
+            # Delete the rest
+            db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp < cutoff_24h)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff_7d)\
+                .filter(~HistoricalNetWorth.id.in_(to_keep_ids))\
+                .delete(synchronize_session=False)
+        
+        # For data older than 7 days, keep only 12-hour intervals
+        old_data = db.session.query(HistoricalNetWorth)\
+            .filter(HistoricalNetWorth.timestamp < cutoff_7d)\
+            .order_by(HistoricalNetWorth.timestamp.asc())\
+            .all()
+        
+        if old_data:
+            to_keep = sample_data_by_interval(old_data, hours=12)
+            to_keep_ids = [item.id for item in to_keep]
+            
+            # Delete the rest
+            db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp < cutoff_7d)\
+                .filter(~HistoricalNetWorth.id.in_(to_keep_ids))\
+                .delete(synchronize_session=False)
+        
+        db.session.commit()
+        logging.info("Historical data cleanup completed")
+        
+    except Exception as e:
+        logging.error(f"Error cleaning up historical data: {str(e)}")
+        db.session.rollback()
+
 def generate_y_labels(min_val, max_val):
     """Generate appropriate Y-axis labels for the chart with proper alignment"""
     try:
@@ -1421,11 +1497,12 @@ def collect_historical_data():
         logging.error(f"Error collecting historical data: {str(e)}")
 
 def background_price_updater():
-    """Background thread function to update prices every 15 minutes and collect historical data every 12 hours"""
+    """Background thread function to update prices every 15 minutes and collect historical data with smart intervals"""
     global last_historical_collection
     
     # Set initial collection time to trigger first collection
-    last_historical_collection = datetime.now() - timedelta(hours=13)
+    last_historical_collection = datetime.now() - timedelta(minutes=31)  # Trigger first collection soon
+    last_cleanup = datetime.now() - timedelta(days=1)  # Trigger first cleanup
     
     while True:
         try:
@@ -1434,10 +1511,25 @@ def background_price_updater():
             with app.app_context():
                 update_all_prices()
                 
-                # Check if we should collect historical data (every 12 hours)
                 now = datetime.now()
-                if last_historical_collection is None or (now - last_historical_collection).total_seconds() >= 43200:  # 12 hours = 43200 seconds
+                
+                # Smart historical data collection:
+                # - Every 30 minutes for the first 24 hours (for 1D charts)
+                # - Then switches to 12-hour collection for long-term storage
+                time_since_last = (now - last_historical_collection).total_seconds()
+                should_collect = False
+                
+                # Collect every 30 minutes (1800 seconds)
+                if time_since_last >= 1800:  # 30 minutes
+                    should_collect = True
+                
+                if should_collect:
                     collect_historical_data()
+                
+                # Clean up old data daily to maintain tiered storage
+                if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
+                    cleanup_old_historical_data()
+                    last_cleanup = now
                     
         except Exception as e:
             logging.error(f"Error in background price updater: {str(e)}")
@@ -1681,23 +1773,47 @@ def networth_chart_data():
         return jsonify({'labels': [], 'values': []}), 500
 
 def get_historical_chart_data(time_range, chart_type):
-    """Get chart data using historical net worth data for recent time ranges"""
+    """Get chart data using tiered historical data with smart sampling"""
     try:
         from models import HistoricalNetWorth, db
         from datetime import datetime, timedelta
         
-        # Calculate cutoff date based on time range
         now = datetime.now()
+        
+        # Smart data selection based on time range
         if time_range == '1d':
+            # Use 30-minute data for last 24 hours
             cutoff = now - timedelta(days=1)
+            # Filter for data that's roughly every 30 minutes
+            historical_data = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
         elif time_range == '1w':
+            # Use 6-hour sampling for last week
             cutoff = now - timedelta(days=7)
-        elif time_range == '3m':
-            cutoff = now - timedelta(days=90)
-        elif time_range == '6m':
-            cutoff = now - timedelta(days=180)
+            all_data = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
+            # Sample every 6 hours worth of data
+            historical_data = sample_data_by_interval(all_data, hours=6)
+        elif time_range in ['3m', '6m']:
+            # Use 12-hour sampling for 3-6 months
+            days = 90 if time_range == '3m' else 180
+            cutoff = now - timedelta(days=days)
+            all_data = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
+            # Sample every 12 hours worth of data
+            historical_data = sample_data_by_interval(all_data, hours=12)
         else:
-            cutoff = now - timedelta(days=30)  # Default to 1 month
+            cutoff = now - timedelta(days=30)
+            historical_data = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
         
         # Query historical data
         historical_data = db.session.query(HistoricalNetWorth)\
