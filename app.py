@@ -1854,11 +1854,7 @@ def get_historical_chart_data(time_range, chart_type):
                 .order_by(HistoricalNetWorth.timestamp.asc())\
                 .all()
         
-        # Query historical data
-        historical_data = db.session.query(HistoricalNetWorth)\
-            .filter(HistoricalNetWorth.timestamp >= cutoff)\
-            .order_by(HistoricalNetWorth.timestamp.asc())\
-            .all()
+        # The historical_data is already set above by the smart sampling logic
         
         # Convert UTC timestamps to BST for user-friendly display
         import pytz
@@ -1892,8 +1888,9 @@ def get_historical_chart_data(time_range, chart_type):
             current_bst = datetime.now(bst_tz)
             
             if chart_type == 'line':
+                time_format = '%H:%M' if time_range == '1d' else ('%a %H:%M' if time_range == '1w' else '%d/%m')
                 return {
-                    'labels': [current_bst.strftime('%H:%M')],
+                    'labels': [current_bst.strftime(time_format)],
                     'values': [current_net_worth]
                 }
             else:
