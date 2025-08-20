@@ -716,9 +716,14 @@
                         const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
                         const newValue = data.current_net_worth;
                         
-                        if (Math.abs(currentValue - newValue) > 0.01) { // Only animate if there's a meaningful change
+                        const change = Math.abs(currentValue - newValue);
+                        console.log(`Net worth change: £${change.toFixed(2)} (from £${currentValue.toFixed(2)} to £${newValue.toFixed(2)})`);
+                        
+                        if (change > 0.01) { // Only animate if there's a meaningful change
                             animateNetWorthValue(netWorthElement, currentValue, newValue);
-                            console.log('Updated desktop net worth to:', `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+                            console.log('✨ Animation triggered! Updated desktop net worth to:', `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
+                        } else {
+                            console.log('💤 No animation - change too small or identical value');
                         }
                     } else {
                         console.log('Could not find main net worth element to update');
