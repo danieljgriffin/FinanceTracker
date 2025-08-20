@@ -646,6 +646,42 @@
             });
     }
     
+    // Animate net worth value updates with rolling numbers
+    function animateNetWorthValue(element, fromValue, toValue) {
+        const duration = 1200; // Animation duration in milliseconds
+        const steps = 30; // Number of animation steps
+        const stepDuration = duration / steps;
+        let currentStep = 0;
+        
+        // Add a subtle glow effect during animation
+        element.style.textShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
+        element.style.transition = 'text-shadow 0.3s ease';
+        
+        const interval = setInterval(() => {
+            currentStep++;
+            
+            // Use easing function for smooth animation (ease-out)
+            const progress = currentStep / steps;
+            const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+            
+            // Calculate intermediate value
+            const currentValue = fromValue + (toValue - fromValue) * easedProgress;
+            
+            // Format and display the value
+            const displayValue = `£${currentValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            element.textContent = displayValue;
+            
+            // End animation
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                // Remove glow effect after animation
+                setTimeout(() => {
+                    element.style.textShadow = 'none';
+                }, 500);
+            }
+        }, stepDuration);
+    }
+    
     // Auto-refresh functionality for desktop dashboard
     function startDesktopAutoRefresh() {
         console.log('Starting desktop auto-refresh...');
@@ -658,13 +694,16 @@
                     const data = await response.json();
                     console.log('Received desktop live data:', data);
                     
-                    // Update current net worth - target the main display card
+                    // Update current net worth with smooth animation
                     const netWorthElement = document.querySelector('.privacy-sensitive');
                     if (netWorthElement && netWorthElement.textContent.includes('£')) {
-                        const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                        if (netWorthElement.textContent !== newValue) {
-                            netWorthElement.textContent = newValue;
-                            console.log('Updated desktop net worth to:', newValue);
+                        const currentText = netWorthElement.textContent;
+                        const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
+                        const newValue = data.current_net_worth;
+                        
+                        if (Math.abs(currentValue - newValue) > 0.01) { // Only animate if there's a meaningful change
+                            animateNetWorthValue(netWorthElement, currentValue, newValue);
+                            console.log('Updated desktop net worth to:', `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
                         }
                     } else {
                         console.log('Could not find main net worth element to update');
