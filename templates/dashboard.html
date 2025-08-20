@@ -658,15 +658,16 @@
                     const data = await response.json();
                     console.log('Received desktop live data:', data);
                     
-                    // Update current net worth
-                    const netWorthElement = document.querySelector('.privacy-sensitive p');
-                    if (netWorthElement) {
+                    // Update current net worth - target the main display card
+                    const netWorthElement = document.querySelector('.privacy-sensitive');
+                    if (netWorthElement && netWorthElement.textContent.includes('£')) {
                         const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                         if (netWorthElement.textContent !== newValue) {
                             netWorthElement.textContent = newValue;
                             console.log('Updated desktop net worth to:', newValue);
                         }
-                    }
+                    } else {
+                        console.log('Could not find main net worth element to update');
                     
                     // Update breakdown values in the sidebar
                     const breakdownItems = document.querySelectorAll('.privacy-sensitive');
