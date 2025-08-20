@@ -9,6 +9,9 @@
         <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Financial Dashboard</h1>
         <div class="text-right">
             <div id="price-status" class="text-xs sm:text-sm text-gray-400">Loading price status...</div>
+            <button onclick="testNetWorthAnimation()" class="mt-1 px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors">
+                Test Animation
+            </button>
         </div>
     </div>
 
@@ -682,6 +685,18 @@
         }, stepDuration);
     }
     
+    // Test function to manually trigger animation
+    function testNetWorthAnimation() {
+        const netWorthElement = document.querySelector('.privacy-sensitive');
+        if (netWorthElement && netWorthElement.textContent.includes('£')) {
+            const currentText = netWorthElement.textContent;
+            const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
+            // Add a small random change for demo
+            const testValue = currentValue + (Math.random() * 1000 - 500);
+            animateNetWorthValue(netWorthElement, currentValue, testValue);
+        }
+    }
+    
     // Auto-refresh functionality for desktop dashboard
     function startDesktopAutoRefresh() {
         console.log('Starting desktop auto-refresh...');
@@ -707,6 +722,7 @@
                         }
                     } else {
                         console.log('Could not find main net worth element to update');
+                    }
                     
                     // Update breakdown values in the sidebar
                     const breakdownItems = document.querySelectorAll('.privacy-sensitive');
