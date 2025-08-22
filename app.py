@@ -1882,6 +1882,94 @@ def realtime_chart_data():
                 DailyHistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
+        elif time_filter in ['2023', '2024', '2025']:
+            # Get data from NetworthEntry for specific year
+            from models import NetworthEntry
+            try:
+                year = int(time_filter)
+                monthly_data = NetworthEntry.query.filter_by(year=year).all()
+                
+                # Convert monthly tracker data to chart format  
+                data_points = []
+                
+                # Helper function to parse the unusual month format (e.g., "1st May")
+                def parse_month_string(month_str):
+                    """Parse month strings like '1st May' to month number"""
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    for i, month_name in enumerate(month_names):
+                        if month_name in month_str:
+                            return i + 1
+                    return 1  # Default to January if can't parse
+                
+                # Sort by parsed month order
+                monthly_data.sort(key=lambda x: parse_month_string(x.month))
+                
+                for month_data in monthly_data:
+                    # Create a fake data point object that matches our chart interface
+                    class FakeDataPoint:
+                        def __init__(self, timestamp, net_worth):
+                            self.timestamp = timestamp
+                            self.net_worth = net_worth
+                    
+                    # Create timestamp for the end of each month
+                    month_num = parse_month_string(month_data.month)
+                    month_end = datetime(year, month_num, 1)
+                    if month_num == 12:
+                        month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+                    else:
+                        month_end = datetime(year, month_num + 1, 1) - timedelta(days=1)
+                    
+                    data_points.append(FakeDataPoint(month_end, month_data.total_networth))
+                
+            except Exception as e:
+                logging.error(f"Error getting yearly data for {time_filter}: {str(e)}")
+                data_points = []
+                
+        elif time_filter == 'all-years':
+            # Get data from NetworthEntry for all years
+            from models import NetworthEntry
+            try:
+                monthly_data = NetworthEntry.query.order_by(NetworthEntry.year.asc()).all()
+                
+                # Convert monthly tracker data to chart format
+                data_points = []
+                
+                # Helper function to parse the unusual month format (e.g., "1st May")
+                def parse_month_string(month_str):
+                    """Parse month strings like '1st May' to month number"""
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    for i, month_name in enumerate(month_names):
+                        if month_name in month_str:
+                            return i + 1
+                    return 1  # Default to January if can't parse
+                
+                # Sort by year then month
+                monthly_data.sort(key=lambda x: (x.year, parse_month_string(x.month)))
+                
+                for month_data in monthly_data:
+                    # Create a fake data point object that matches our chart interface
+                    class FakeDataPoint:
+                        def __init__(self, timestamp, net_worth):
+                            self.timestamp = timestamp
+                            self.net_worth = net_worth
+                    
+                    # Create timestamp for the end of each month
+                    year = month_data.year
+                    month_num = parse_month_string(month_data.month)
+                    month_end = datetime(year, month_num, 1)
+                    if month_num == 12:
+                        month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+                    else:
+                        month_end = datetime(year, month_num + 1, 1) - timedelta(days=1)
+                    
+                    data_points.append(FakeDataPoint(month_end, month_data.total_networth))
+                
+            except Exception as e:
+                logging.error(f"Error getting all years data: {str(e)}")
+                data_points = []
+            
         else:  # Default to 24h
             # Get data from last 24 hours
             cutoff_time = datetime.now() - timedelta(hours=24)
@@ -1910,6 +1998,9 @@ def realtime_chart_data():
             elif time_filter in ['3months', 'year']:
                 # For 3 months/year data, show date (e.g., "22/08")
                 time_label = bst_time.strftime('%d/%m')
+            elif time_filter in ['2023', '2024', '2025', 'all-years']:
+                # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
+                time_label = bst_time.strftime('%b %y')
             
             labels.append(time_label)
             values.append(float(point.net_worth))

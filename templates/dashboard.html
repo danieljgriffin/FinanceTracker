@@ -329,31 +329,13 @@
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Charts</h2>
             </div>
             <div class="p-3 sm:p-4 lg:p-6">
-                <div class="mb-4 space-y-3">
-                    <!-- Chart Type Switcher -->
-                    <div class="flex justify-center">
-                        <div class="flex bg-gray-700/50 rounded-lg p-1">
-                            <button id="lineChartBtnCharts" onclick="switchChartTypeCharts('line')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors text-gray-300 hover:text-white">
-                                <i class="fas fa-chart-line mr-1"></i>Line Chart
-                            </button>
-                            <button id="barChartBtnCharts" onclick="switchChartTypeCharts('bar')" 
-                                    class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors bg-blue-600 text-white">
-                                <i class="fas fa-chart-bar mr-1"></i>Stacked Bar
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Time Range Filters -->
+                <div class="mb-4">
+                    <!-- Year Filters Only -->
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <button onclick="filterYearCharts('1d')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="1d">Last Day</button>
-                        <button onclick="filterYearCharts('1w')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="1w">Last Week</button>
-                        <button onclick="filterYearCharts('3m')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="3m">Last 3 Months</button>
-                        <button onclick="filterYearCharts('6m')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="6m">Last 6 Months</button>
-                        <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2023">2023</button>
-                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="2024">2024</button>
-                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white" data-year="2025">2025</button>
-                        <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 text-gray-300" data-year="all">All Years</button>
+                        <button onclick="filterYearCharts('2023')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-300 transition-colors" data-year="2023">2023</button>
+                        <button onclick="filterYearCharts('2024')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-300 transition-colors" data-year="2024">2024</button>
+                        <button onclick="filterYearCharts('2025')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-blue-600 text-white transition-colors" data-year="2025">2025</button>
+                        <button onclick="filterYearCharts('all')" class="year-filter-charts px-3 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-gray-300 transition-colors" data-year="all">All Years</button>
                     </div>
                 </div>
                 <div class="relative h-96 bg-gray-800/50 rounded-xl p-4 privacy-sensitive">
@@ -394,6 +376,22 @@
                             <button id="filter-year" onclick="switchRealtimeFilter('year')" 
                                     class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
                                 Year
+                            </button>
+                            <button id="filter-2023" onclick="switchRealtimeFilter('2023')" 
+                                    class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
+                                2023
+                            </button>
+                            <button id="filter-2024" onclick="switchRealtimeFilter('2024')" 
+                                    class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
+                                2024
+                            </button>
+                            <button id="filter-2025" onclick="switchRealtimeFilter('2025')" 
+                                    class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
+                                2025
+                            </button>
+                            <button id="filter-all-years" onclick="switchRealtimeFilter('all-years')" 
+                                    class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
+                                All
                             </button>
                         </div>
                         <div class="text-xs text-gray-400">
@@ -524,24 +522,9 @@
         }, 3000);
     }
     
-    // Chart variables
-    let currentChartTypeCharts = 'bar';
+    // Chart variables for Net Worth Charts (stacked bar only)
     let currentYearFilterSeparate = '2025';
     let networthChartSeparate;
-    
-    // Chart type switching for separate charts section
-    function switchChartTypeCharts(type) {
-        currentChartTypeCharts = type;
-        
-        // Update button states
-        document.getElementById('lineChartBtnCharts').className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors ' + 
-            (type === 'line' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white');
-        document.getElementById('barChartBtnCharts').className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-colors ' + 
-            (type === 'bar' ? 'bg-blue-600 text-white' : 'text-gray-300 hover:text-white');
-        
-        // Reload chart with new type
-        loadChartDataSeparate(currentYearFilterSeparate);
-    }
     
     // Year filtering for separate charts
     function filterYearCharts(year) {
@@ -567,9 +550,9 @@
             chartLoadingElement.style.display = 'block';
         }
         
-        console.log('Loading chart data for year:', year, 'type:', currentChartTypeCharts);
+        console.log('Loading chart data for year:', year, 'type:', 'bar');
         
-        fetch(`/api/networth-chart-data?year=${year}&type=${currentChartTypeCharts}`)
+        fetch(`/api/networth-chart-data?year=${year}&type=bar`)
             .then(response => response.json())
             .then(data => {
                 console.log('Received chart data:', data);
@@ -600,11 +583,9 @@
                         datasets: [{
                             label: 'Net Worth',
                             data: data.values || [],
-                            borderColor: currentChartTypeCharts === 'line' ? '#3b82f6' : 'rgba(59, 130, 246, 0.8)',
-                            backgroundColor: currentChartTypeCharts === 'line' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(59, 130, 246, 0.6)',
-                            borderWidth: currentChartTypeCharts === 'line' ? 3 : 1,
-                            fill: currentChartTypeCharts === 'line',
-                            tension: currentChartTypeCharts === 'line' ? 0.4 : 0
+                            borderColor: 'rgba(59, 130, 246, 0.8)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                            borderWidth: 1
                         }]
                     };
                 } else {
@@ -625,7 +606,7 @@
                 }
                 
                 const config = {
-                    type: currentChartTypeCharts,
+                    type: 'bar',
                     data: chartData,
                     options: {
                         responsive: true,
@@ -685,10 +666,9 @@
                     }
                 };
                 
-                if (currentChartTypeCharts === 'bar') {
-                    config.options.scales.x.stacked = true;
-                    config.options.scales.y.stacked = true;
-                }
+                // Always use stacked bar for Net Worth charts
+                config.options.scales.x.stacked = true;
+                config.options.scales.y.stacked = true;
                 
                 networthChartSeparate = new Chart(ctx, config);
                 console.log('Chart created successfully');
@@ -803,11 +783,16 @@
         currentRealtimeFilter = filter;
         
         // Update button styles
-        const buttons = ['filter-24h', 'filter-week', 'filter-month', 'filter-3months', 'filter-year'];
+        const buttons = ['filter-24h', 'filter-week', 'filter-month', 'filter-3months', 'filter-year', 'filter-2023', 'filter-2024', 'filter-2025', 'filter-all-years'];
         
         buttons.forEach(buttonId => {
             const button = document.getElementById(buttonId);
-            const filterName = buttonId.replace('filter-', '');
+            let filterName = buttonId.replace('filter-', '');
+            
+            // Handle special case for all-years button
+            if (filterName === 'all-years') {
+                filterName = 'all-years';
+            }
             
             if (button) {
                 if (filterName === filter) {
