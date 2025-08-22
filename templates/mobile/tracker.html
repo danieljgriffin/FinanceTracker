@@ -144,8 +144,38 @@
                                 <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalNov">£0</td>
                                 <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalDec">£0</td>
                             </tr>
+                            <tr class="bg-gray-700/30 border-t border-gray-600">
+                                <td class="p-3 text-xs font-semibold text-gray-300 sticky left-0 bg-gray-700/30">M-o-M Change</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeJan">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeFeb">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeMar">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeApr">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeMay">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeJun">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeJul">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeAug">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeSep">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeOct">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeNov">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeDec">-</td>
+                            </tr>
                         </tfoot>
                     </table>
+                </div>
+            </div>
+            
+            <!-- Year Summary -->
+            <div class="mt-4 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-300 mb-3">Year Summary for <span id="yearSummaryYear">2025</span></h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs text-gray-400">Net Worth Growth</div>
+                        <div class="text-lg font-bold text-green-400" id="yearNetWorthGrowth">+£0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400">Current Net Worth</div>
+                        <div class="text-lg font-bold text-white" id="yearEndNetWorth">£0</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -256,7 +286,39 @@
             });
             
             document.getElementById('selectedYearDisplay').textContent = year;
+            document.getElementById('yearSummaryYear').textContent = year;
             updatePlatformProgress();
+        }
+
+        function updateYearSummary(monthlyTotals) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            let startValue = 0;
+            let endValue = 0;
+            
+            // Find first month with data
+            for (const month of months) {
+                if (monthlyTotals[month] > 0) {
+                    startValue = monthlyTotals[month];
+                    break;
+                }
+            }
+            
+            // Find last month with data
+            for (let i = months.length - 1; i >= 0; i--) {
+                if (monthlyTotals[months[i]] > 0) {
+                    endValue = monthlyTotals[months[i]];
+                    break;
+                }
+            }
+            
+            const netWorthGrowth = endValue - startValue;
+            
+            document.getElementById('yearNetWorthGrowth').textContent = 
+                `${netWorthGrowth >= 0 ? '+' : ''}£${netWorthGrowth.toLocaleString('en-GB')}`;
+            document.getElementById('yearNetWorthGrowth').className = 
+                `text-lg font-bold ${netWorthGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`;
+            document.getElementById('yearEndNetWorth').textContent = 
+                `£${endValue.toLocaleString('en-GB')}`;
         }
 
         function updatePlatformProgress() {
@@ -326,14 +388,37 @@
                 `;
             }).join('');
             
-            // Update totals row
-            months.forEach(month => {
+            // Update totals row and calculate month-on-month changes
+            let previousMonthTotal = 0;
+            months.forEach((month, index) => {
                 const totalEl = document.getElementById(`total${month}`);
+                const changeEl = document.getElementById(`change${month}`);
                 const total = monthlyTotals[month];
+                
                 if (totalEl) {
                     totalEl.textContent = total > 0 ? `£${(total / 1000).toFixed(2)}k` : '£0';
                 }
+                
+                if (changeEl && index > 0 && total > 0 && previousMonthTotal > 0) {
+                    const change = total - previousMonthTotal;
+                    const changePercent = (change / previousMonthTotal) * 100;
+                    const changeColor = change >= 0 ? 'text-green-400' : 'text-red-400';
+                    const changeSign = change >= 0 ? '+' : '';
+                    
+                    changeEl.textContent = `${changeSign}£${(change / 1000).toFixed(2)}k (${changeSign}${changePercent.toFixed(1)}%)`;
+                    changeEl.className = `text-center p-3 text-xs font-semibold ${changeColor}`;
+                } else if (changeEl) {
+                    changeEl.textContent = '-';
+                    changeEl.className = 'text-center p-3 text-xs font-semibold text-gray-500';
+                }
+                
+                if (total > 0) {
+                    previousMonthTotal = total;
+                }
             });
+            
+            // Calculate and display year summary
+            updateYearSummary(monthlyTotals);
         }
 
         function updateYearSummary(yearData) {
