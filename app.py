@@ -1451,7 +1451,7 @@ def update_all_prices():
         return 0
 
 def collect_historical_data():
-    """Collect current net worth data for historical tracking with clean timestamps"""
+    """Collect current net worth data for historical tracking every 15 minutes"""
     global last_historical_collection
     try:
         from models import HistoricalNetWorth, db
@@ -1481,27 +1481,14 @@ def collect_historical_data():
             if platform_total > 0:
                 platform_breakdown[platform] = platform_total
         
-        # Create clean timestamp on the hour or half-hour in user's BST timezone
+        # Use current time for real-time collection every 15 minutes
         now = datetime.now()
         uk_tz = pytz.timezone('Europe/London')
         uk_now = now.astimezone(uk_tz)
         
-        # Round to nearest 30-minute interval for clean BST timestamps
-        minute = uk_now.minute
-        if minute < 15:
-            clean_minute = 0
-        elif minute < 45:
-            clean_minute = 30
-        else:
-            clean_minute = 0
-            uk_now = uk_now + timedelta(hours=1)
-        
-        # Create clean timestamp in BST
-        clean_timestamp = uk_now.replace(minute=clean_minute, second=0, microsecond=0)
-        
-        # Store historical data point with clean timestamp
+        # Store historical data point with current timestamp
         historical_entry = HistoricalNetWorth(
-            timestamp=clean_timestamp,
+            timestamp=uk_now,
             net_worth=current_net_worth,
             platform_breakdown=platform_breakdown
         )
@@ -1510,7 +1497,7 @@ def collect_historical_data():
         db.session.commit()
         
         last_historical_collection = datetime.now()
-        logging.info(f"Historical data collected: £{current_net_worth:,.2f} at {clean_timestamp.strftime('%H:%M')}")
+        logging.info(f"Historical data collected: £{current_net_worth:,.2f} at {uk_now.strftime('%H:%M')}")
         
     except Exception as e:
         logging.error(f"Error collecting historical data: {str(e)}")
@@ -1532,27 +1519,11 @@ def background_price_updater():
                 
                 now = datetime.now()
                 
-                # Smart historical data collection with round timing in UK time:
-                # - Every 30 minutes on the hour/half-hour (7:00, 7:30, 8:00, etc.) UK time
-                # - Clean timing for better user experience
-                should_collect = False
+                # Collect historical data every 15 minutes for real-time tracking
+                time_since_last = (now - last_historical_collection).total_seconds() / 60
                 
-                # Convert to UK timezone (BST/GMT) for timing - user's local time
-                import pytz
-                uk_tz = pytz.timezone('Europe/London')
-                uk_now = now.astimezone(uk_tz)
-                current_minute = uk_now.minute
-                current_second = uk_now.second
-                
-                # Collect on the hour (0 minutes) or half-hour (30 minutes) with wider window
-                if (current_minute == 0 or current_minute == 30) and current_second <= 60:
-                    # Make sure we haven't collected in the last 25 minutes to avoid duplicates
-                    time_since_last = (now - last_historical_collection).total_seconds()
-                    if time_since_last >= 1500:  # 25 minutes minimum gap
-                        should_collect = True
-                        logging.info(f"Historical collection triggered at BST time: {uk_now.strftime('%H:%M:%S')}")
-                
-                if should_collect:
+                # Collect every 15 minutes consistently
+                if time_since_last >= 15:
                     collect_historical_data()
                 
                 # Clean up old data daily to maintain tiered storage
@@ -1650,6 +1621,43 @@ def manual_collect_historical_data():
     except Exception as e:
         logging.error(f"Error in manual historical data collection: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/realtime-chart-data')
+def realtime_chart_data():
+    """API endpoint for real-time historical chart data - last 24 hours"""
+    try:
+        from models import HistoricalNetWorth
+        import pytz
+        
+        # Get data from last 24 hours
+        cutoff_time = datetime.now() - timedelta(hours=24)
+        
+        data_points = HistoricalNetWorth.query.filter(
+            HistoricalNetWorth.timestamp >= cutoff_time
+        ).order_by(HistoricalNetWorth.timestamp.asc()).all()
+        
+        labels = []
+        values = []
+        
+        uk_tz = pytz.timezone('Europe/London')
+        
+        for point in data_points:
+            # Convert to BST for display
+            bst_time = point.timestamp.astimezone(uk_tz)
+            time_label = bst_time.strftime('%H:%M')
+            
+            labels.append(time_label)
+            values.append(float(point.net_worth))
+        
+        return jsonify({
+            'labels': labels,
+            'values': values,
+            'count': len(data_points)
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting real-time chart data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/price-status')
 def price_status():

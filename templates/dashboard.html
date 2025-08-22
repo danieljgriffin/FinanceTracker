@@ -366,6 +366,34 @@
             </div>
         </div>
     </div>
+    
+    <!-- Real-Time Net Worth Chart - 24 Hours -->
+    <div class="mt-6">
+        <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-600/30">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg sm:text-xl font-semibold text-white">Real-Time Progress</h2>
+                    <div class="text-sm text-gray-400">
+                        Last 24 hours • Updates every 15 minutes
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 sm:p-4 lg:p-6">
+                <div class="relative h-64 bg-gray-800/50 rounded-xl p-4 privacy-sensitive">
+                    <canvas id="realtimeChart" width="400" height="200"></canvas>
+                </div>
+                <div id="realtimeChartLoading" class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-gray-400 text-2xl mb-2"></i>
+                    <p class="text-gray-400 text-sm">Loading real-time data...</p>
+                </div>
+                
+                <!-- Data Point Count -->
+                <div class="mt-3 text-center">
+                    <span id="realtimeDataCount" class="text-xs text-gray-500">Data points: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -649,6 +677,102 @@
             });
     }
     
+    // Real-time chart functionality
+    let realtimeChart;
+    
+    function loadRealtimeChart() {
+        const chartLoadingElement = document.getElementById('realtimeChartLoading');
+        const dataCountElement = document.getElementById('realtimeDataCount');
+        
+        if (chartLoadingElement) {
+            chartLoadingElement.style.display = 'block';
+        }
+        
+        fetch('/api/realtime-chart-data')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Real-time chart data:', data);
+                
+                // Update data count
+                if (dataCountElement) {
+                    dataCountElement.textContent = `Data points: ${data.count || 0}`;
+                }
+                
+                // Clear existing chart
+                if (realtimeChart) {
+                    realtimeChart.destroy();
+                }
+                
+                const ctx = document.getElementById('realtimeChart').getContext('2d');
+                
+                const chartData = {
+                    labels: data.labels || [],
+                    datasets: [{
+                        label: 'Net Worth',
+                        data: data.values || [],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                };
+                
+                realtimeChart = new Chart(ctx, {
+                    type: 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                                titleColor: '#f3f4f6',
+                                bodyColor: '#e5e7eb',
+                                borderColor: '#6b7280',
+                                borderWidth: 1,
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Net Worth: £' + context.parsed.y.toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { 
+                                ticks: { color: '#9ca3af', font: { size: 10 } },
+                                grid: { color: '#374151' }
+                            },
+                            y: { 
+                                ticks: { 
+                                    color: '#9ca3af',
+                                    font: { size: 10 },
+                                    callback: function(value) { return '£' + value.toLocaleString(); }
+                                },
+                                grid: { color: '#374151' }
+                            }
+                        }
+                    }
+                });
+                
+                console.log('Real-time chart created successfully');
+            })
+            .catch(error => {
+                console.error('Error loading real-time chart:', error);
+                if (chartLoadingElement) {
+                    chartLoadingElement.innerHTML = '<p class="text-red-400 text-sm">Error loading real-time data</p>';
+                }
+            })
+            .finally(() => {
+                if (chartLoadingElement) {
+                    chartLoadingElement.style.display = 'none';
+                }
+            });
+    }
+    
     // Animate net worth value updates with rolling numbers
     function animateNetWorthValue(element, fromValue, toValue) {
         const duration = 1200; // Animation duration in milliseconds
@@ -750,6 +874,11 @@
                             });
                         }
                     });
+                    
+                    // Refresh real-time chart if it exists
+                    if (document.getElementById('realtimeChart')) {
+                        loadRealtimeChart();
+                    }
                     
                 } else {
                     console.error('Failed to fetch desktop live values:', response.status);
@@ -1032,6 +1161,10 @@
         if (document.getElementById('millionPredictionChart')) {
             createMillionPredictionChart();
         }
+        
+        if (document.getElementById('realtimeChart')) {
+            loadRealtimeChart();
+        }
     });
     
     // Prediction settings modal functions
@@ -1077,6 +1210,11 @@
         
         // Create million prediction chart
         createMillionPredictionChart();
+        
+        // Load real-time chart
+        if (document.getElementById('realtimeChart')) {
+            loadRealtimeChart();
+        }
         
         // Start auto-refresh for live updates
         startDesktopAutoRefresh();
