@@ -50,18 +50,18 @@
             <div class="bg-gray-900 rounded-xl p-6">
                 <div class="text-center mb-4">
                     <h2 class="text-lg font-semibold text-white mb-2">Current Position</h2>
-                    <div id="currentNetWorth" class="text-3xl font-bold text-blue-400">Loading...</div>
+                    <div id="currentNetWorth" class="text-3xl font-bold text-white">Loading...</div>
                     <div class="text-gray-400 text-sm mt-1">Portfolio Value</div>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-4 mt-4">
                     <div class="bg-gray-800 rounded-lg p-4 text-center">
                         <div class="text-gray-400 text-xs mb-1">Monthly Investment</div>
-                        <div id="monthlyInvestment" class="text-lg font-bold text-green-400">-</div>
+                        <div id="monthlyInvestment" class="text-lg font-bold text-white">-</div>
                     </div>
                     <div class="bg-gray-800 rounded-lg p-4 text-center">
                         <div class="text-gray-400 text-xs mb-1">Projected APY</div>
-                        <div class="text-lg font-bold text-purple-400">9%</div>
+                        <div class="text-lg font-bold text-white">9%</div>
                     </div>
                 </div>
             </div>
@@ -123,20 +123,23 @@
 
         async function loadCurrentPosition() {
             try {
-                // Use the same API as mobile home page
-                const response = await fetch('/api/live-values');
-                const data = await response.json();
+                // Get portfolio value
+                const liveResponse = await fetch('/api/live-values');
+                const liveData = await liveResponse.json();
                 
                 document.getElementById('currentNetWorth').textContent = 
-                    '£' + data.current_net_worth.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                    '£' + liveData.current_net_worth.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 
-                // For monthly investment, we can use a simple estimate or set to 0 for now
-                // TODO: Create proper monthly investment endpoint if needed
-                document.getElementById('monthlyInvestment').textContent = '£2,000';
+                // Get correct monthly investment data
+                const monthlyResponse = await fetch('/api/monthly-breakdown');
+                const monthlyData = await monthlyResponse.json();
+                document.getElementById('monthlyInvestment').textContent = 
+                    '£' + (monthlyData.total_investment_commitments || 0).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 
             } catch (error) {
                 console.error('Error loading current position:', error);
                 document.getElementById('currentNetWorth').textContent = 'Error loading data';
+                document.getElementById('monthlyInvestment').textContent = 'Error';
             }
         }
 
@@ -193,7 +196,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex-1">
                                 <h3 class="text-lg font-bold text-white">${goal.title || targetDate.getFullYear() + '/' + String(targetDate.getMonth() + 1).padStart(2, '0')}</h3>
-                                <p class="text-2xl font-bold text-blue-400">£${targetAmount.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                <p class="text-2xl font-bold text-white">£${targetAmount.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                                 <p class="text-sm text-gray-400">${targetDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} Target</p>
                             </div>
                             
@@ -215,7 +218,7 @@
                                     <circle 
                                         cx="50" cy="50" r="40" 
                                         fill="none" 
-                                        stroke="${isCompleted ? '#10b981' : '#3b82f6'}" 
+                                        stroke="${isCompleted ? '#10b981' : '#ffffff'}" 
                                         stroke-width="8"
                                         stroke-dasharray="251.2"
                                         stroke-dashoffset="${251.2 - (progress / 100) * 251.2}"
@@ -224,7 +227,7 @@
                                     />
                                 </svg>
                                 <div class="absolute inset-0 flex items-center justify-center">
-                                    <span class="text-lg font-bold ${isCompleted ? 'text-green-400' : 'text-blue-400'}">${Math.round(progress)}%</span>
+                                    <span class="text-lg font-bold ${isCompleted ? 'text-green-400' : 'text-white'}">${Math.round(progress)}%</span>
                                 </div>
                             </div>
                         </div>
