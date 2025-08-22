@@ -332,11 +332,15 @@
                     }
                 }
                 
-                // Mark current value point (last point) differently - use actual last point position
-                const lastIndex = data.values.length - 1;
-                const lastX = padding + (lastIndex / (data.values.length - 1)) * plotWidth;
-                const lastY = padding + plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * plotHeight;
-                const currentPointMarkup = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>`;
+                // Mark current value point only for live/current data (not historical years)
+                let currentPointMarkup = '';
+                if (range !== '2023' && range !== '2024') {
+                    // Only show "current" indicator for live data ranges
+                    const lastIndex = data.values.length - 1;
+                    const lastX = padding + (lastIndex / (data.values.length - 1)) * plotWidth;
+                    const lastY = padding + plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * plotHeight;
+                    currentPointMarkup = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>`;
+                }
                 
                 svg.innerHTML = `
                     <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${points}"/>
