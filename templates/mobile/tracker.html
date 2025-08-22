@@ -348,22 +348,15 @@
                 return;
             }
             
-            // Calculate December total from previous year (using same month matching logic)
+            // Calculate December total from previous year - specifically "1st Dec" to match desktop
             let previousDecTotal = 0;
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
             Object.values(previousYearData).forEach(platformData => {
                 const platformMonths = platformData.months || {};
-                const monthKeys = Object.keys(platformMonths);
                 
-                // Find December data using same matching logic as main table
-                const decKey = monthKeys.find(key => 
-                    key.includes('Dec') || 
-                    key.toLowerCase().includes('dec')
-                );
-                
-                if (decKey && platformMonths[decKey]?.value > 0) {
-                    previousDecTotal += platformMonths[decKey].value;
+                // Look specifically for "1st Dec" key to match desktop logic exactly
+                if (platformMonths['1st Dec']?.value > 0) {
+                    previousDecTotal += platformMonths['1st Dec'].value;
                 }
             });
             
