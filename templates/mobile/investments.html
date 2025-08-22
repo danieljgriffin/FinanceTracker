@@ -15,15 +15,15 @@
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
     <!-- Mobile Header -->
-    <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-4 shadow-lg">
+    <div class="bg-black p-4 border-b border-gray-800">
         <div class="flex items-center justify-between">
-            <h1 class="text-xl font-bold">Investments</h1>
+            <h1 class="text-xl font-bold text-white">Investments</h1>
             <i class="fas fa-chart-line text-blue-400"></i>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container mx-auto px-4 py-6 pb-24">
+    <div class="px-4 py-6 pb-24">
         
         <!-- Loading State -->
         <div id="loadingState" class="text-center py-8">
@@ -39,7 +39,7 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-600">
+    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
         <div class="flex justify-around py-3">
             <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
                 <i class="fas fa-home text-xl mb-1"></i>
@@ -90,7 +90,7 @@
 
         function createPlatformElement(platformName, platformData) {
             const platformDiv = document.createElement('div');
-            platformDiv.className = 'bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600';
+            platformDiv.className = 'bg-gray-900 rounded-2xl p-5 border border-gray-800';
             
             // Calculate platform totals
             const totalValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, platformData.cash || 0);
@@ -99,13 +99,13 @@
             
             platformDiv.innerHTML = `
                 <!-- Platform Header -->
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-600">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-800">
                     <div>
                         <h3 class="text-lg font-bold text-white">${platformName}</h3>
                         <p class="text-2xl font-bold text-blue-400 mt-1">£${totalValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-sm text-gray-400">Total P&L</p>
+                        <p class="text-sm text-gray-500">Total P&L</p>
                         <p class="font-bold ${totalPL >= 0 ? 'text-green-400' : 'text-red-400'}">
                             ${totalPL >= 0 ? '+' : ''}${totalPLPercent.toFixed(2)}%
                         </p>
@@ -118,11 +118,11 @@
                 <!-- Investments List -->
                 <div class="space-y-3">
                     ${platformData.investments.map(investment => `
-                        <div class="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                        <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <h4 class="font-semibold text-white text-sm">${investment.name}</h4>
-                                    <p class="text-xs text-gray-400 mt-1">£${investment.current_price?.toFixed(4) || 'N/A'}</p>
+                                    <p class="text-xs text-gray-500 mt-1">£${investment.current_price?.toFixed(4) || 'N/A'}</p>
                                 </div>
                                 <div class="text-right ml-4">
                                     <p class="font-bold text-white">£${investment.current_value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
@@ -142,8 +142,8 @@
 
                 <!-- Cash Balance -->
                 ${platformData.cash ? `
-                    <div class="mt-4 pt-3 border-t border-slate-600">
-                        <div class="flex justify-between items-center bg-slate-600/30 rounded-xl p-3">
+                    <div class="mt-4 pt-3 border-t border-gray-800">
+                        <div class="flex justify-between items-center bg-gray-800/30 rounded-xl p-3">
                             <div class="flex items-center">
                                 <i class="fas fa-coins text-yellow-400 mr-2"></i>
                                 <span class="font-semibold text-white">Cash Balance</span>

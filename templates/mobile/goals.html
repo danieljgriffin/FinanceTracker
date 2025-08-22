@@ -15,22 +15,22 @@
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
     <!-- Mobile Header -->
-    <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-4 shadow-lg">
+    <div class="bg-black p-4 border-b border-gray-800">
         <div class="flex items-center justify-between">
-            <h1 class="text-xl font-bold">Goals</h1>
+            <h1 class="text-xl font-bold text-white">Goals</h1>
             <i class="fas fa-bullseye text-blue-400"></i>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="container mx-auto px-4 py-6 pb-24">
+    <div class="px-4 py-6 pb-24">
         
         <!-- Current Position -->
-        <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600 mb-6">
+        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6">
             <div class="text-center">
                 <h2 class="text-lg font-bold text-white mb-2">Current Position</h2>
                 <p class="text-3xl font-bold text-blue-400" id="currentNetWorth">£0.00</p>
-                <p class="text-sm text-gray-400 mt-1" id="lastUpdated">Loading...</p>
+                <p class="text-sm text-gray-500 mt-1" id="lastUpdated">Loading...</p>
             </div>
         </div>
 
@@ -58,7 +58,7 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-600">
+    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
         <div class="flex justify-around py-3">
             <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
                 <i class="fas fa-home text-xl mb-1"></i>
@@ -123,9 +123,9 @@
             if (!goals || goals.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8">
-                        <i class="fas fa-bullseye text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-400">No goals set yet</p>
-                        <p class="text-sm text-gray-500 mt-2">Add your first financial goal to start tracking progress</p>
+                        <i class="fas fa-bullseye text-4xl text-gray-600 mb-4"></i>
+                        <p class="text-gray-500">No goals set yet</p>
+                        <p class="text-sm text-gray-600 mt-2">Add your first financial goal to start tracking progress</p>
                     </div>
                 `;
                 return;
@@ -139,7 +139,7 @@
 
         function createGoalElement(goal) {
             const goalDiv = document.createElement('div');
-            goalDiv.className = 'bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600';
+            goalDiv.className = 'bg-gray-900 rounded-2xl p-5 border border-gray-800';
             
             // Calculate progress
             const currentNetWorth = parseFloat(document.getElementById('currentNetWorth').textContent.replace(/[£,]/g, ''));
@@ -167,10 +167,10 @@
                 <!-- Progress Bar -->
                 <div class="mb-4">
                     <div class="flex justify-between text-sm mb-2">
-                        <span class="text-gray-400">Progress</span>
+                        <span class="text-gray-500">Progress</span>
                         <span class="text-white font-semibold">${progressPercent.toFixed(1)}%</span>
                     </div>
-                    <div class="w-full bg-slate-600 rounded-full h-3">
+                    <div class="w-full bg-gray-800 rounded-full h-3">
                         <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500" 
                              style="width: ${progressPercent}%"></div>
                     </div>
@@ -179,11 +179,11 @@
                 <!-- Goal Stats -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="text-center">
-                        <p class="text-sm text-gray-400">Remaining</p>
+                        <p class="text-sm text-gray-500">Remaining</p>
                         <p class="font-bold text-white">£${remaining.toLocaleString('en-GB')}</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-sm text-gray-400">${daysRemaining > 0 ? 'Days Left' : 'Overdue'}</p>
+                        <p class="text-sm text-gray-500">${daysRemaining > 0 ? 'Days Left' : 'Overdue'}</p>
                         <p class="font-bold ${daysRemaining > 0 ? 'text-blue-400' : 'text-red-400'}">
                             ${Math.abs(daysRemaining)} ${daysRemaining === 1 ? 'day' : 'days'}
                         </p>
@@ -192,9 +192,9 @@
 
                 <!-- Monthly Requirement (if applicable) -->
                 ${daysRemaining > 0 && remaining > 0 ? `
-                    <div class="mt-4 pt-3 border-t border-slate-600">
+                    <div class="mt-4 pt-3 border-t border-gray-800">
                         <div class="text-center">
-                            <p class="text-sm text-gray-400">Monthly Requirement</p>
+                            <p class="text-sm text-gray-500">Monthly Requirement</p>
                             <p class="font-bold text-yellow-400">
                                 £${(remaining / (daysRemaining / 30)).toLocaleString('en-GB', { maximumFractionDigits: 0 })}
                             </p>
