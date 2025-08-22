@@ -1509,15 +1509,22 @@ def background_price_updater():
     # Set initial collection time to trigger first collection
     last_historical_collection = datetime.now() - timedelta(minutes=31)  # Trigger first collection soon
     last_cleanup = datetime.now() - timedelta(days=1)  # Trigger first cleanup
+    last_price_update = datetime.now() - timedelta(minutes=16)  # Trigger first price update soon
     
     while True:
         try:
-            time.sleep(PRICE_REFRESH_INTERVAL)
+            time.sleep(60)  # Check every minute to catch clean 15-minute intervals
             # Create Flask application context for database access
             with app.app_context():
-                update_all_prices()
-                
                 now = datetime.now()
+                
+                # Update prices every 15 minutes
+                time_since_price_update = (now - last_price_update).total_seconds() / 60
+                if time_since_price_update >= 15:
+                    update_all_prices()
+                    last_price_update = now
+                    logging.info("✅ Price update completed")
+                
                 
                 # Collect historical data at aligned 15-minute intervals (00, 15, 30, 45)
                 import pytz
@@ -1532,7 +1539,12 @@ def background_price_updater():
                 # Collect only at clean 15-minute intervals and avoid duplicates
                 if is_collection_time and time_since_last >= 10:  # 10 min gap to avoid duplicates
                     collect_historical_data()
-                    logging.info(f"Historical collection at aligned time: {uk_now.strftime('%H:%M')}")
+                    last_historical_collection = now  # Update the last collection time
+                    logging.info(f"✅ Historical collection completed at aligned time: {uk_now.strftime('%H:%M:%S')} BST")
+                elif is_collection_time:
+                    logging.info(f"⏰ Collection time {uk_now.strftime('%H:%M')} BST but too soon since last (wait {10 - time_since_last:.1f} min)")
+                else:
+                    logging.debug(f"⏳ Not collection time - current minute: {current_minute}, next at: {[x for x in [0,15,30,45] if x > current_minute] or [0]}")
                 
                 # Clean up old data daily to maintain tiered storage
                 if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
