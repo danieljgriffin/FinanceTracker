@@ -98,29 +98,54 @@
             </div>
         </div>
         
-        <!-- Platform Progress Section -->
+        <!-- Platform Values Table -->
         <div class="px-6 mb-8">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-white">Platform Progress</h2>
+                <h2 class="text-lg font-semibold text-white">Platform Values</h2>
                 <div class="text-sm text-gray-400" id="selectedYearDisplay">2025</div>
             </div>
             
-            <div class="space-y-4" id="platformProgress">
-                <!-- Platform data will be loaded here -->
-            </div>
-            
-            <!-- Year Summary -->
-            <div class="mt-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
-                <h3 class="text-sm font-semibold text-gray-300 mb-3">Year Summary</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <div class="text-xs text-gray-400">Net Worth Growth</div>
-                        <div class="text-lg font-bold text-green-400" id="yearNetWorthGrowth">+£0</div>
-                    </div>
-                    <div>
-                        <div class="text-xs text-gray-400">Total Net Worth</div>
-                        <div class="text-lg font-bold text-white" id="yearEndNetWorth">£0</div>
-                    </div>
+            <div class="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-max">
+                        <thead>
+                            <tr class="bg-gray-800/50 border-b border-gray-700">
+                                <th class="text-left p-3 text-xs font-semibold text-gray-300 sticky left-0 bg-gray-800/50 min-w-[140px]">Platform</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Jan</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Feb</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Mar</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Apr</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">May</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Jun</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Jul</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Aug</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Sep</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Oct</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Nov</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Dec</th>
+                            </tr>
+                        </thead>
+                        <tbody id="platformTable">
+                            <!-- Platform data will be loaded here -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-gray-800/50 border-t border-gray-700">
+                                <td class="p-3 text-sm font-bold text-white sticky left-0 bg-gray-800/50">Total</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalJan">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalFeb">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalMar">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalApr">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalMay">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalJun">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalJul">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalAug">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalSep">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalOct">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalNov">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalDec">£0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
             </div>
         </div>
@@ -234,71 +259,65 @@
         }
 
         function updatePlatformProgress() {
-            const container = document.getElementById('platformProgress');
+            const container = document.getElementById('platformTable');
             const yearData = trackerData.platform_data?.[currentYear] || {};
             const platforms = Object.keys(yearData);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             
             if (platforms.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
-                        <p class="text-gray-400">No platform data for ${currentYear}</p>
-                        <p class="text-sm text-gray-500 mt-2">Add monthly data to see progress</p>
-                    </div>
+                    <tr>
+                        <td colspan="13" class="text-center py-8 text-gray-400">
+                            <i class="fas fa-chart-line text-gray-400 text-3xl mb-3 block"></i>
+                            No platform data for ${currentYear}
+                        </td>
+                    </tr>
                 `;
+                // Reset totals
+                months.forEach(month => {
+                    const totalEl = document.getElementById(`total${month}`);
+                    if (totalEl) totalEl.textContent = '£0';
+                });
                 return;
             }
             
+            // Calculate monthly totals
+            const monthlyTotals = {};
+            months.forEach(month => monthlyTotals[month] = 0);
+            
             container.innerHTML = platforms.map(platform => {
                 const data = yearData[platform];
-                const months = data.months || {};
-                const monthNames = Object.keys(months).sort((a, b) => {
-                    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    return monthOrder.indexOf(a) - monthOrder.indexOf(b);
-                });
+                const platformMonths = data.months || {};
                 
-                const startValue = monthNames.length > 0 ? months[monthNames[0]]?.value || 0 : 0;
-                const endValue = monthNames.length > 0 ? months[monthNames[monthNames.length - 1]]?.value || 0 : 0;
-                const growth = endValue - startValue;
-                const growthPercent = startValue > 0 ? ((growth / startValue) * 100) : 0;
+                const monthCells = months.map(month => {
+                    const value = platformMonths[month]?.value || 0;
+                    if (value > 0) {
+                        monthlyTotals[month] += value;
+                    }
+                    
+                    return `
+                        <td class="text-center p-3 text-sm ${value > 0 ? 'text-white' : 'text-gray-600'}">
+                            ${value > 0 ? `£${(value / 1000).toFixed(0)}k` : '-'}
+                        </td>
+                    `;
+                }).join('');
                 
                 return `
-                    <div class="platform-card p-4 bg-gray-900/30 rounded-xl">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-semibold text-white text-sm">${platform}</h3>
-                            <div class="text-right">
-                                <div class="text-sm font-bold text-white">£${endValue.toLocaleString('en-GB')}</div>
-                                <div class="text-xs ${growth >= 0 ? 'text-green-400' : 'text-red-400'}">
-                                    ${growth >= 0 ? '+' : ''}£${growth.toLocaleString('en-GB')} 
-                                    (${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%)
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-6 gap-1 mb-2">
-                            ${monthNames.map(month => {
-                                const monthData = months[month];
-                                const hasData = monthData && monthData.value > 0;
-                                return `
-                                    <div class="text-center">
-                                        <div class="text-xs text-gray-400 mb-1">${month}</div>
-                                        <div class="h-2 rounded-full ${hasData ? 'bg-blue-500' : 'bg-gray-700'}"></div>
-                                        ${hasData ? `<div class="text-xs text-gray-300 mt-1">£${(monthData.value / 1000).toFixed(0)}k</div>` : ''}
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                        
-                        <div class="text-xs text-gray-500 mt-2">
-                            ${monthNames.length} month${monthNames.length !== 1 ? 's' : ''} tracked
-                        </div>
-                    </div>
+                    <tr class="border-b border-gray-800/30 hover:bg-gray-800/20">
+                        <td class="p-3 text-sm font-medium text-white sticky left-0 bg-gray-900/50">${platform}</td>
+                        ${monthCells}
+                    </tr>
                 `;
             }).join('');
             
-            // Update year summary
-            updateYearSummary(yearData);
+            // Update totals row
+            months.forEach(month => {
+                const totalEl = document.getElementById(`total${month}`);
+                const total = monthlyTotals[month];
+                if (totalEl) {
+                    totalEl.textContent = total > 0 ? `£${(total / 1000).toFixed(0)}k` : '£0';
+                }
+            });
         }
 
         function updateYearSummary(yearData) {

@@ -2780,25 +2780,14 @@ def api_tracker_data():
             year_data = {}
             
             for entry in year_entries:
-                # Map platform names to database field names
-                platform_mappings = {
-                    'Trading212 ISA': 'trading212_isa',
-                    'Degiro': 'degiro',
-                    'InvestEngine ISA': 'investengine_isa', 
-                    'HL Stocks & Shares LISA': 'hl_stocks_and_shares_lisa',
-                    'Crypto': 'crypto',
-                    'EQ (GSK shares)': 'eq_gsk_shares',
-                    'Cash': 'cash'
-                }
+                # Get platform data from JSON field
+                platform_data_dict = entry.get_platform_data()
                 
-                for platform_name, field_name in platform_mappings.items():
+                for platform_name, platform_value in platform_data_dict.items():
                     if platform_name not in year_data:
                         year_data[platform_name] = {'months': {}}
                     
-                    # Get platform value from entry
-                    platform_value = getattr(entry, field_name, 0) or 0
-                    
-                    if platform_value > 0:
+                    if platform_value and platform_value > 0:
                         year_data[platform_name]['months'][entry.month] = {
                             'value': float(platform_value),
                             'change': 0  # We'll calculate this later
