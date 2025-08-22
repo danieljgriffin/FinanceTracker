@@ -2902,35 +2902,38 @@ def api_monthly_breakdown():
     try:
         data_manager = get_data_manager()
         
-        # Get income data
-        income_data = data_manager.get_income_data()
-        monthly_income = income_data.get('monthly_income', 0)
+        # Use the existing monthly breakdown method
+        breakdown_data = data_manager.get_monthly_breakdown_data()
         
-        # Get expenses data
-        expenses_data = data_manager.get_expenses_data()
+        # Extract data
+        monthly_income = breakdown_data.get('monthly_income', 0)
+        monthly_expenses = breakdown_data.get('monthly_expenses', [])
+        platform_investments = breakdown_data.get('platform_investments', {})
+        
+        # Format expenses for API
         expenses = []
         total_expenses = 0
-        
-        for category, amount in expenses_data.items():
+        for expense in monthly_expenses:
             expenses.append({
-                'category': category,
-                'amount': amount
+                'category': expense.get('name', ''),
+                'amount': expense.get('monthly_amount', 0)
             })
-            total_expenses += amount
+            total_expenses += expense.get('monthly_amount', 0)
         
-        # Get investment commitments
-        commitments_data = data_manager.get_investment_commitments_data()
+        # Format investment commitments for API
         investment_commitments = []
         total_investment_commitments = 0
         
-        for platform, commitments in commitments_data.items():
-            for commitment in commitments:
-                investment_commitments.append({
-                    'platform': platform,
-                    'name': commitment.get('name', ''),
-                    'amount': commitment.get('monthly_amount', 0)
-                })
-                total_investment_commitments += commitment.get('monthly_amount', 0)
+        for platform, investments in platform_investments.items():
+            if investments and isinstance(investments, list):
+                for investment in investments:
+                    if isinstance(investment, dict) and investment.get('monthly_amount', 0) > 0:
+                        investment_commitments.append({
+                            'platform': platform,
+                            'name': investment.get('name', ''),
+                            'amount': investment.get('monthly_amount', 0)
+                        })
+                        total_investment_commitments += investment.get('monthly_amount', 0)
         
         return jsonify({
             'monthly_income': monthly_income,
