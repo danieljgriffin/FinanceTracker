@@ -1380,23 +1380,7 @@ def add_investment():
     
     return redirect(url_for('investment_manager'))
 
-@app.route('/transaction-history')
-def transaction_history():
-    """View transaction history"""
-    try:
-        history_data = get_data_manager().get_transaction_history()
-        # Sort by timestamp descending (most recent first)
-        history_data.sort(key=lambda x: x['timestamp'], reverse=True)
-        
-        return render_template('transaction_history.html',
-                             history_data=history_data,
-                             platform_colors=PLATFORM_COLORS)
-    except Exception as e:
-        logging.error(f"Error in transaction history: {str(e)}")
-        flash(f'Error loading transaction history: {str(e)}', 'error')
-        return render_template('transaction_history.html',
-                             history_data=[],
-                             platform_colors=PLATFORM_COLORS)
+
 
 def update_all_prices():
     """Update live prices for all investments using optimized batch fetching"""
