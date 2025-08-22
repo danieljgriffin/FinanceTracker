@@ -1519,12 +1519,20 @@ def background_price_updater():
                 
                 now = datetime.now()
                 
-                # Collect historical data every 15 minutes for real-time tracking
+                # Collect historical data at aligned 15-minute intervals (00, 15, 30, 45)
+                import pytz
+                uk_tz = pytz.timezone('Europe/London')
+                uk_now = now.astimezone(uk_tz)
+                current_minute = uk_now.minute
+                
+                # Check if we're on a clean 15-minute boundary
+                is_collection_time = current_minute in [0, 15, 30, 45]
                 time_since_last = (now - last_historical_collection).total_seconds() / 60
                 
-                # Collect every 15 minutes consistently
-                if time_since_last >= 15:
+                # Collect only at clean 15-minute intervals and avoid duplicates
+                if is_collection_time and time_since_last >= 10:  # 10 min gap to avoid duplicates
                     collect_historical_data()
+                    logging.info(f"Historical collection at aligned time: {uk_now.strftime('%H:%M')}")
                 
                 # Clean up old data daily to maintain tiered storage
                 if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
