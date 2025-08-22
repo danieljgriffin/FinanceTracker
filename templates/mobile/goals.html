@@ -71,9 +71,15 @@
         <div class="mb-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-bold text-white">Your Goals</h2>
-                <button onclick="openCreateGoalModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    <i class="fas fa-plus text-sm"></i>
-                </button>
+                <div class="flex items-center space-x-3">
+                    <button onclick="toggleCompletedGoals()" id="toggleCompletedBtn" class="text-gray-400 hover:text-white text-sm">
+                        <i class="fas fa-eye-slash mr-1"></i>
+                        <span id="toggleText">Show Completed</span>
+                    </button>
+                    <button onclick="openCreateGoalModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-plus text-sm"></i>
+                    </button>
+                </div>
             </div>
             
             <!-- Goals Container -->
@@ -115,6 +121,9 @@
     </div>
 
     <script>
+        let showCompletedGoals = false;
+        let allGoals = [];
+        
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadCurrentPosition();
@@ -152,7 +161,8 @@
                 const goals = await response.json();
                 console.log('Goals loaded:', goals);
                 
-                displayGoals(goals);
+                allGoals = goals;
+                displayGoals(filterGoals());
                 document.getElementById('loadingGoals').style.display = 'none';
                 
             } catch (error) {
@@ -170,17 +180,52 @@
             }
         }
 
+        function filterGoals() {
+            if (showCompletedGoals) {
+                return allGoals;
+            }
+            // Filter out completed goals (progress >= 100%)
+            const currentNetWorth = parseFloat(document.getElementById('currentNetWorth').textContent.replace(/[£,]/g, '')) || 0;
+            return allGoals.filter(goal => {
+                const progress = Math.min((currentNetWorth / goal.target_amount) * 100, 100);
+                return progress < 100;
+            });
+        }
+
+        function toggleCompletedGoals() {
+            showCompletedGoals = !showCompletedGoals;
+            const button = document.getElementById('toggleCompletedBtn');
+            const text = document.getElementById('toggleText');
+            const icon = button.querySelector('i');
+            
+            if (showCompletedGoals) {
+                icon.className = 'fas fa-eye mr-1';
+                text.textContent = 'Hide Completed';
+            } else {
+                icon.className = 'fas fa-eye-slash mr-1';
+                text.textContent = 'Show Completed';
+            }
+            
+            displayGoals(filterGoals());
+        }
+
         function displayGoals(goals) {
             const container = document.getElementById('goalsContainer');
             
             if (goals.length === 0) {
+                const message = showCompletedGoals ? 
+                    'No completed goals yet' : 
+                    (allGoals.length === 0 ? 'No goals set yet' : 'No active goals');
+                
                 container.innerHTML = `
                     <div class="text-center py-8">
                         <i class="fas fa-bullseye text-4xl text-gray-400 mb-4"></i>
-                        <p class="text-gray-400 mb-4">No goals set yet</p>
-                        <button onclick="openCreateGoalModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                            Create Your First Goal
-                        </button>
+                        <p class="text-gray-400 mb-4">${message}</p>
+                        ${allGoals.length === 0 ? `
+                            <button onclick="openCreateGoalModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                                Create Your First Goal
+                            </button>
+                        ` : ''}
                     </div>
                 `;
                 return;
@@ -196,8 +241,22 @@
                 const targetDate = new Date(goal.target_date);
                 const isCompleted = progress >= 100;
                 
+                // Get progress-based border color
+                let borderColor = 'border-gray-800';
+                if (isCompleted) {
+                    borderColor = 'border-2 border-green-500';
+                } else if (progress >= 75) {
+                    borderColor = 'border-2 border-yellow-500';
+                } else if (progress >= 50) {
+                    borderColor = 'border-2 border-orange-500';
+                } else if (progress >= 25) {
+                    borderColor = 'border-2 border-blue-500';
+                } else if (progress > 0) {
+                    borderColor = 'border-2 border-red-500';
+                }
+                
                 return `
-                    <div class="bg-black border border-gray-800 rounded-xl p-6 ${isCompleted ? 'border-2 border-green-500' : ''}">
+                    <div class="bg-black ${borderColor} rounded-xl p-6">
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex-1">
                                 <h3 class="text-lg font-bold text-white">${goal.title || targetDate.getFullYear() + '/' + String(targetDate.getMonth() + 1).padStart(2, '0')}</h3>
@@ -262,6 +321,11 @@
                                     <i class="fas fa-trophy text-yellow-400 mr-2"></i>
                                     <span class="text-green-400 font-medium">Goal Achieved!</span>
                                 </div>
+                                ${goal.completed_date ? `
+                                    <div class="text-gray-300 text-sm mt-1">
+                                        Completed on ${new Date(goal.completed_date).toLocaleDateString('en-GB')}
+                                    </div>
+                                ` : ''}
                             </div>
                         ` : ''}
                     </div>
@@ -299,7 +363,9 @@
                 const result = await response.json();
                 if (result.success) {
                     // Reload goals to update display
-                    loadGoals();
+                    await loadGoals();
+                    // Refresh the filtered display
+                    displayGoals(filterGoals());
                 } else {
                     alert('Failed to update goal: ' + result.message);
                 }
