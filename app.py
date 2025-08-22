@@ -1859,7 +1859,7 @@ def realtime_chart_data():
                 DailyHistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
-        elif time_filter == 'year':
+        elif time_filter in ['year', '1y']:
             # Get daily data from the last 365 days
             cutoff_time = datetime.now() - timedelta(days=365)
             data_points = DailyHistoricalNetWorth.query.filter(
@@ -2196,6 +2196,15 @@ def get_historical_chart_data(time_range, chart_type):
                 .all()
             # Sample every 12 hours worth of data
             historical_data = sample_data_by_interval(all_data, hours=12)
+        elif time_range == '1y':
+            # Use 24-hour sampling for 1 year
+            cutoff = now - timedelta(days=365)
+            all_data = db.session.query(HistoricalNetWorth)\
+                .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                .order_by(HistoricalNetWorth.timestamp.asc())\
+                .all()
+            # Sample every 24 hours worth of data
+            historical_data = sample_data_by_interval(all_data, hours=24)
         else:
             cutoff = now - timedelta(days=30)
             historical_data = db.session.query(HistoricalNetWorth)\

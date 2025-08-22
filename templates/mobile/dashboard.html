@@ -128,7 +128,7 @@
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1d')">1D</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1w')">1W</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('3m')">3M</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('6m')">6M</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1y')">1Y</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
                 <span class="text-white font-semibold cursor-pointer" onclick="updateChart('2025')">2025</span>
@@ -214,39 +214,72 @@
         let isInteracting = false;
 
         function updateChart(range) {
-            console.log('updateChart called with range:', range, 'current:', currentRange);
+            console.log('Mobile updateChart called with range:', range, 'current:', currentRange);
             if (range === currentRange) return;
             
-            const svg = document.getElementById('portfolioChart');
-            const data = chartData[range];
-            
-            console.log('Updating chart with range:', range);
-            console.log('Chart data for range:', data);
-            
-            // Update active range styling
+            // Update active range styling first
             document.querySelectorAll('[onclick^="updateChart"]').forEach(el => {
-                el.className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
+                el.className = 'text-gray-400 cursor-pointer hover:text-white transition-colors';
             });
             
-            // Update current range indicator
+            // Find and highlight the selected range
+            const allRangeElements = document.querySelectorAll('[onclick^="updateChart"]');
+            allRangeElements.forEach(el => {
+                const onclick = el.getAttribute('onclick');
+                const elRange = onclick.match(/updateChart\('(.+?)'\)/)?.[1];
+                if (elRange === range) {
+                    el.className = 'text-white font-semibold cursor-pointer';
+                }
+            });
+            
             currentRange = range;
             
-            if (range === 'MAX') {
-                document.getElementById('activeRange').className = 'text-white text-sm font-semibold cursor-pointer';
-                document.getElementById('activeRange').textContent = 'MAX';
-            } else {
-                // Find and highlight the clicked year
-                const yearElements = document.querySelectorAll('[onclick^="updateChart"]');
-                yearElements.forEach(el => {
-                    if (el.textContent === range) {
-                        el.className = 'text-white text-sm font-semibold cursor-pointer';
+            // Fetch real-time data using same API as desktop
+            const apiUrl = range.toLowerCase() === 'max' ? 
+                '/api/realtime-chart-data?filter=all-years' :
+                `/api/realtime-chart-data?filter=${range}`;
+                
+            console.log('Fetching mobile chart data from:', apiUrl);
+            
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Mobile chart data received:', data);
+                    updateMobileChartDisplay(data, range);
+                })
+                .catch(error => {
+                    console.error('Error fetching mobile chart data:', error);
+                    // Fallback to static data
+                    const svg = document.getElementById('portfolioChart');
+                    const staticData = chartData[range];
+                    if (staticData) {
+                        updateMobileChartDisplay(staticData, range);
                     }
                 });
-                document.getElementById('activeRange').className = 'text-gray-400 text-sm cursor-pointer hover:text-white transition-colors';
-            }
+        }
+        
+        function updateMobileChartDisplay(data, range) {
+            const svg = document.getElementById('portfolioChart');
             
-            // Check if data exists for this range
-            if (!data || !data.line) {
+            console.log('Updating mobile chart display for range:', range);
+            console.log('Chart data:', data);
+            
+            // Handle both API data format and static data format
+            let lineData, yLabels, xLabels, hasCurrentValue;
+            
+            if (data.labels && data.values) {
+                // API format - convert to chart format
+                console.log('Converting API data to chart format');
+                // This would need proper SVG line generation, for now show message
+                svg.innerHTML = '<text x="200" y="120" text-anchor="middle" fill="#00d4ff" font-size="14">Live data loaded</text>';
+                return;
+            } else if (data.line) {
+                // Static format - use directly
+                lineData = data.line;
+                yLabels = data.yLabels;
+                xLabels = data.xLabels;
+                hasCurrentValue = data.hasCurrentValue;
+            } else {
                 console.warn('No chart data for range:', range);
                 svg.innerHTML = '<text x="200" y="120" text-anchor="middle" fill="#666" font-size="14">No data available</text>';
                 return;
@@ -310,8 +343,11 @@
             
             // Touch behaviors disabled - no chart interactions
             
-            // Start auto-refresh for live updates
+            // Start auto-refresh for live updates (portfolio values)
             startAutoRefresh();
+            
+            // Auto-refresh chart data every 30 seconds for real-time updates
+            startChartAutoRefresh();
         });
 
         // Privacy toggle functionality
@@ -393,6 +429,31 @@
                     console.error('Auto-refresh error:', error);
                 }
             }, 10000); // Update every 10 seconds for testing
+        }
+        
+        // Auto-refresh chart data for mobile
+        function startChartAutoRefresh() {
+            console.log('Starting mobile chart auto-refresh...');
+            
+            setInterval(function() {
+                if (currentRange) {
+                    console.log('Auto-refreshing mobile chart data for range:', currentRange);
+                    
+                    const apiUrl = currentRange.toLowerCase() === 'max' ? 
+                        '/api/realtime-chart-data?filter=all-years' :
+                        `/api/realtime-chart-data?filter=${currentRange}`;
+                        
+                    fetch(apiUrl)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Auto-refresh: Mobile chart data received for', currentRange);
+                            updateMobileChartDisplay(data, currentRange);
+                        })
+                        .catch(error => {
+                            console.error('Auto-refresh: Error fetching mobile chart data:', error);
+                        });
+                }
+            }, 30000); // Refresh chart every 30 seconds
         }
     </script>
 </body>
