@@ -1502,6 +1502,56 @@ def collect_historical_data():
     except Exception as e:
         logging.error(f"Error collecting historical data: {str(e)}")
 
+def collect_weekly_historical_data():
+    """Collect current net worth data for weekly tracking every 6 hours at midnight, 6am, noon, 6pm"""
+    try:
+        from models import WeeklyHistoricalNetWorth, db
+        import pytz
+        
+        # Calculate current net worth and platform breakdown
+        current_net_worth = calculate_current_net_worth()
+        
+        # Get platform allocations
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_breakdown = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue
+                
+            platform_total = 0
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            if platform_total > 0:
+                platform_breakdown[platform] = platform_total
+        
+        # Use current time for weekly collection
+        now = datetime.now()
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = now.astimezone(uk_tz)
+        
+        # Store weekly historical data point with current timestamp
+        weekly_entry = WeeklyHistoricalNetWorth(
+            timestamp=uk_now,
+            net_worth=current_net_worth,
+            platform_breakdown=platform_breakdown
+        )
+        
+        db.session.add(weekly_entry)
+        db.session.commit()
+        
+        logging.info(f"Weekly historical data collected: £{current_net_worth:,.2f} at {uk_now.strftime('%H:%M')}")
+        
+    except Exception as e:
+        logging.error(f"Error collecting weekly historical data: {str(e)}")
+
 def background_price_updater():
     """Background thread function to update prices every 15 minutes and collect historical data with smart intervals"""
     global last_historical_collection
@@ -1532,19 +1582,27 @@ def background_price_updater():
                 uk_now = now.astimezone(uk_tz)
                 current_minute = uk_now.minute
                 
-                # Check if we're on a clean 15-minute boundary
-                is_collection_time = current_minute in [0, 15, 30, 45]
+                # Check if we're on a clean 15-minute boundary for 24-hour data
+                is_15min_collection_time = current_minute in [0, 15, 30, 45]
                 time_since_last = (now - last_historical_collection).total_seconds() / 60
                 
                 # Collect only at clean 15-minute intervals and avoid duplicates
-                if is_collection_time and time_since_last >= 10:  # 10 min gap to avoid duplicates
+                if is_15min_collection_time and time_since_last >= 10:  # 10 min gap to avoid duplicates
                     collect_historical_data()
                     last_historical_collection = now  # Update the last collection time
                     logging.info(f"✅ Historical collection completed at aligned time: {uk_now.strftime('%H:%M:%S')} BST")
-                elif is_collection_time:
+                elif is_15min_collection_time:
                     logging.info(f"⏰ Collection time {uk_now.strftime('%H:%M')} BST but too soon since last (wait {10 - time_since_last:.1f} min)")
                 else:
                     logging.debug(f"⏳ Not collection time - current minute: {current_minute}, next at: {[x for x in [0,15,30,45] if x > current_minute] or [0]}")
+                
+                # Check if we're on a 6-hour boundary for weekly data (midnight, 6am, noon, 6pm)
+                current_hour = uk_now.hour
+                is_6hour_collection_time = current_hour in [0, 6, 12, 18] and current_minute == 0
+                
+                if is_6hour_collection_time:
+                    collect_weekly_historical_data()
+                    logging.info(f"✅ Weekly historical collection completed at: {uk_now.strftime('%H:%M')} BST")
                 
                 # Clean up old data daily to maintain tiered storage
                 if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
@@ -1584,6 +1642,16 @@ def manual_collect_data():
         return jsonify({'status': 'success', 'message': 'Historical data collected successfully'})
     except Exception as e:
         logging.error(f"Error in manual data collection: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/test-weekly-collection', methods=['POST'])
+def test_weekly_collection():
+    """Manually trigger weekly historical data collection for testing"""
+    try:
+        collect_weekly_historical_data()
+        return jsonify({'status': 'success', 'message': 'Weekly historical data collected successfully'})
+    except Exception as e:
+        logging.error(f"Error in weekly data collection: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/live-values')
@@ -1644,17 +1712,29 @@ def manual_collect_historical_data():
 
 @app.route('/api/realtime-chart-data')
 def realtime_chart_data():
-    """API endpoint for real-time historical chart data - last 24 hours"""
+    """API endpoint for real-time historical chart data - last 24 hours or last week"""
     try:
-        from models import HistoricalNetWorth
+        from models import HistoricalNetWorth, WeeklyHistoricalNetWorth
         import pytz
         
-        # Get data from last 24 hours
-        cutoff_time = datetime.now() - timedelta(hours=24)
+        # Get filter parameter (default to '24h')
+        time_filter = request.args.get('filter', '24h')
         
-        data_points = HistoricalNetWorth.query.filter(
-            HistoricalNetWorth.timestamp >= cutoff_time
-        ).order_by(HistoricalNetWorth.timestamp.asc()).all()
+        if time_filter == 'week':
+            # Get weekly data from the last 7 days
+            cutoff_time = datetime.now() - timedelta(days=7)
+            
+            data_points = WeeklyHistoricalNetWorth.query.filter(
+                WeeklyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(WeeklyHistoricalNetWorth.timestamp.asc()).all()
+            
+        else:  # Default to 24h
+            # Get data from last 24 hours
+            cutoff_time = datetime.now() - timedelta(hours=24)
+            
+            data_points = HistoricalNetWorth.query.filter(
+                HistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
         
         labels = []
         values = []
@@ -1664,7 +1744,12 @@ def realtime_chart_data():
         for point in data_points:
             # Convert to BST for display
             bst_time = point.timestamp.astimezone(uk_tz)
-            time_label = bst_time.strftime('%H:%M')
+            if time_filter == 'week':
+                # For weekly data, show day and time (e.g., "Mon 12:00")
+                time_label = bst_time.strftime('%a %H:%M')
+            else:
+                # For 24h data, show just time (e.g., "19:30")
+                time_label = bst_time.strftime('%H:%M')
             
             labels.append(time_label)
             values.append(float(point.net_worth))
@@ -1672,7 +1757,8 @@ def realtime_chart_data():
         return jsonify({
             'labels': labels,
             'values': values,
-            'count': len(data_points)
+            'count': len(data_points),
+            'filter': time_filter
         })
         
     except Exception as e:
