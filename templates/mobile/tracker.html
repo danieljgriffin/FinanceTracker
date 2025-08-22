@@ -295,7 +295,7 @@
             let startValue = 0;
             let endValue = 0;
             
-            // Find first month with data for start of year
+            // Get start value from first month with data
             for (const month of months) {
                 if (monthlyTotals[month] && monthlyTotals[month] > 0) {
                     startValue = monthlyTotals[month];
@@ -303,7 +303,7 @@
                 }
             }
             
-            // Find last month with data for end of year
+            // Get end value from last month with data
             for (let i = months.length - 1; i >= 0; i--) {
                 if (monthlyTotals[months[i]] && monthlyTotals[months[i]] > 0) {
                     endValue = monthlyTotals[months[i]];
@@ -311,9 +311,10 @@
                 }
             }
             
-            // If no data for current year, check if we're looking at 2025 and use January from previous year for comparison
-            if (startValue === 0 && currentYear === 2025) {
-                const previousYearData = trackerData.platform_data?.[currentYear - 1];
+            // For 2025, use previous year December as starting point if no January data
+            if (startValue === 0) {
+                const previousYear = currentYear - 1;
+                const previousYearData = trackerData.platform_data?.[previousYear];
                 if (previousYearData) {
                     let previousYearEndTotal = 0;
                     Object.values(previousYearData).forEach(platformData => {
@@ -329,9 +330,15 @@
                 }
             }
             
-            console.log('Year summary calculation:', {startValue, endValue, currentYear});
+            console.log('Year summary data:', {
+                startValue, 
+                endValue, 
+                currentYear, 
+                monthlyTotals,
+                allMonthTotals: Object.keys(monthlyTotals).map(m => `${m}: ${monthlyTotals[m]}`)
+            });
             
-            if (startValue === 0 || endValue === 0) {
+            if (startValue === 0 && endValue === 0) {
                 document.getElementById('yearNetWorthGrowth').textContent = '£0';
                 document.getElementById('yearNetWorthGrowth').className = 'text-lg font-bold text-gray-400';
                 document.getElementById('yearGrowthPercent').textContent = '0%';
@@ -339,8 +346,13 @@
                 return;
             }
             
+            // Use current end value if no starting value (first year scenario)
+            if (startValue === 0 && endValue > 0) {
+                startValue = endValue; // This would show 0% growth, but at least shows current value
+            }
+            
             const netWorthGrowth = endValue - startValue;
-            const growthPercent = (netWorthGrowth / startValue) * 100;
+            const growthPercent = startValue > 0 ? (netWorthGrowth / startValue) * 100 : 0;
             
             // Update growth in £
             document.getElementById('yearNetWorthGrowth').textContent = 
