@@ -102,14 +102,7 @@
                 </svg>
                 
                 <!-- Interactive overlay for touch/hover - aligned with chart data points -->
-                <div id="chartOverlay" class="absolute inset-0 bg-transparent cursor-pointer"
-                     onmousedown="startInteraction(event)"
-                     onmousemove="updateHoverPosition(event)"
-                     onmouseup="endInteraction()"
-                     onmouseleave="endInteraction()"
-                     ontouchstart="startInteraction(event)"
-                     ontouchmove="updateHoverPosition(event)"
-                     ontouchend="endInteraction()"></div>
+                <div id="chartOverlay" class="absolute inset-0 bg-transparent"></div>
                 
                 <!-- Hover indicator line and value display -->
                 <div id="hoverIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
@@ -125,13 +118,13 @@
             
             <!-- Time Range Options -->
             <div class="flex justify-center space-x-4 mt-3 px-4 text-xs">
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1d')">1D</span>
+                <span class="text-white font-semibold cursor-pointer" onclick="updateChart('1d')">1D</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1w')">1W</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('3m')">3M</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1y')">1Y</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
-                <span class="text-white font-semibold cursor-pointer" onclick="updateChart('2025')">2025</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('MAX')" id="activeRange">MAX</span>
             </div>
         </div>
@@ -234,12 +227,24 @@
             
             currentRange = range;
             
-            // Fetch real-time data using same API as desktop
-            const apiUrl = range.toLowerCase() === 'max' ? 
-                '/api/realtime-chart-data?filter=all-years' :
-                `/api/realtime-chart-data?filter=${range}`;
-                
-            console.log('Fetching mobile chart data from:', apiUrl);
+            // Map mobile filters to API filters
+            let apiFilter;
+            if (range.toLowerCase() === 'max') {
+                apiFilter = 'all-years';
+            } else if (range === '1d') {
+                apiFilter = '24h';
+            } else if (range === '1w') {
+                apiFilter = 'week';
+            } else if (range === '3m') {
+                apiFilter = '3months';
+            } else if (range === '1y') {
+                apiFilter = 'year';
+            } else {
+                apiFilter = range; // 2023, 2024, 2025
+            }
+            
+            const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}`;
+            console.log('Fetching mobile chart data from:', apiUrl, 'for range:', range);
             
             fetch(apiUrl)
                 .then(response => response.json())
@@ -285,9 +290,9 @@
                 return;
             }
             
-            // Update chart
-            const hasCurrentValue = data.hasCurrentValue || false;
-            const linePoints = data.line.split(' ');
+            // Update chart  
+            const chartHasCurrentValue = hasCurrentValue || false;
+            const linePoints = lineData.split(' ');
             const lastPoint = linePoints[linePoints.length - 1];
             
             // Create dots for each data point
@@ -297,36 +302,40 @@
             }).join('');
             
             // Mark current value point differently if it exists
-            const currentPointMarkup = hasCurrentValue && lastPoint ? 
+            const currentPointMarkup = chartHasCurrentValue && lastPoint ? 
                 `<circle cx="${lastPoint.split(',')[0]}" cy="${lastPoint.split(',')[1]}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>` : '';
             
             svg.innerHTML = `
-                <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${data.line}"/>
+                <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${lineData}"/>
                 ${dataPoints}
                 ${currentPointMarkup}
-                ${data.yLabels.map(label => 
+                ${yLabels.map(label => 
                     `<text x="385" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
                 ).join('')}
-                ${data.xLabels.map(label => 
+                ${xLabels.map(label => 
                     `<text x="${label.x}" y="240" font-size="10" fill="${label.text.includes('*') ? '#00d4ff' : '#6b7280'}" text-anchor="middle">${label.text}</text>`
                 ).join('')}
             `;
             
             currentRange = range;
-            currentChartData = data;
+            currentChartData = {
+                line: lineData,
+                yLabels: yLabels,
+                xLabels: xLabels,
+                hasCurrentValue: chartHasCurrentValue
+            };
             
             // Store actual data points for precise hover detection
-            const points = data.line.split(' ').map((point, index) => {
+            const points = lineData.split(' ').map((point, index) => {
                 const [x, y] = point.split(',').map(Number);
                 return {
                     x: x,
                     y: y,
-                    label: data.xLabels[index]?.text || '',
+                    label: xLabels[index]?.text || '',
                     index: index
                 };
             });
             currentChartData.dataPoints = points;
-            currentChartData.hasCurrentValue = data.hasCurrentValue;
             
             // setupChartInteraction(); // Disabled - no hover interactions
         }
@@ -337,9 +346,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Chart data:', chartData);
             
-            // Force MAX view to be active on load
+            // Force 1D view to be active on load (like desktop)
             currentRange = '';
-            updateChart('MAX');
+            updateChart('1d');
             
             // Touch behaviors disabled - no chart interactions
             
@@ -439,9 +448,23 @@
                 if (currentRange) {
                     console.log('Auto-refreshing mobile chart data for range:', currentRange);
                     
-                    const apiUrl = currentRange.toLowerCase() === 'max' ? 
-                        '/api/realtime-chart-data?filter=all-years' :
-                        `/api/realtime-chart-data?filter=${currentRange}`;
+                    // Map mobile filters to API filters for auto-refresh
+                    let apiFilter;
+                    if (currentRange.toLowerCase() === 'max') {
+                        apiFilter = 'all-years';
+                    } else if (currentRange === '1d') {
+                        apiFilter = '24h';
+                    } else if (currentRange === '1w') {
+                        apiFilter = 'week';
+                    } else if (currentRange === '3m') {
+                        apiFilter = '3months';
+                    } else if (currentRange === '1y') {
+                        apiFilter = 'year';
+                    } else {
+                        apiFilter = currentRange; // 2023, 2024, 2025
+                    }
+                    
+                    const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}`;
                         
                     fetch(apiUrl)
                         .then(response => response.json())
