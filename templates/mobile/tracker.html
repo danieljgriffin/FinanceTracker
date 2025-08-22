@@ -295,6 +295,8 @@
             let startValue = 0;
             let endValue = 0;
             
+            console.log('Year summary - monthlyTotals:', monthlyTotals);
+            
             // Find first month with data
             for (const month of months) {
                 if (monthlyTotals[month] > 0) {
@@ -311,14 +313,23 @@
                 }
             }
             
+            console.log('Year summary values:', {startValue, endValue, currentYear});
+            
+            if (endValue === 0) {
+                document.getElementById('yearNetWorthGrowth').textContent = '£0';
+                document.getElementById('yearNetWorthGrowth').className = 'text-lg font-bold text-gray-400';
+                document.getElementById('yearEndNetWorth').textContent = '£0';
+                return;
+            }
+            
             const netWorthGrowth = endValue - startValue;
             
             document.getElementById('yearNetWorthGrowth').textContent = 
-                `${netWorthGrowth >= 0 ? '+' : ''}£${netWorthGrowth.toLocaleString('en-GB')}`;
+                `${netWorthGrowth >= 0 ? '+' : ''}£${Math.round(netWorthGrowth).toLocaleString('en-GB')}`;
             document.getElementById('yearNetWorthGrowth').className = 
                 `text-lg font-bold ${netWorthGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`;
             document.getElementById('yearEndNetWorth').textContent = 
-                `£${endValue.toLocaleString('en-GB')}`;
+                `£${Math.round(endValue).toLocaleString('en-GB')}`;
         }
 
         function handleJanuaryChange(changeEl, currentJanTotal) {
@@ -337,16 +348,23 @@
                 return;
             }
             
-            // Calculate December total from previous year
+            // Calculate December total from previous year (using same month matching logic)
             let previousDecTotal = 0;
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
             Object.values(previousYearData).forEach(platformData => {
-                const months = platformData.months || {};
-                const decKeys = Object.keys(months).filter(key => key.includes('Dec'));
-                decKeys.forEach(key => {
-                    if (months[key]?.value > 0) {
-                        previousDecTotal += months[key].value;
-                    }
-                });
+                const platformMonths = platformData.months || {};
+                const monthKeys = Object.keys(platformMonths);
+                
+                // Find December data using same matching logic as main table
+                const decKey = monthKeys.find(key => 
+                    key.includes('Dec') || 
+                    key.toLowerCase().includes('dec')
+                );
+                
+                if (decKey && platformMonths[decKey]?.value > 0) {
+                    previousDecTotal += platformMonths[decKey].value;
+                }
             });
             
             if (previousDecTotal > 0) {
