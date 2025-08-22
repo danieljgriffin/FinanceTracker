@@ -158,10 +158,25 @@
                     <div class="space-y-0 mb-4">
                         ${platformData.investments.map(investment => `
                             <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
-                                <div>
+                                <div class="flex items-center space-x-3">
+                                    <!-- Company Logo -->
+                                    <div class="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center overflow-hidden">
+                                        <img 
+                                            src="https://logo.clearbit.com/${getCompanyDomain(investment.ticker || investment.name)}" 
+                                            alt="${investment.name}" 
+                                            class="w-8 h-8 rounded object-contain"
+                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                        />
+                                        <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold" style="display: none;">
+                                            ${getInitials(investment.name)}
+                                        </div>
+                                    </div>
+                                    
                                     <!-- Investment Info -->
-                                    <div class="text-white font-semibold text-base">${investment.name}</div>
-                                    <div class="text-gray-400 text-sm">${(investment.holdings || 0).toLocaleString('en-GB', { maximumFractionDigits: 8 })} SHARES</div>
+                                    <div>
+                                        <div class="text-white font-semibold text-base">${investment.name}</div>
+                                        <div class="text-gray-400 text-sm">${(investment.holdings || 0).toLocaleString('en-GB', { maximumFractionDigits: 8 })} SHARES</div>
+                                    </div>
                                 </div>
                                 
                                 <!-- Value and P&L -->
@@ -276,6 +291,76 @@
             `;
             document.getElementById('loadingState').style.display = 'none';
             container.style.display = 'block';
+        }
+
+        // Smart logo system functions
+        function getCompanyDomain(tickerOrName) {
+            // Map common tickers to company domains
+            const tickerToDomain = {
+                'AAPL': 'apple.com',
+                'META': 'meta.com',
+                'GOOGL': 'google.com',
+                'GOOG': 'google.com',
+                'TSLA': 'tesla.com',
+                'MSFT': 'microsoft.com',
+                'AMZN': 'amazon.com',
+                'NVDA': 'nvidia.com',
+                'NFLX': 'netflix.com',
+                'KO': 'coca-cola.com',
+                'MCD': 'mcdonalds.com',
+                'ABBV': 'abbvie.com',
+                'LLY': 'lilly.com',
+                'NVO': 'novonordisk.com',
+                'PLTR': 'palantir.com',
+                'ACHR': 'archer.com',
+                'BTC': 'bitcoin.org',
+                'ETH': 'ethereum.org',
+                'SOL': 'solana.com',
+                'FET': 'fetch.ai',
+                'TRX': 'tron.network',
+                'GSK': 'gsk.com',
+                'RR': 'rolls-royce.com'
+            };
+
+            // Check if it's a known ticker
+            if (tickerToDomain[tickerOrName]) {
+                return tickerToDomain[tickerOrName];
+            }
+
+            // For company names, try to extract domain
+            const name = tickerOrName.toLowerCase();
+            if (name.includes('apple')) return 'apple.com';
+            if (name.includes('microsoft')) return 'microsoft.com';
+            if (name.includes('google') || name.includes('alphabet')) return 'google.com';
+            if (name.includes('meta') || name.includes('facebook')) return 'meta.com';
+            if (name.includes('tesla')) return 'tesla.com';
+            if (name.includes('amazon')) return 'amazon.com';
+            if (name.includes('nvidia')) return 'nvidia.com';
+            if (name.includes('netflix')) return 'netflix.com';
+            if (name.includes('coca-cola') || name.includes('coke')) return 'coca-cola.com';
+            if (name.includes('mcdonald')) return 'mcdonalds.com';
+            if (name.includes('abbvie')) return 'abbvie.com';
+            if (name.includes('lilly')) return 'lilly.com';
+            if (name.includes('novo nordisk')) return 'novonordisk.com';
+            if (name.includes('palantir')) return 'palantir.com';
+            if (name.includes('gsk') || name.includes('glaxosmith')) return 'gsk.com';
+            if (name.includes('rolls-royce')) return 'rolls-royce.com';
+            if (name.includes('bitcoin')) return 'bitcoin.org';
+            if (name.includes('ethereum')) return 'ethereum.org';
+            if (name.includes('solana')) return 'solana.com';
+            if (name.includes('fidelity')) return 'fidelity.com';
+            if (name.includes('vanguard')) return 'vanguard.com';
+
+            // Fallback to generic domain
+            return 'example.com';
+        }
+
+        function getInitials(name) {
+            return name.split(' ')
+                .map(word => word.charAt(0))
+                .join('')
+                .substring(0, 2)
+                .toUpperCase();
         }
     </script>
 </body>
