@@ -1552,6 +1552,106 @@ def collect_weekly_historical_data():
     except Exception as e:
         logging.error(f"Error collecting weekly historical data: {str(e)}")
 
+def collect_monthly_historical_data():
+    """Collect current net worth data for monthly tracking every 12 hours at midnight and noon"""
+    try:
+        from models import MonthlyHistoricalNetWorth, db
+        import pytz
+        
+        # Calculate current net worth and platform breakdown
+        current_net_worth = calculate_current_net_worth()
+        
+        # Get platform allocations
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_breakdown = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue
+                
+            platform_total = 0
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            if platform_total > 0:
+                platform_breakdown[platform] = platform_total
+        
+        # Use current time for monthly collection
+        now = datetime.now()
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = now.astimezone(uk_tz)
+        
+        # Store monthly historical data point with current timestamp
+        monthly_entry = MonthlyHistoricalNetWorth(
+            timestamp=uk_now,
+            net_worth=current_net_worth,
+            platform_breakdown=platform_breakdown
+        )
+        
+        db.session.add(monthly_entry)
+        db.session.commit()
+        
+        logging.info(f"Monthly historical data collected: £{current_net_worth:,.2f} at {uk_now.strftime('%H:%M')}")
+        
+    except Exception as e:
+        logging.error(f"Error collecting monthly historical data: {str(e)}")
+
+def collect_daily_historical_data():
+    """Collect current net worth data for daily tracking at end of day (midnight)"""
+    try:
+        from models import DailyHistoricalNetWorth, db
+        import pytz
+        
+        # Calculate current net worth and platform breakdown
+        current_net_worth = calculate_current_net_worth()
+        
+        # Get platform allocations
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_breakdown = {}
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue
+                
+            platform_total = 0
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            if platform_total > 0:
+                platform_breakdown[platform] = platform_total
+        
+        # Use current time for daily collection
+        now = datetime.now()
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = now.astimezone(uk_tz)
+        
+        # Store daily historical data point with current timestamp
+        daily_entry = DailyHistoricalNetWorth(
+            timestamp=uk_now,
+            net_worth=current_net_worth,
+            platform_breakdown=platform_breakdown
+        )
+        
+        db.session.add(daily_entry)
+        db.session.commit()
+        
+        logging.info(f"Daily historical data collected: £{current_net_worth:,.2f} at {uk_now.strftime('%H:%M')}")
+        
+    except Exception as e:
+        logging.error(f"Error collecting daily historical data: {str(e)}")
+
 def background_price_updater():
     """Background thread function to update prices every 15 minutes and collect historical data with smart intervals"""
     global last_historical_collection
@@ -1604,6 +1704,20 @@ def background_price_updater():
                     collect_weekly_historical_data()
                     logging.info(f"✅ Weekly historical collection completed at: {uk_now.strftime('%H:%M')} BST")
                 
+                # Check if we're on a 12-hour boundary for monthly data (midnight, noon)
+                is_12hour_collection_time = current_hour in [0, 12] and current_minute == 0
+                
+                if is_12hour_collection_time:
+                    collect_monthly_historical_data()
+                    logging.info(f"✅ Monthly historical collection completed at: {uk_now.strftime('%H:%M')} BST")
+                
+                # Check if we're at end of day for daily data (midnight)
+                is_daily_collection_time = current_hour == 0 and current_minute == 0
+                
+                if is_daily_collection_time:
+                    collect_daily_historical_data()
+                    logging.info(f"✅ Daily historical collection completed at: {uk_now.strftime('%H:%M')} BST")
+                
                 # Clean up old data daily to maintain tiered storage
                 if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
                     cleanup_old_historical_data()
@@ -1652,6 +1766,26 @@ def test_weekly_collection():
         return jsonify({'status': 'success', 'message': 'Weekly historical data collected successfully'})
     except Exception as e:
         logging.error(f"Error in weekly data collection: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/test-monthly-collection', methods=['POST'])
+def test_monthly_collection():
+    """Manually trigger monthly historical data collection for testing"""
+    try:
+        collect_monthly_historical_data()
+        return jsonify({'status': 'success', 'message': 'Monthly historical data collected successfully'})
+    except Exception as e:
+        logging.error(f"Error in monthly data collection: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/test-daily-collection', methods=['POST'])
+def test_daily_collection():
+    """Manually trigger daily historical data collection for testing"""
+    try:
+        collect_daily_historical_data()
+        return jsonify({'status': 'success', 'message': 'Daily historical data collected successfully'})
+    except Exception as e:
+        logging.error(f"Error in daily data collection: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/live-values')
@@ -1712,9 +1846,9 @@ def manual_collect_historical_data():
 
 @app.route('/api/realtime-chart-data')
 def realtime_chart_data():
-    """API endpoint for real-time historical chart data - last 24 hours or last week"""
+    """API endpoint for real-time historical chart data - supports multiple time ranges"""
     try:
-        from models import HistoricalNetWorth, WeeklyHistoricalNetWorth
+        from models import HistoricalNetWorth, WeeklyHistoricalNetWorth, MonthlyHistoricalNetWorth, DailyHistoricalNetWorth
         import pytz
         
         # Get filter parameter (default to '24h')
@@ -1723,15 +1857,34 @@ def realtime_chart_data():
         if time_filter == 'week':
             # Get weekly data from the last 7 days
             cutoff_time = datetime.now() - timedelta(days=7)
-            
             data_points = WeeklyHistoricalNetWorth.query.filter(
                 WeeklyHistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(WeeklyHistoricalNetWorth.timestamp.asc()).all()
             
+        elif time_filter == 'month':
+            # Get monthly data from the last 30 days
+            cutoff_time = datetime.now() - timedelta(days=30)
+            data_points = MonthlyHistoricalNetWorth.query.filter(
+                MonthlyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(MonthlyHistoricalNetWorth.timestamp.asc()).all()
+            
+        elif time_filter == '3months':
+            # Get daily data from the last 90 days
+            cutoff_time = datetime.now() - timedelta(days=90)
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            
+        elif time_filter == 'year':
+            # Get daily data from the last 365 days
+            cutoff_time = datetime.now() - timedelta(days=365)
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            
         else:  # Default to 24h
             # Get data from last 24 hours
             cutoff_time = datetime.now() - timedelta(hours=24)
-            
             data_points = HistoricalNetWorth.query.filter(
                 HistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(HistoricalNetWorth.timestamp.asc()).all()
@@ -1744,12 +1897,19 @@ def realtime_chart_data():
         for point in data_points:
             # Convert to BST for display
             bst_time = point.timestamp.astimezone(uk_tz)
-            if time_filter == 'week':
-                # For weekly data, show day and time (e.g., "Mon 12:00")
-                time_label = bst_time.strftime('%a %H:%M')
-            else:
+            
+            if time_filter == '24h':
                 # For 24h data, show just time (e.g., "19:30")
                 time_label = bst_time.strftime('%H:%M')
+            elif time_filter == 'week':
+                # For weekly data, show day and time (e.g., "Mon 12:00")
+                time_label = bst_time.strftime('%a %H:%M')
+            elif time_filter == 'month':
+                # For monthly data, show date and time (e.g., "22/08 12:00")
+                time_label = bst_time.strftime('%d/%m %H:%M')
+            elif time_filter in ['3months', 'year']:
+                # For 3 months/year data, show date (e.g., "22/08")
+                time_label = bst_time.strftime('%d/%m')
             
             labels.append(time_label)
             values.append(float(point.net_worth))

@@ -255,3 +255,39 @@ class WeeklyHistoricalNetWorth(db.Model):
             'platform_breakdown': self.platform_breakdown,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
+
+class MonthlyHistoricalNetWorth(db.Model):
+    __tablename__ = 'monthly_historical_net_worth'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    net_worth = db.Column(db.Float, nullable=False)
+    platform_breakdown = db.Column(JSONB, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'net_worth': self.net_worth,
+            'platform_breakdown': self.platform_breakdown,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+class DailyHistoricalNetWorth(db.Model):
+    __tablename__ = 'daily_historical_net_worth'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, nullable=False)
+    net_worth = db.Column(db.Float, nullable=False)
+    platform_breakdown = db.Column(JSONB, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'net_worth': self.net_worth,
+            'platform_breakdown': self.platform_breakdown,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
