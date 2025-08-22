@@ -304,12 +304,12 @@
                     return `<circle cx="${x}" cy="${y}" r="3" fill="#00d4ff" stroke="#1a1a1a" stroke-width="1"/>`;
                 }).join('');
                 
-                // Generate Y-axis labels
+                // Generate Y-axis labels (on the right side)
                 const yLabels = [];
                 for (let i = 0; i <= 4; i++) {
                     const value = minValue + (valueRange * i / 4);
                     const y = padding + plotHeight - (i / 4) * plotHeight;
-                    yLabels.push(`<text x="15" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(0)}k</text>`);
+                    yLabels.push(`<text x="385" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(0)}k</text>`);
                 }
                 
                 // Generate X-axis labels (show every few labels to avoid crowding)
