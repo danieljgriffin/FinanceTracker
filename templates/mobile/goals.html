@@ -241,27 +241,28 @@
                 const targetDate = new Date(goal.target_date);
                 const isCompleted = progress >= 100;
                 
-                // Get progress-based border color
+                // Get progress-based border color - more intuitive gradient
                 let borderColor = 'border-gray-800';
                 if (isCompleted) {
                     borderColor = 'border-2 border-green-500';
+                } else if (progress >= 90) {
+                    borderColor = 'border-2 border-green-300'; // Light green when very close
                 } else if (progress >= 75) {
-                    borderColor = 'border-2 border-yellow-500';
+                    borderColor = 'border-2 border-yellow-400'; // Yellow for good progress
                 } else if (progress >= 50) {
-                    borderColor = 'border-2 border-orange-500';
+                    borderColor = 'border-2 border-orange-400'; // Orange for halfway
                 } else if (progress >= 25) {
-                    borderColor = 'border-2 border-blue-500';
+                    borderColor = 'border-2 border-blue-400'; // Blue for early progress
                 } else if (progress > 0) {
-                    borderColor = 'border-2 border-red-500';
+                    borderColor = 'border-2 border-red-400'; // Red for minimal progress
                 }
                 
                 return `
                     <div class="bg-black ${borderColor} rounded-xl p-6">
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex-1">
-                                <h3 class="text-lg font-bold text-white">${goal.title || targetDate.getFullYear() + '/' + String(targetDate.getMonth() + 1).padStart(2, '0')}</h3>
                                 <p class="text-2xl font-bold text-white">£${targetAmount.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
-                                <p class="text-sm text-gray-400">${targetDate.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })} Target</p>
+                                <p class="text-sm text-gray-400">${targetDate.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</p>
                             </div>
                             
                             <button onclick="toggleGoalCompletion(${goal.id})" class="ml-4">
@@ -342,16 +343,7 @@
             }
             
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            const diffMonths = Math.round(diffDays / 30);
-            const diffYears = Math.round(diffDays / 365);
-            
-            if (diffDays < 30) {
-                return `${diffDays} days`;
-            } else if (diffMonths < 12) {
-                return `${diffMonths} months`;
-            } else {
-                return `${diffYears} years`;
-            }
+            return `${diffDays} days`;
         }
 
         async function toggleGoalCompletion(goalId) {
