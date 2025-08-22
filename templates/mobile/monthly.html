@@ -292,9 +292,18 @@
             
             let html = '';
             Object.keys(platformGroups).forEach(platform => {
+                // Calculate platform total
+                const platformTotal = platformGroups[platform].reduce((sum, inv) => sum + inv.amount, 0);
+                
                 html += `
                     <div class="mb-4">
-                        <h3 class="text-sm font-semibold text-purple-400 mb-2 px-2">${platform}</h3>
+                        <div class="flex items-center justify-between mb-2 px-2">
+                            <h3 class="text-sm font-semibold text-purple-400">${platform}</h3>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-purple-300">£${platformTotal.toLocaleString('en-GB')}</div>
+                                <div class="text-xs text-gray-400">monthly total</div>
+                            </div>
+                        </div>
                         ${platformGroups[platform].map(investment => `
                             <div class="flex items-center justify-between p-3 bg-purple-500/10 rounded-xl border border-purple-500/20 mb-2 ml-2">
                                 <div class="flex items-center flex-1">
@@ -318,6 +327,14 @@
                                 </div>
                             </div>
                         `).join('')}
+                        
+                        <!-- Platform Annual Total -->
+                        <div class="ml-2 mt-2 p-2 bg-purple-500/5 rounded-lg border border-purple-500/10">
+                            <div class="text-center">
+                                <div class="text-xs text-gray-400">Annual commitment</div>
+                                <div class="text-sm font-semibold text-purple-300">£${(platformTotal * 12).toLocaleString('en-GB')}</div>
+                            </div>
+                        </div>
                     </div>
                 `;
             });
