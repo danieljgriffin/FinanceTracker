@@ -278,11 +278,11 @@
                 console.log('Data labels:', data.labels);
                 console.log('Data values:', data.values);
                 
-                // Generate SVG chart elements from API data (reduce right padding for labels)
+                // Generate SVG chart elements from API data (balanced padding for labels)
                 const chartWidth = 380;
                 const chartHeight = 200;
                 const padding = 20;
-                const rightPadding = 50; // Extra space for right-side labels
+                const rightPadding = 35; // Balanced space for right-side labels
                 const plotWidth = chartWidth - padding - rightPadding;
                 const plotHeight = chartHeight - padding * 2;
                 
@@ -305,12 +305,12 @@
                     return `<circle cx="${x}" cy="${y}" r="3" fill="#00d4ff" stroke="#1a1a1a" stroke-width="1"/>`;
                 }).join('');
                 
-                // Generate Y-axis labels (on the right side, moved further right to avoid overlap)
+                // Generate Y-axis labels (properly positioned on right side)
                 const yLabels = [];
                 for (let i = 0; i <= 4; i++) {
                     const value = minValue + (valueRange * i / 4);
                     const y = padding + plotHeight - (i / 4) * plotHeight;
-                    yLabels.push(`<text x="395" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="start">£${(value / 1000).toFixed(0)}k</text>`);
+                    yLabels.push(`<text x="370" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="start">£${(value / 1000).toFixed(0)}k</text>`);
                 }
                 
                 // Generate X-axis labels - show all months for yearly data, otherwise smart spacing
