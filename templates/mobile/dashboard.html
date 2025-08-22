@@ -102,17 +102,20 @@
                 </svg>
                 
                 <!-- Interactive overlay for touch/hover - aligned with chart data points -->
-                <div id="chartOverlay" class="absolute inset-0 bg-transparent"></div>
+                <div id="chartOverlay" class="absolute inset-0 bg-transparent" 
+                     ontouchstart="handleChartTouch(event)" 
+                     ontouchmove="handleChartTouch(event)"
+                     ontouchend="hideTooltip()"></div>
                 
-                <!-- Hover indicator line and value display -->
-                <div id="hoverIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
-                    <div class="w-px h-full bg-white bg-opacity-50"></div>
+                <!-- Touch indicator dot -->
+                <div id="touchIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
+                    <div class="w-3 h-3 bg-white rounded-full border-2 border-blue-400"></div>
                 </div>
                 
-                <!-- Value tooltip -->
-                <div id="valueTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-200 bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-                    <div id="tooltipValue"></div>
-                    <div id="tooltipDate" class="text-gray-300"></div>
+                <!-- Mobile value tooltip -->
+                <div id="mobileTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20">
+                    <div id="mobileTooltipValue" class="font-semibold"></div>
+                    <div id="mobileTooltipDate" class="text-gray-300 text-xs mt-1"></div>
                 </div>
             </div>
             
@@ -360,6 +363,24 @@
                 };
                 
                 console.log('Mobile SVG chart generated successfully');
+                
+                // Store chart data for touch interactions
+                window.mobileChartData = {
+                    values: data.values,
+                    labels: data.labels,
+                    dataPoints: data.values.map((value, index) => {
+                        const x = padding + (index / (data.values.length - 1)) * plotWidth;
+                        const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
+                        return { x, y, value, label: data.labels[index] };
+                    }),
+                    chartBounds: {
+                        left: padding,
+                        right: padding + plotWidth,
+                        top: padding,
+                        bottom: padding + plotHeight
+                    }
+                };
+                
                 return;
             } else if (data.line) {
                 // Static format - use directly
@@ -423,7 +444,80 @@
             // setupChartInteraction(); // Disabled - no hover interactions
         }
 
-        // setupChartInteraction function disabled - no hover interactions
+        // Mobile touch interaction functions
+        function handleChartTouch(event) {
+            if (!window.mobileChartData) return;
+            
+            event.preventDefault();
+            const touch = event.touches[0] || event.changedTouches[0];
+            if (!touch) return;
+            
+            const chartContainer = document.querySelector('.relative');
+            const rect = chartContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            // Find closest data point
+            let closestPoint = null;
+            let minDistance = Infinity;
+            
+            window.mobileChartData.dataPoints.forEach(point => {
+                const distance = Math.sqrt(Math.pow(x - point.x, 2) + Math.pow(y - point.y, 2));
+                if (distance < minDistance && distance < 30) { // 30px touch tolerance
+                    minDistance = distance;
+                    closestPoint = point;
+                }
+            });
+            
+            if (closestPoint) {
+                showMobileTooltip(closestPoint, x, y);
+            } else {
+                hideTooltip();
+            }
+        }
+        
+        function showMobileTooltip(point, touchX, touchY) {
+            const indicator = document.getElementById('touchIndicator');
+            const tooltip = document.getElementById('mobileTooltip');
+            const valueEl = document.getElementById('mobileTooltipValue');
+            const dateEl = document.getElementById('mobileTooltipDate');
+            
+            // Position touch indicator
+            indicator.style.left = (point.x - 6) + 'px';
+            indicator.style.top = (point.y - 6) + 'px';
+            indicator.style.opacity = '1';
+            
+            // Update tooltip content
+            valueEl.textContent = `£${point.value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            dateEl.textContent = point.label;
+            
+            // Position tooltip (above touch point, adjust if too close to edges)
+            let tooltipX = touchX - 50; // Center tooltip roughly
+            let tooltipY = touchY - 70; // Position above touch
+            
+            // Keep tooltip within bounds
+            if (tooltipX < 10) tooltipX = 10;
+            if (tooltipX > 280) tooltipX = 280;
+            if (tooltipY < 10) tooltipY = touchY + 20; // Move below if too high
+            
+            tooltip.style.left = tooltipX + 'px';
+            tooltip.style.top = tooltipY + 'px';
+            tooltip.style.opacity = '1';
+            
+            // Auto-hide after 3 seconds
+            clearTimeout(window.tooltipHideTimer);
+            window.tooltipHideTimer = setTimeout(hideTooltip, 3000);
+        }
+        
+        function hideTooltip() {
+            const indicator = document.getElementById('touchIndicator');
+            const tooltip = document.getElementById('mobileTooltip');
+            
+            indicator.style.opacity = '0';
+            tooltip.style.opacity = '0';
+            
+            clearTimeout(window.tooltipHideTimer);
+        }
 
         // Initialize chart on page load with MAX view
         document.addEventListener('DOMContentLoaded', function() {
