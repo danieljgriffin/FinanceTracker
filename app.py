@@ -1966,28 +1966,45 @@ def realtime_chart_data():
         
         uk_tz = pytz.timezone('Europe/London')
         
-        for point in data_points:
-            # Convert to BST for display
-            bst_time = point.timestamp.astimezone(uk_tz)
+        # For 24h data, deduplicate by time label to avoid duplicate entries
+        if time_filter == '24h':
+            time_data_map = {}  # {time_label: (timestamp, net_worth)}
             
-            if time_filter == '24h':
-                # For 24h data, show just time (e.g., "19:30")
+            for point in data_points:
+                # Convert to BST for display
+                bst_time = point.timestamp.astimezone(uk_tz)
                 time_label = bst_time.strftime('%H:%M')
-            elif time_filter == 'week':
-                # For weekly data, show day and time (e.g., "Mon 12:00")
-                time_label = bst_time.strftime('%a %H:%M')
-            elif time_filter == 'month':
-                # For monthly data, show date and time (e.g., "22/08 12:00")
-                time_label = bst_time.strftime('%d/%m %H:%M')
-            elif time_filter in ['3months', 'year']:
-                # For 3 months/year data, show date (e.g., "22/08")
-                time_label = bst_time.strftime('%d/%m')
-            elif time_filter in ['2023', '2024', '2025', 'all-years']:
-                # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
-                time_label = bst_time.strftime('%b %y')
+                
+                # Keep only the most recent entry for each time label
+                if time_label not in time_data_map or point.timestamp > time_data_map[time_label][0]:
+                    time_data_map[time_label] = (point.timestamp, float(point.net_worth))
             
-            labels.append(time_label)
-            values.append(float(point.net_worth))
+            # Sort by timestamp and build final arrays
+            sorted_items = sorted(time_data_map.items(), key=lambda x: x[1][0])
+            for time_label, (timestamp, net_worth) in sorted_items:
+                labels.append(time_label)
+                values.append(net_worth)
+        else:
+            # For other time filters, process normally
+            for point in data_points:
+                # Convert to BST for display
+                bst_time = point.timestamp.astimezone(uk_tz)
+                
+                if time_filter == 'week':
+                    # For weekly data, show day and time (e.g., "Mon 12:00")
+                    time_label = bst_time.strftime('%a %H:%M')
+                elif time_filter == 'month':
+                    # For monthly data, show date and time (e.g., "22/08 12:00")
+                    time_label = bst_time.strftime('%d/%m %H:%M')
+                elif time_filter in ['3months', 'year']:
+                    # For 3 months/year data, show date (e.g., "22/08")
+                    time_label = bst_time.strftime('%d/%m')
+                elif time_filter in ['2023', '2024', '2025', 'all-years']:
+                    # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
+                    time_label = bst_time.strftime('%b %y')
+                
+                labels.append(time_label)
+                values.append(float(point.net_worth))
         
         return jsonify({
             'labels': labels,
