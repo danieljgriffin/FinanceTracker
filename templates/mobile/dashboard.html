@@ -273,10 +273,76 @@
             let lineData, yLabels, xLabels, hasCurrentValue;
             
             if (data.labels && data.values) {
-                // API format - convert to chart format
-                console.log('Converting API data to chart format');
-                // This would need proper SVG line generation, for now show message
-                svg.innerHTML = '<text x="200" y="120" text-anchor="middle" fill="#00d4ff" font-size="14">Live data loaded</text>';
+                // API format - convert to SVG chart format
+                console.log('Converting API data to SVG chart format');
+                console.log('Data labels:', data.labels);
+                console.log('Data values:', data.values);
+                
+                // Generate SVG chart elements from API data
+                const chartWidth = 380;
+                const chartHeight = 200;
+                const padding = 20;
+                const plotWidth = chartWidth - padding * 2;
+                const plotHeight = chartHeight - padding * 2;
+                
+                // Find min and max values for scaling
+                const minValue = Math.min(...data.values);
+                const maxValue = Math.max(...data.values);
+                const valueRange = maxValue - minValue;
+                
+                // Generate chart points
+                const points = data.values.map((value, index) => {
+                    const x = padding + (index / (data.values.length - 1)) * plotWidth;
+                    const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
+                    return `${x},${y}`;
+                }).join(' ');
+                
+                // Generate data point circles
+                const dataPoints = data.values.map((value, index) => {
+                    const x = padding + (index / (data.values.length - 1)) * plotWidth;
+                    const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
+                    return `<circle cx="${x}" cy="${y}" r="3" fill="#00d4ff" stroke="#1a1a1a" stroke-width="1"/>`;
+                }).join('');
+                
+                // Generate Y-axis labels
+                const yLabels = [];
+                for (let i = 0; i <= 4; i++) {
+                    const value = minValue + (valueRange * i / 4);
+                    const y = padding + plotHeight - (i / 4) * plotHeight;
+                    yLabels.push(`<text x="15" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(0)}k</text>`);
+                }
+                
+                // Generate X-axis labels (show every few labels to avoid crowding)
+                const xLabels = [];
+                const labelStep = Math.ceil(data.labels.length / 6); // Show ~6 labels max
+                for (let i = 0; i < data.labels.length; i += labelStep) {
+                    const x = padding + (i / (data.labels.length - 1)) * plotWidth;
+                    xLabels.push(`<text x="${x}" y="240" font-size="10" fill="#6b7280" text-anchor="middle">${data.labels[i]}</text>`);
+                }
+                
+                // Mark current value point (last point) differently
+                const lastX = padding + plotWidth;
+                const lastY = padding + plotHeight - ((data.values[data.values.length - 1] - minValue) / valueRange) * plotHeight;
+                const currentPointMarkup = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>`;
+                
+                svg.innerHTML = `
+                    <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${points}"/>
+                    ${dataPoints}
+                    ${currentPointMarkup}
+                    ${yLabels.join('')}
+                    ${xLabels.join('')}
+                `;
+                
+                // Store chart data for potential interactions
+                currentRange = range;
+                currentChartData = {
+                    values: data.values,
+                    labels: data.labels,
+                    points: points,
+                    hasCurrentValue: true
+                };
+                
+                console.log('Mobile SVG chart generated successfully');
                 return;
             } else if (data.line) {
                 // Static format - use directly
