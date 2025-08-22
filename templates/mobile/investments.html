@@ -47,7 +47,18 @@
 
     <!-- Main Content -->
     <div class="px-4 py-6 pb-24">
-        <!-- Content cleared - keeping same black background as home page -->
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+            <p class="text-gray-400">Loading investment data...</p>
+        </div>
+
+        <!-- Investment Platforms Container -->
+        <div id="investmentsContainer" class="space-y-6" style="display: none;">
+            <!-- Platforms will be dynamically loaded here -->
+        </div>
+
     </div>
 
     <!-- Bottom Navigation -->
@@ -77,7 +88,188 @@
     </div>
 
     <script>
-        // Content cleared - keeping basic page structure
+        // Load investment data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadInvestmentData();
+        });
+
+        async function loadInvestmentData() {
+            try {
+                const response = await fetch('/api/investment-details');
+                const data = await response.json();
+                
+                if (data.error) {
+                    showError('Failed to load investment data');
+                    return;
+                }
+                
+                displayInvestmentData(data.platforms);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('investmentsContainer').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error loading investment data:', error);
+                showError('Failed to load investment data');
+            }
+        }
+
+        function displayInvestmentData(platforms) {
+            const container = document.getElementById('investmentsContainer');
+            container.innerHTML = '';
+
+            // Calculate total portfolio value
+            let totalPortfolioValue = 0;
+            Object.values(platforms).forEach(platformData => {
+                const platformValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, 0) + (platformData.cash || 0);
+                totalPortfolioValue += platformValue;
+            });
+
+            Object.entries(platforms).forEach(([platformName, platformData]) => {
+                const platformElement = createPlatformElement(platformName, platformData, totalPortfolioValue);
+                container.appendChild(platformElement);
+            });
+        }
+
+        function createPlatformElement(platformName, platformData, totalPortfolioValue) {
+            // Calculate platform totals
+            const totalValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, 0) + (platformData.cash || 0);
+            const totalPL = platformData.investments.reduce((sum, inv) => sum + (inv.profit_loss || 0), 0);
+            const totalCost = platformData.investments.reduce((sum, inv) => sum + inv.amount_spent, 0);
+            const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
+            const platformPercent = totalPortfolioValue > 0 ? (totalValue / totalPortfolioValue) * 100 : 0;
+            
+            const platformDiv = document.createElement('div');
+            platformDiv.className = 'mb-8';
+            
+            platformDiv.innerHTML = `
+                <!-- Platform Header -->
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-xl font-bold text-white">${platformName}</h2>
+                        <div class="text-right">
+                            <div class="text-white font-bold text-lg">£${totalValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            <div class="text-${totalPL >= 0 ? 'green' : 'red'}-400 text-sm font-semibold">
+                                ${totalPL >= 0 ? '+' : ''}£${Math.abs(totalPL).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                                (${totalPL >= 0 ? '+' : ''}${totalPLPercent.toFixed(2)}%)
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-gray-400 text-sm">${platformPercent.toFixed(1)}% of portfolio</div>
+                </div>
+
+                <!-- Individual Investments -->
+                <div class="space-y-0">
+                    ${platformData.investments.map(investment => `
+                        <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
+                            <div class="flex items-center space-x-3">
+                                <!-- Investment Icon/Logo Placeholder -->
+                                <div class="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-gray-300 text-lg"></i>
+                                </div>
+                                
+                                <!-- Investment Info -->
+                                <div>
+                                    <div class="text-white font-semibold text-base">${investment.name}</div>
+                                    <div class="text-gray-400 text-sm">${(investment.holdings || 0).toLocaleString('en-GB', { maximumFractionDigits: 8 })} SHARES</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Value and P&L -->
+                            <div class="text-right">
+                                <div class="text-white font-bold text-lg">£${investment.current_value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                ${investment.profit_loss !== undefined ? `
+                                    <div class="text-${investment.profit_loss >= 0 ? 'green' : 'red'}-400 text-sm font-semibold">
+                                        ${investment.profit_loss >= 0 ? '+' : ''}£${Math.abs(investment.profit_loss).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
+                                        (${investment.profit_loss_percent >= 0 ? '+' : ''}${investment.profit_loss_percent.toFixed(2)}%)
+                                    </div>
+                                ` : `
+                                    <div class="text-gray-500 text-sm">No P&L data</div>
+                                `}
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <!-- Cash Balance (if exists) -->
+                    ${platformData.cash ? `
+                        <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
+                            <div class="flex items-center space-x-3">
+                                <!-- Cash Icon -->
+                                <div class="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+                                    <i class="fas fa-coins text-white text-lg"></i>
+                                </div>
+                                
+                                <!-- Cash Info -->
+                                <div>
+                                    <div class="text-white font-semibold text-base">Cash Balance</div>
+                                    <div class="text-gray-400 text-sm">Available funds</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Cash Value -->
+                            <div class="text-right flex items-center">
+                                <div>
+                                    <div class="text-green-400 font-bold text-lg">£${platformData.cash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                    <div class="text-gray-500 text-sm">Cash</div>
+                                </div>
+                                <button onclick="editCashBalance('${platformName}', ${platformData.cash})" class="text-gray-400 hover:text-white ml-3">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            return platformDiv;
+        }
+
+        function editCashBalance(platformName, currentAmount) {
+            const newAmount = prompt(`Enter new cash balance for ${platformName}:`, currentAmount);
+            if (newAmount !== null && !isNaN(newAmount)) {
+                updateCashBalance(platformName, parseFloat(newAmount));
+            }
+        }
+
+        async function updateCashBalance(platformName, amount) {
+            try {
+                const response = await fetch('/api/update-cash-balance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        platform: platformName,
+                        amount: amount
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    // Reload the data to show updated balance
+                    loadInvestmentData();
+                } else {
+                    alert('Failed to update cash balance: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error updating cash balance:', error);
+                alert('Failed to update cash balance');
+            }
+        }
+
+        function showError(message) {
+            const container = document.getElementById('investmentsContainer');
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                    <p class="text-red-400">${message}</p>
+                    <button onclick="loadInvestmentData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
+                        Try Again
+                    </button>
+                </div>
+            `;
+            document.getElementById('loadingState').style.display = 'none';
+            container.style.display = 'block';
+        }
     </script>
 </body>
 </html>
