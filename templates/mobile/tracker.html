@@ -169,12 +169,12 @@
                 <h3 class="text-sm font-semibold text-gray-300 mb-3">Year Summary for <span id="yearSummaryYear">2025</span></h3>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <div class="text-xs text-gray-400">Net Worth Growth</div>
+                        <div class="text-xs text-gray-400">Growth in £</div>
                         <div class="text-lg font-bold text-green-400" id="yearNetWorthGrowth">+£0</div>
                     </div>
                     <div>
-                        <div class="text-xs text-gray-400">Current Net Worth</div>
-                        <div class="text-lg font-bold text-white" id="yearEndNetWorth">£0</div>
+                        <div class="text-xs text-gray-400">Growth in %</div>
+                        <div class="text-lg font-bold text-white" id="yearGrowthPercent">0%</div>
                     </div>
                 </div>
             </div>
@@ -295,41 +295,64 @@
             let startValue = 0;
             let endValue = 0;
             
-            console.log('Year summary - monthlyTotals:', monthlyTotals);
-            
-            // Find first month with data
+            // Find first month with data for start of year
             for (const month of months) {
-                if (monthlyTotals[month] > 0) {
+                if (monthlyTotals[month] && monthlyTotals[month] > 0) {
                     startValue = monthlyTotals[month];
                     break;
                 }
             }
             
-            // Find last month with data
+            // Find last month with data for end of year
             for (let i = months.length - 1; i >= 0; i--) {
-                if (monthlyTotals[months[i]] > 0) {
+                if (monthlyTotals[months[i]] && monthlyTotals[months[i]] > 0) {
                     endValue = monthlyTotals[months[i]];
                     break;
                 }
             }
             
-            console.log('Year summary values:', {startValue, endValue, currentYear});
+            // If no data for current year, check if we're looking at 2025 and use January from previous year for comparison
+            if (startValue === 0 && currentYear === 2025) {
+                const previousYearData = trackerData.platform_data?.[currentYear - 1];
+                if (previousYearData) {
+                    let previousYearEndTotal = 0;
+                    Object.values(previousYearData).forEach(platformData => {
+                        const platformMonths = platformData.months || {};
+                        // Look for December data from previous year
+                        if (platformMonths['1st Dec']?.value > 0) {
+                            previousYearEndTotal += platformMonths['1st Dec'].value;
+                        } else if (platformMonths['31st Dec']?.value > 0) {
+                            previousYearEndTotal += platformMonths['31st Dec'].value;
+                        }
+                    });
+                    startValue = previousYearEndTotal;
+                }
+            }
             
-            if (endValue === 0) {
+            console.log('Year summary calculation:', {startValue, endValue, currentYear});
+            
+            if (startValue === 0 || endValue === 0) {
                 document.getElementById('yearNetWorthGrowth').textContent = '£0';
                 document.getElementById('yearNetWorthGrowth').className = 'text-lg font-bold text-gray-400';
-                document.getElementById('yearEndNetWorth').textContent = '£0';
+                document.getElementById('yearGrowthPercent').textContent = '0%';
+                document.getElementById('yearGrowthPercent').className = 'text-lg font-bold text-gray-400';
                 return;
             }
             
             const netWorthGrowth = endValue - startValue;
+            const growthPercent = (netWorthGrowth / startValue) * 100;
             
+            // Update growth in £
             document.getElementById('yearNetWorthGrowth').textContent = 
                 `${netWorthGrowth >= 0 ? '+' : ''}£${Math.round(netWorthGrowth).toLocaleString('en-GB')}`;
             document.getElementById('yearNetWorthGrowth').className = 
                 `text-lg font-bold ${netWorthGrowth >= 0 ? 'text-green-400' : 'text-red-400'}`;
-            document.getElementById('yearEndNetWorth').textContent = 
-                `£${Math.round(endValue).toLocaleString('en-GB')}`;
+            
+            // Update growth in %
+            document.getElementById('yearGrowthPercent').textContent = 
+                `${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%`;
+            document.getElementById('yearGrowthPercent').className = 
+                `text-lg font-bold ${growthPercent >= 0 ? 'text-green-400' : 'text-red-400'}`;
         }
 
         function handleJanuaryChange(changeEl, currentJanTotal) {
