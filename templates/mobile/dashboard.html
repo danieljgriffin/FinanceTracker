@@ -107,10 +107,7 @@
                      ontouchmove="handleChartTouch(event)"
                      ontouchend="hideTooltip()"></div>
                 
-                <!-- Touch indicator dot - exactly matches chart data point size -->
-                <div id="touchIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
-                    <div class="w-3 h-3 bg-white rounded-full border-2 border-blue-400 shadow-lg"></div>
-                </div>
+                <!-- Touch indicator removed - just tooltip now -->
                 
                 <!-- Mobile value tooltip -->
                 <div id="mobileTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20">
@@ -478,21 +475,15 @@
         }
         
         function showMobileTooltip(point, touchX, touchY) {
-            const indicator = document.getElementById('touchIndicator');
             const tooltip = document.getElementById('mobileTooltip');
             const valueEl = document.getElementById('mobileTooltipValue');
             const dateEl = document.getElementById('mobileTooltipDate');
-            
-            // Position touch indicator exactly on the data point coordinates
-            indicator.style.left = (point.x - 6) + 'px';
-            indicator.style.top = (point.y - 6) + 'px';
-            indicator.style.opacity = '1';
             
             // Update tooltip content
             valueEl.textContent = `£${point.value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             dateEl.textContent = point.label;
             
-            // Position tooltip above the data point (not touch point)
+            // Position tooltip above the data point
             let tooltipX = point.x - 50; // Center on data point x
             let tooltipY = point.y - 80; // Position well above data point
             
@@ -511,10 +502,8 @@
         }
         
         function hideTooltip() {
-            const indicator = document.getElementById('touchIndicator');
             const tooltip = document.getElementById('mobileTooltip');
             
-            indicator.style.opacity = '0';
             tooltip.style.opacity = '0';
             
             clearTimeout(window.tooltipHideTimer);
