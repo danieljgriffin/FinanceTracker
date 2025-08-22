@@ -160,16 +160,13 @@
                             <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
                                 <div class="flex items-center space-x-3">
                                     <!-- Company Logo -->
-                                    <div class="w-12 h-12 rounded-xl bg-gray-700 flex items-center justify-center overflow-hidden">
+                                    <div class="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
                                         <img 
                                             src="https://logo.clearbit.com/${getCompanyDomain(investment.ticker || investment.name)}" 
                                             alt="${investment.name}" 
-                                            class="w-8 h-8 rounded object-contain"
-                                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                                            class="w-full h-full object-cover rounded-xl"
+                                            onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'text-white text-xs font-bold\\'>${getInitials(investment.name)}</div>';"
                                         />
-                                        <div class="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white text-xs font-bold" style="display: none;">
-                                            ${getInitials(investment.name)}
-                                        </div>
                                     </div>
                                     
                                     <!-- Investment Info -->
