@@ -2920,9 +2920,11 @@ def api_monthly_breakdown():
             })
             total_expenses += expense.get('monthly_amount', 0)
         
+        # Use the same total calculation as desktop version
+        total_investment_commitments = breakdown_data.get('total_monthly_investments', 0)
+        
         # Format investment commitments for API
         investment_commitments = []
-        total_investment_commitments = 0
         
         for platform, investments in platform_investments.items():
             if investments and isinstance(investments, list):
@@ -2933,7 +2935,6 @@ def api_monthly_breakdown():
                             'name': investment.get('name', ''),
                             'amount': investment.get('monthly_amount', 0)
                         })
-                        total_investment_commitments += investment.get('monthly_amount', 0)
         
         return jsonify({
             'monthly_income': monthly_income,
