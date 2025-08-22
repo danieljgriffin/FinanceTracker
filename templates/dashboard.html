@@ -625,27 +625,22 @@
                                 borderColor: '#6b7280',
                                 borderWidth: 1,
                                 callbacks: {
-                                    footer: function(tooltipItems) {
-                                        // Calculate total for the month (for stacked bars, sum all values)
-                                        let total = 0;
-                                        if (currentChartTypeCharts === 'bar') {
-                                            // For stacked bars, show the total across all platforms for this month
-                                            tooltipItems.forEach(function(tooltipItem) {
-                                                total += tooltipItem.parsed.y;
-                                            });
-                                        } else {
-                                            // For line charts, sum all datasets for this point
-                                            const dataIndex = tooltipItems[0].dataIndex;
-                                            tooltipItems[0].chart.data.datasets.forEach(function(dataset) {
-                                                if (dataset.data[dataIndex]) {
-                                                    total += dataset.data[dataIndex];
-                                                }
-                                            });
-                                        }
-                                        return 'Total: £' + total.toLocaleString();
-                                    },
                                     label: function(context) {
                                         return context.dataset.label + ': £' + context.parsed.y.toLocaleString();
+                                    },
+                                    afterBody: function(context) {
+                                        // Calculate total for the month by summing all visible datasets
+                                        const dataIndex = context[0].dataIndex;
+                                        let total = 0;
+                                        
+                                        // Sum all datasets for this month
+                                        context[0].chart.data.datasets.forEach(dataset => {
+                                            if (dataset.data[dataIndex] !== undefined) {
+                                                total += dataset.data[dataIndex];
+                                            }
+                                        });
+                                        
+                                        return ['', 'Total: £' + total.toLocaleString()];
                                     }
                                 }
                             }
