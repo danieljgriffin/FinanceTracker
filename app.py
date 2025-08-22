@@ -2067,7 +2067,7 @@ def networth_chart_data():
         values = []
         platform_data = {}  # For stacked bar chart
         
-        if year_param == 'all':
+        if year_param == 'all' or year_param == 'all-years':
             # Get data from all years (2023, 2024, 2025) - enhanced with historical data
             return jsonify(get_enhanced_all_years_chart_data(chart_type))
         elif year_param == '2024-2025':
