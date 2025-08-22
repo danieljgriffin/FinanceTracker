@@ -806,6 +806,21 @@ def mobile_info():
     """Information page about the mobile app"""
     return render_template('mobile_info.html')
 
+@app.route('/mobile/investments')
+def mobile_investments():
+    """Mobile investments page"""
+    return render_template('mobile/investments.html')
+
+@app.route('/mobile/goals')
+def mobile_goals():
+    """Mobile goals page"""
+    return render_template('mobile/goals.html')
+
+@app.route('/mobile/monthly')
+def mobile_monthly():
+    """Mobile monthly breakdown page"""
+    return render_template('mobile/monthly.html')
+
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
 def yearly_tracker(year=None):
@@ -2812,6 +2827,163 @@ def api_geographic_allocation():
         return jsonify(allocation_data)
     except Exception as e:
         logging.error(f"Error getting geographic allocation data: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/investment-details')
+def api_investment_details():
+    """API endpoint for investment details with P&L calculations"""
+    try:
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        result = {
+            'platforms': {}
+        }
+        
+        # Process each platform
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
+                
+            platform_info = {
+                'investments': [],
+                'cash': data_manager.get_platform_cash(platform)
+            }
+            
+            # Process investments
+            for investment in investments:
+                investment_details = {
+                    'name': investment.get('name', ''),
+                    'holdings': investment.get('holdings', 0),
+                    'current_price': investment.get('current_price', 0),
+                    'current_value': investment.get('holdings', 0) * investment.get('current_price', 0),
+                    'amount_spent': investment.get('amount_spent', 0),
+                    'average_buy_price': investment.get('average_buy_price', 0),
+                    'profit_loss': 0,
+                    'profit_loss_percent': 0
+                }
+                
+                # Calculate P&L
+                if investment_details['amount_spent'] > 0:
+                    investment_details['profit_loss'] = investment_details['current_value'] - investment_details['amount_spent']
+                    investment_details['profit_loss_percent'] = (investment_details['profit_loss'] / investment_details['amount_spent']) * 100
+                
+                platform_info['investments'].append(investment_details)
+            
+            result['platforms'][platform] = platform_info
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error getting investment details: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update-cash-balance', methods=['POST'])
+def api_update_cash_balance():
+    """API endpoint to update cash balance for a platform"""
+    try:
+        data = request.get_json()
+        platform = data.get('platform')
+        amount = data.get('amount')
+        
+        if not platform or amount is None:
+            return jsonify({'success': False, 'message': 'Platform and amount are required'})
+        
+        get_data_manager().set_platform_cash(platform, float(amount))
+        return jsonify({'success': True, 'message': 'Cash balance updated successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error updating cash balance: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/monthly-breakdown')
+def api_monthly_breakdown():
+    """API endpoint for monthly breakdown data"""
+    try:
+        data_manager = get_data_manager()
+        
+        # Get income data
+        income_data = data_manager.get_income_data()
+        monthly_income = income_data.get('monthly_income', 0)
+        
+        # Get expenses data
+        expenses_data = data_manager.get_expenses_data()
+        expenses = []
+        total_expenses = 0
+        
+        for category, amount in expenses_data.items():
+            expenses.append({
+                'category': category,
+                'amount': amount
+            })
+            total_expenses += amount
+        
+        # Get investment commitments
+        commitments_data = data_manager.get_investment_commitments_data()
+        investment_commitments = []
+        total_investment_commitments = 0
+        
+        for platform, commitments in commitments_data.items():
+            for commitment in commitments:
+                investment_commitments.append({
+                    'platform': platform,
+                    'name': commitment.get('name', ''),
+                    'amount': commitment.get('monthly_amount', 0)
+                })
+                total_investment_commitments += commitment.get('monthly_amount', 0)
+        
+        return jsonify({
+            'monthly_income': monthly_income,
+            'expenses': expenses,
+            'total_expenses': total_expenses,
+            'investment_commitments': investment_commitments,
+            'total_investment_commitments': total_investment_commitments
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting monthly breakdown: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update-monthly-data', methods=['POST'])
+def api_update_monthly_data():
+    """API endpoint to update monthly data"""
+    try:
+        data = request.get_json()
+        field = data.get('field')
+        value = data.get('value')
+        
+        if field == 'income':
+            get_data_manager().update_income(float(value))
+            return jsonify({'success': True, 'message': 'Income updated successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid field'})
+        
+    except Exception as e:
+        logging.error(f"Error updating monthly data: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/goals')
+def api_goals():
+    """API endpoint for goals data"""
+    try:
+        goals_list = Goal.query.order_by(Goal.target_date.asc()).all()
+        
+        # Convert goals to JSON format
+        goals_json = []
+        for goal in goals_list:
+            goals_json.append({
+                'id': goal.id,
+                'title': goal.title,
+                'description': goal.description,
+                'target_amount': goal.target_amount,
+                'target_date': goal.target_date.isoformat(),
+                'created_at': goal.created_at.isoformat() if goal.created_at else None
+            })
+        
+        return jsonify(goals_json)
+        
+    except Exception as e:
+        logging.error(f"Error getting goals: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/goals')

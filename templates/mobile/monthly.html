@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Breakdown - Portfolio Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+    <!-- Mobile Header -->
+    <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold">Monthly Breakdown</h1>
+            <i class="fas fa-calendar-alt text-blue-400"></i>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6 pb-24">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+            <p class="text-gray-400 mt-2">Loading monthly data...</p>
+        </div>
+
+        <!-- Monthly Data Container -->
+        <div id="monthlyContainer" class="space-y-6" style="display: none;">
+            
+            <!-- Free Cash Available -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600">
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-wallet text-green-400 mr-3 text-xl"></i>
+                    <h2 class="text-lg font-bold text-white">Free Cash Available</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">Monthly</p>
+                        <p class="text-2xl font-bold text-green-400" id="monthlyFreeCash">£0.00</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">Annual</p>
+                        <p class="text-2xl font-bold text-green-400" id="annualFreeCash">£0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Income -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-money-bill-wave text-blue-400 mr-3 text-xl"></i>
+                        <h2 class="text-lg font-bold text-white">Income</h2>
+                    </div>
+                    <button onclick="editIncome()" class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">Monthly Take Home</p>
+                        <p class="text-2xl font-bold text-blue-400" id="monthlyIncome">£0.00</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">Yearly Take Home</p>
+                        <p class="text-2xl font-bold text-blue-400" id="yearlyIncome">£0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expenses -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-shopping-cart text-red-400 mr-3 text-xl"></i>
+                        <h2 class="text-lg font-bold text-white">Expenses</h2>
+                    </div>
+                    <button onclick="editExpenses()" class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                <div class="space-y-3" id="expensesContainer">
+                    <!-- Expenses will be dynamically loaded -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-600">
+                    <div class="flex justify-between">
+                        <span class="font-semibold text-white">Total Monthly Expenses:</span>
+                        <span class="font-bold text-red-400" id="totalExpenses">£0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Commitments -->
+            <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-purple-400 mr-3 text-xl"></i>
+                        <h2 class="text-lg font-bold text-white">Investment Commitments</h2>
+                    </div>
+                    <button onclick="editInvestmentCommitments()" class="text-blue-400 hover:text-blue-300">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+                <div class="space-y-3" id="investmentCommitmentsContainer">
+                    <!-- Investment commitments will be dynamically loaded -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-600">
+                    <div class="flex justify-between">
+                        <span class="font-semibold text-white">Total Monthly Investments:</span>
+                        <span class="font-bold text-purple-400" id="totalInvestmentCommitments">£0.00</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-600">
+        <div class="flex justify-around py-3">
+            <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Home</span>
+            </a>
+            <a href="/mobile/investments" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-chart-line text-xl mb-1"></i>
+                <span class="text-xs">Investments</span>
+            </a>
+            <a href="/mobile/goals" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-bullseye text-xl mb-1"></i>
+                <span class="text-xs">Goals</span>
+            </a>
+            <div class="flex flex-col items-center text-blue-400">
+                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+                <span class="text-xs">Monthly</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let monthlyData = {};
+
+        // Load monthly breakdown data
+        async function loadMonthlyData() {
+            try {
+                const response = await fetch('/api/monthly-breakdown');
+                monthlyData = await response.json();
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('monthlyContainer').style.display = 'block';
+                
+                renderMonthlyData();
+            } catch (error) {
+                console.error('Error loading monthly data:', error);
+                document.getElementById('loadingState').innerHTML = '<p class="text-red-400">Error loading monthly data</p>';
+            }
+        }
+
+        function renderMonthlyData() {
+            // Free Cash
+            const monthlyFreeCash = monthlyData.monthly_income - monthlyData.total_expenses - monthlyData.total_investment_commitments;
+            const annualFreeCash = monthlyFreeCash * 12;
+            
+            document.getElementById('monthlyFreeCash').textContent = 
+                `£${monthlyFreeCash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('annualFreeCash').textContent = 
+                `£${annualFreeCash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Income
+            document.getElementById('monthlyIncome').textContent = 
+                `£${monthlyData.monthly_income.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            document.getElementById('yearlyIncome').textContent = 
+                `£${(monthlyData.monthly_income * 12).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            // Expenses
+            renderExpenses();
+            
+            // Investment Commitments
+            renderInvestmentCommitments();
+        }
+
+        function renderExpenses() {
+            const container = document.getElementById('expensesContainer');
+            container.innerHTML = '';
+            
+            let total = 0;
+            
+            monthlyData.expenses.forEach(expense => {
+                total += expense.amount;
+                
+                const expenseDiv = document.createElement('div');
+                expenseDiv.className = 'flex justify-between items-center py-2 px-3 bg-slate-600/30 rounded-lg';
+                expenseDiv.innerHTML = `
+                    <span class="text-white">${expense.category}</span>
+                    <span class="font-semibold text-red-400">£${expense.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                `;
+                container.appendChild(expenseDiv);
+            });
+            
+            document.getElementById('totalExpenses').textContent = 
+                `£${total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function renderInvestmentCommitments() {
+            const container = document.getElementById('investmentCommitmentsContainer');
+            container.innerHTML = '';
+            
+            let total = 0;
+            
+            monthlyData.investment_commitments.forEach(commitment => {
+                total += commitment.amount;
+                
+                const commitmentDiv = document.createElement('div');
+                commitmentDiv.className = 'flex justify-between items-center py-2 px-3 bg-slate-600/30 rounded-lg';
+                commitmentDiv.innerHTML = `
+                    <span class="text-white">${commitment.platform}</span>
+                    <span class="font-semibold text-purple-400">£${commitment.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                `;
+                container.appendChild(commitmentDiv);
+            });
+            
+            document.getElementById('totalInvestmentCommitments').textContent = 
+                `£${total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function editIncome() {
+            const newIncome = prompt('Update monthly take home income:', monthlyData.monthly_income.toFixed(2));
+            if (newIncome !== null && !isNaN(parseFloat(newIncome))) {
+                updateMonthlyData('income', parseFloat(newIncome));
+            }
+        }
+
+        function editExpenses() {
+            alert('Expense editing will be implemented in a future update');
+        }
+
+        function editInvestmentCommitments() {
+            alert('Investment commitment editing will be implemented in a future update');
+        }
+
+        function updateMonthlyData(field, value) {
+            fetch('/api/update-monthly-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    field: field,
+                    value: value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    loadMonthlyData(); // Reload to show updated data
+                } else {
+                    alert('Failed to update data');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating data:', error);
+                alert('Error updating data');
+            });
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', loadMonthlyData);
+    </script>
+</body>
+</html>

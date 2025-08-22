@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals - Portfolio Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+    <!-- Mobile Header -->
+    <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold">Goals</h1>
+            <i class="fas fa-bullseye text-blue-400"></i>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6 pb-24">
+        
+        <!-- Current Position -->
+        <div class="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600 mb-6">
+            <div class="text-center">
+                <h2 class="text-lg font-bold text-white mb-2">Current Position</h2>
+                <p class="text-3xl font-bold text-blue-400" id="currentNetWorth">£0.00</p>
+                <p class="text-sm text-gray-400 mt-1" id="lastUpdated">Loading...</p>
+            </div>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-white">Your Goals</h2>
+                <button class="text-blue-400 hover:text-blue-300">
+                    <i class="fas fa-plus text-sm"></i>
+                </button>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="goalsLoading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+                <p class="text-gray-400 mt-2">Loading goals...</p>
+            </div>
+
+            <!-- Goals Container -->
+            <div id="goalsContainer" class="space-y-4" style="display: none;">
+                <!-- Goals will be dynamically inserted here -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-600">
+        <div class="flex justify-around py-3">
+            <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Home</span>
+            </a>
+            <a href="/mobile/investments" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-chart-line text-xl mb-1"></i>
+                <span class="text-xs">Investments</span>
+            </a>
+            <div class="flex flex-col items-center text-blue-400">
+                <i class="fas fa-bullseye text-xl mb-1"></i>
+                <span class="text-xs">Goals</span>
+            </div>
+            <a href="/mobile/monthly" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+                <span class="text-xs">Monthly</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Load current net worth
+        async function loadCurrentPosition() {
+            try {
+                const response = await fetch('/api/live-values');
+                const data = await response.json();
+                
+                document.getElementById('currentNetWorth').textContent = 
+                    `£${data.current_net_worth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                
+                if (data.last_updated) {
+                    document.getElementById('lastUpdated').textContent = `Last updated ${data.last_updated}`;
+                } else {
+                    document.getElementById('lastUpdated').textContent = 'Live data';
+                }
+            } catch (error) {
+                console.error('Error loading current position:', error);
+                document.getElementById('currentNetWorth').textContent = 'Error loading';
+            }
+        }
+
+        // Load goals data
+        async function loadGoals() {
+            try {
+                const response = await fetch('/api/goals');
+                const goals = await response.json();
+                
+                document.getElementById('goalsLoading').style.display = 'none';
+                document.getElementById('goalsContainer').style.display = 'block';
+                
+                renderGoals(goals);
+            } catch (error) {
+                console.error('Error loading goals:', error);
+                document.getElementById('goalsLoading').innerHTML = '<p class="text-red-400">Error loading goals</p>';
+            }
+        }
+
+        function renderGoals(goals) {
+            const container = document.getElementById('goalsContainer');
+            container.innerHTML = '';
+            
+            if (!goals || goals.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-bullseye text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-400">No goals set yet</p>
+                        <p class="text-sm text-gray-500 mt-2">Add your first financial goal to start tracking progress</p>
+                    </div>
+                `;
+                return;
+            }
+
+            goals.forEach(goal => {
+                const goalElement = createGoalElement(goal);
+                container.appendChild(goalElement);
+            });
+        }
+
+        function createGoalElement(goal) {
+            const goalDiv = document.createElement('div');
+            goalDiv.className = 'bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600';
+            
+            // Calculate progress
+            const currentNetWorth = parseFloat(document.getElementById('currentNetWorth').textContent.replace(/[£,]/g, ''));
+            const progressPercent = Math.min((currentNetWorth / goal.target_amount) * 100, 100);
+            const remaining = Math.max(goal.target_amount - currentNetWorth, 0);
+            
+            // Calculate days remaining
+            const targetDate = new Date(goal.target_date);
+            const today = new Date();
+            const daysRemaining = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+            
+            goalDiv.innerHTML = `
+                <!-- Goal Header -->
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-white">${goal.title}</h3>
+                        <p class="text-sm text-gray-400 mt-1">${goal.description || ''}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-blue-400">£${goal.target_amount.toLocaleString('en-GB')}</p>
+                        <p class="text-xs text-gray-400">${new Date(goal.target_date).toLocaleDateString('en-GB')}</p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm mb-2">
+                        <span class="text-gray-400">Progress</span>
+                        <span class="text-white font-semibold">${progressPercent.toFixed(1)}%</span>
+                    </div>
+                    <div class="w-full bg-slate-600 rounded-full h-3">
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500" 
+                             style="width: ${progressPercent}%"></div>
+                    </div>
+                </div>
+
+                <!-- Goal Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">Remaining</p>
+                        <p class="font-bold text-white">£${remaining.toLocaleString('en-GB')}</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm text-gray-400">${daysRemaining > 0 ? 'Days Left' : 'Overdue'}</p>
+                        <p class="font-bold ${daysRemaining > 0 ? 'text-blue-400' : 'text-red-400'}">
+                            ${Math.abs(daysRemaining)} ${daysRemaining === 1 ? 'day' : 'days'}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Monthly Requirement (if applicable) -->
+                ${daysRemaining > 0 && remaining > 0 ? `
+                    <div class="mt-4 pt-3 border-t border-slate-600">
+                        <div class="text-center">
+                            <p class="text-sm text-gray-400">Monthly Requirement</p>
+                            <p class="font-bold text-yellow-400">
+                                £${(remaining / (daysRemaining / 30)).toLocaleString('en-GB', { maximumFractionDigits: 0 })}
+                            </p>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            return goalDiv;
+        }
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCurrentPosition();
+            loadGoals();
+        });
+
+        // Refresh current position every 10 seconds
+        setInterval(loadCurrentPosition, 10000);
+    </script>
+</body>
+</html>

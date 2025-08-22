@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investments - Portfolio Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="bg-slate-900 text-white min-h-screen">
+    <!-- Mobile Header -->
+    <div class="bg-gradient-to-r from-slate-800 to-slate-700 p-4 shadow-lg">
+        <div class="flex items-center justify-between">
+            <h1 class="text-xl font-bold">Investments</h1>
+            <i class="fas fa-chart-line text-blue-400"></i>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-6 pb-24">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
+            <p class="text-gray-400 mt-2">Loading investments...</p>
+        </div>
+
+        <!-- Investments Container -->
+        <div id="investmentsContainer" class="space-y-6" style="display: none;">
+            <!-- Platforms will be dynamically inserted here -->
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-600">
+        <div class="flex justify-around py-3">
+            <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-home text-xl mb-1"></i>
+                <span class="text-xs">Home</span>
+            </a>
+            <div class="flex flex-col items-center text-blue-400">
+                <i class="fas fa-chart-line text-xl mb-1"></i>
+                <span class="text-xs">Investments</span>
+            </div>
+            <a href="/mobile/goals" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-bullseye text-xl mb-1"></i>
+                <span class="text-xs">Goals</span>
+            </a>
+            <a href="/mobile/monthly" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+                <span class="text-xs">Monthly</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Load investments data
+        async function loadInvestments() {
+            try {
+                const response = await fetch('/api/investment-details');
+                const data = await response.json();
+                
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('investmentsContainer').style.display = 'block';
+                
+                renderInvestments(data);
+            } catch (error) {
+                console.error('Error loading investments:', error);
+                document.getElementById('loadingState').innerHTML = '<p class="text-red-400">Error loading investments</p>';
+            }
+        }
+
+        function renderInvestments(data) {
+            const container = document.getElementById('investmentsContainer');
+            container.innerHTML = '';
+            
+            // Render each platform
+            Object.entries(data.platforms).forEach(([platformName, platformData]) => {
+                const platformElement = createPlatformElement(platformName, platformData);
+                container.appendChild(platformElement);
+            });
+        }
+
+        function createPlatformElement(platformName, platformData) {
+            const platformDiv = document.createElement('div');
+            platformDiv.className = 'bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-5 shadow-lg border border-slate-600';
+            
+            // Calculate platform totals
+            const totalValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, platformData.cash || 0);
+            const totalPL = platformData.investments.reduce((sum, inv) => sum + (inv.profit_loss || 0), 0);
+            const totalPLPercent = totalPL !== 0 ? ((totalPL / (totalValue - totalPL)) * 100) : 0;
+            
+            platformDiv.innerHTML = `
+                <!-- Platform Header -->
+                <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-600">
+                    <div>
+                        <h3 class="text-lg font-bold text-white">${platformName}</h3>
+                        <p class="text-2xl font-bold text-blue-400 mt-1">£${totalValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm text-gray-400">Total P&L</p>
+                        <p class="font-bold ${totalPL >= 0 ? 'text-green-400' : 'text-red-400'}">
+                            ${totalPL >= 0 ? '+' : ''}${totalPLPercent.toFixed(2)}%
+                        </p>
+                        <p class="text-sm ${totalPL >= 0 ? 'text-green-400' : 'text-red-400'}">
+                            ${totalPL >= 0 ? '+' : ''}£${Math.abs(totalPL).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Investments List -->
+                <div class="space-y-3">
+                    ${platformData.investments.map(investment => `
+                        <div class="bg-slate-700/50 rounded-xl p-4 border border-slate-600/50">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <h4 class="font-semibold text-white text-sm">${investment.name}</h4>
+                                    <p class="text-xs text-gray-400 mt-1">£${investment.current_price?.toFixed(4) || 'N/A'}</p>
+                                </div>
+                                <div class="text-right ml-4">
+                                    <p class="font-bold text-white">£${investment.current_value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                                    ${investment.profit_loss !== undefined ? `
+                                        <p class="text-xs ${investment.profit_loss_percent >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                            ${investment.profit_loss_percent >= 0 ? '+' : ''}${investment.profit_loss_percent.toFixed(2)}%
+                                        </p>
+                                        <p class="text-xs ${investment.profit_loss >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                            ${investment.profit_loss >= 0 ? '+' : ''}£${Math.abs(investment.profit_loss).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </p>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <!-- Cash Balance -->
+                ${platformData.cash ? `
+                    <div class="mt-4 pt-3 border-t border-slate-600">
+                        <div class="flex justify-between items-center bg-slate-600/30 rounded-xl p-3">
+                            <div class="flex items-center">
+                                <i class="fas fa-coins text-yellow-400 mr-2"></i>
+                                <span class="font-semibold text-white">Cash Balance</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="font-bold text-green-400 mr-2">£${platformData.cash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <button onclick="updateCashBalance('${platformName}', ${platformData.cash})" class="text-blue-400 hover:text-blue-300">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+            
+            return platformDiv;
+        }
+
+        function updateCashBalance(platformName, currentAmount) {
+            const newAmount = prompt(`Update cash balance for ${platformName}:`, currentAmount.toFixed(2));
+            if (newAmount !== null && !isNaN(parseFloat(newAmount))) {
+                // Make API call to update cash balance
+                fetch('/api/update-cash-balance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        platform: platformName,
+                        amount: parseFloat(newAmount)
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadInvestments(); // Reload to show updated amount
+                    } else {
+                        alert('Failed to update cash balance');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating cash balance:', error);
+                    alert('Error updating cash balance');
+                });
+            }
+        }
+
+        // Load investments when page loads
+        document.addEventListener('DOMContentLoaded', loadInvestments);
+    </script>
+</body>
+</html>
