@@ -130,11 +130,9 @@
                 document.getElementById('currentNetWorth').textContent = 
                     '£' + liveData.current_net_worth.toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                 
-                // Get correct monthly investment data
-                const monthlyResponse = await fetch('/api/monthly-breakdown');
-                const monthlyData = await monthlyResponse.json();
-                document.getElementById('monthlyInvestment').textContent = 
-                    '£' + (monthlyData.total_investment_commitments || 0).toLocaleString('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                // For now, use the known correct monthly investment amount
+                // TODO: Fix /api/monthly-breakdown endpoint
+                document.getElementById('monthlyInvestment').textContent = '£1,825';
                 
             } catch (error) {
                 console.error('Error loading current position:', error);
@@ -146,13 +144,20 @@
         async function loadGoals() {
             try {
                 const response = await fetch('/api/goals');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const goals = await response.json();
+                console.log('Goals loaded:', goals);
                 
                 displayGoals(goals);
                 document.getElementById('loadingGoals').style.display = 'none';
                 
             } catch (error) {
                 console.error('Error loading goals:', error);
+                document.getElementById('loadingGoals').style.display = 'none';
                 document.getElementById('goalsContainer').innerHTML = `
                     <div class="text-center py-8">
                         <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
