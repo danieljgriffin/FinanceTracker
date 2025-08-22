@@ -107,9 +107,9 @@
                      ontouchmove="handleChartTouch(event)"
                      ontouchend="hideTooltip()"></div>
                 
-                <!-- Touch indicator dot -->
+                <!-- Touch indicator dot - exactly matches chart data point size -->
                 <div id="touchIndicator" class="absolute pointer-events-none opacity-0 transition-opacity duration-200">
-                    <div class="w-3 h-3 bg-white rounded-full border-2 border-blue-400"></div>
+                    <div class="w-3 h-3 bg-white rounded-full border-2 border-blue-400 shadow-lg"></div>
                 </div>
                 
                 <!-- Mobile value tooltip -->
@@ -364,21 +364,22 @@
                 
                 console.log('Mobile SVG chart generated successfully');
                 
-                // Store chart data for touch interactions
+                // Store chart data for touch interactions - using exact same positioning as chart generation
                 window.mobileChartData = {
                     values: data.values,
                     labels: data.labels,
                     dataPoints: data.values.map((value, index) => {
+                        // Use identical positioning logic as chart generation
                         const x = padding + (index / (data.values.length - 1)) * plotWidth;
                         const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
                         return { x, y, value, label: data.labels[index] };
                     }),
-                    chartBounds: {
-                        left: padding,
-                        right: padding + plotWidth,
-                        top: padding,
-                        bottom: padding + plotHeight
-                    }
+                    minValue: minValue,
+                    maxValue: maxValue,
+                    valueRange: valueRange,
+                    padding: padding,
+                    plotWidth: plotWidth,
+                    plotHeight: plotHeight
                 };
                 
                 return;
@@ -482,9 +483,9 @@
             const valueEl = document.getElementById('mobileTooltipValue');
             const dateEl = document.getElementById('mobileTooltipDate');
             
-            // Position touch indicator
-            indicator.style.left = (point.x - 6) + 'px';
-            indicator.style.top = (point.y - 6) + 'px';
+            // Position touch indicator precisely on the data point (centered)
+            indicator.style.left = (point.x - 6) + 'px';  // 6px = half of 12px (w-3 h-3 = 12px)
+            indicator.style.top = (point.y - 6) + 'px';   // Center the 12px dot on the point
             indicator.style.opacity = '1';
             
             // Update tooltip content
