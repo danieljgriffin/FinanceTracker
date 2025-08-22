@@ -6,12 +6,35 @@
     <title>Monthly Breakdown - Portfolio Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#1e293b">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        .bottom-nav {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .nav-icon {
+            color: rgba(156, 163, 175, 1);
+            transition: all 0.2s ease;
+        }
+        
+        .nav-icon.active {
+            color: rgba(59, 130, 246, 1);
+        }
+        
+        .nav-icon:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
     <!-- Mobile Header -->
@@ -27,8 +50,8 @@
         
         <!-- Loading State -->
         <div id="loadingState" class="text-center py-8">
-            <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
-            <p class="text-gray-400 mt-2">Loading monthly data...</p>
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+            <p class="text-gray-400">Loading monthly data...</p>
         </div>
 
         <!-- Monthly Data Container -->
@@ -82,9 +105,6 @@
                         <i class="fas fa-shopping-cart text-red-400 mr-3 text-xl"></i>
                         <h2 class="text-lg font-bold text-white">Expenses</h2>
                     </div>
-                    <button onclick="editExpenses()" class="text-blue-400 hover:text-blue-300">
-                        <i class="fas fa-edit"></i>
-                    </button>
                 </div>
                 <div class="space-y-3" id="expensesContainer">
                     <!-- Expenses will be dynamically loaded -->
@@ -104,9 +124,6 @@
                         <i class="fas fa-chart-line text-purple-400 mr-3 text-xl"></i>
                         <h2 class="text-lg font-bold text-white">Investment Commitments</h2>
                     </div>
-                    <button onclick="editInvestmentCommitments()" class="text-blue-400 hover:text-blue-300">
-                        <i class="fas fa-edit"></i>
-                    </button>
                 </div>
                 <div class="space-y-3" id="investmentCommitmentsContainer">
                     <!-- Investment commitments will be dynamically loaded -->
@@ -124,80 +141,90 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
-        <div class="flex justify-around py-3">
-            <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-home text-xl mb-1"></i>
+    <div class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+        <div class="flex justify-around items-center py-4 pb-3">
+            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-home text-lg mb-1"></i>
                 <span class="text-xs">Home</span>
             </a>
-            <a href="/mobile/investments" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-chart-line text-xl mb-1"></i>
+            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-chart-line text-lg mb-1"></i>
                 <span class="text-xs">Investments</span>
             </a>
-            <a href="/mobile/goals" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-bullseye text-xl mb-1"></i>
+            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-bullseye text-lg mb-1"></i>
                 <span class="text-xs">Goals</span>
             </a>
-            <div class="flex flex-col items-center text-blue-400">
-                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon active">
+                <i class="fas fa-calendar-alt text-lg mb-1"></i>
                 <span class="text-xs">Monthly</span>
-            </div>
+            </a>
+            <a href="#" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-chart-bar text-lg mb-1"></i>
+                <span class="text-xs">Tracker</span>
+            </a>
         </div>
     </div>
 
     <script>
-        let monthlyData = {};
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMonthlyData();
+        });
 
-        // Load monthly breakdown data
         async function loadMonthlyData() {
             try {
                 const response = await fetch('/api/monthly-breakdown');
-                monthlyData = await response.json();
+                const monthlyData = await response.json();
                 
+                if (monthlyData.error) {
+                    showError('Failed to load monthly data');
+                    return;
+                }
+                
+                displayMonthlyData(monthlyData);
                 document.getElementById('loadingState').style.display = 'none';
                 document.getElementById('monthlyContainer').style.display = 'block';
                 
-                renderMonthlyData();
             } catch (error) {
                 console.error('Error loading monthly data:', error);
-                document.getElementById('loadingState').innerHTML = '<p class="text-red-400">Error loading monthly data</p>';
+                showError('Failed to load monthly data');
             }
         }
 
-        function renderMonthlyData() {
-            // Free Cash
-            const monthlyFreeCash = monthlyData.monthly_income - monthlyData.total_expenses - monthlyData.total_investment_commitments;
-            const annualFreeCash = monthlyFreeCash * 12;
+        function displayMonthlyData(monthlyData) {
+            // Update income
+            const monthlyIncome = monthlyData.monthly_income || 0;
+            const yearlyIncome = monthlyIncome * 12;
+            
+            document.getElementById('monthlyIncome').textContent = 
+                '£' + monthlyIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('yearlyIncome').textContent = 
+                '£' + yearlyIncome.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Display expenses
+            displayExpenses(monthlyData.expenses, monthlyData.total_expenses);
+
+            // Display investment commitments
+            displayInvestmentCommitments(monthlyData.investment_commitments, monthlyData.total_investment_commitments);
+
+            // Calculate and display free cash
+            const freeCashMonthly = monthlyIncome - monthlyData.total_expenses - monthlyData.total_investment_commitments;
+            const freeCashAnnual = freeCashMonthly * 12;
             
             document.getElementById('monthlyFreeCash').textContent = 
-                `£${monthlyFreeCash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                '£' + freeCashMonthly.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('annualFreeCash').textContent = 
-                `£${annualFreeCash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            // Income
-            document.getElementById('monthlyIncome').textContent = 
-                `£${monthlyData.monthly_income.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            document.getElementById('yearlyIncome').textContent = 
-                `£${(monthlyData.monthly_income * 12).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            // Expenses
-            renderExpenses();
-            
-            // Investment Commitments
-            renderInvestmentCommitments();
+                '£' + freeCashAnnual.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function renderExpenses() {
+        function displayExpenses(expenses, total) {
             const container = document.getElementById('expensesContainer');
             container.innerHTML = '';
             
-            let total = 0;
-            
-            monthlyData.expenses.forEach(expense => {
-                total += expense.amount;
-                
+            expenses.forEach(expense => {
                 const expenseDiv = document.createElement('div');
-                expenseDiv.className = 'flex justify-between items-center py-2 px-3 bg-gray-800/30 rounded-lg';
+                expenseDiv.className = 'flex justify-between items-center py-2';
                 expenseDiv.innerHTML = `
                     <span class="text-white">${expense.category}</span>
                     <span class="font-semibold text-red-400">£${expense.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -206,20 +233,16 @@
             });
             
             document.getElementById('totalExpenses').textContent = 
-                `£${total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                '£' + total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function renderInvestmentCommitments() {
+        function displayInvestmentCommitments(commitments, total) {
             const container = document.getElementById('investmentCommitmentsContainer');
             container.innerHTML = '';
             
-            let total = 0;
-            
-            monthlyData.investment_commitments.forEach(commitment => {
-                total += commitment.amount;
-                
+            commitments.forEach(commitment => {
                 const commitmentDiv = document.createElement('div');
-                commitmentDiv.className = 'flex justify-between items-center py-2 px-3 bg-gray-800/30 rounded-lg';
+                commitmentDiv.className = 'flex justify-between items-center py-2';
                 commitmentDiv.innerHTML = `
                     <span class="text-white">${commitment.platform}</span>
                     <span class="font-semibold text-purple-400">£${commitment.amount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -228,51 +251,60 @@
             });
             
             document.getElementById('totalInvestmentCommitments').textContent = 
-                `£${total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                '£' + total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
         function editIncome() {
-            const newIncome = prompt('Update monthly take home income:', monthlyData.monthly_income.toFixed(2));
-            if (newIncome !== null && !isNaN(parseFloat(newIncome))) {
-                updateMonthlyData('income', parseFloat(newIncome));
+            const currentIncome = parseFloat(document.getElementById('monthlyIncome').textContent.replace(/[£,]/g, ''));
+            const newIncome = prompt('Enter new monthly income:', currentIncome);
+            
+            if (newIncome !== null && !isNaN(newIncome)) {
+                updateIncome(parseFloat(newIncome));
             }
         }
 
-        function editExpenses() {
-            alert('Expense editing will be implemented in a future update');
-        }
+        async function updateIncome(newIncome) {
+            try {
+                const response = await fetch('/api/update-monthly-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        field: 'income',
+                        value: newIncome
+                    })
+                });
 
-        function editInvestmentCommitments() {
-            alert('Investment commitment editing will be implemented in a future update');
-        }
-
-        function updateMonthlyData(field, value) {
-            fetch('/api/update-monthly-data', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    field: field,
-                    value: value
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    loadMonthlyData(); // Reload to show updated data
+                const result = await response.json();
+                if (result.success) {
+                    // Reload the data to show updated values
+                    loadMonthlyData();
                 } else {
-                    alert('Failed to update data');
+                    alert('Failed to update income: ' + result.message);
                 }
-            })
-            .catch(error => {
-                console.error('Error updating data:', error);
-                alert('Error updating data');
-            });
+            } catch (error) {
+                console.error('Error updating income:', error);
+                alert('Failed to update income');
+            }
         }
 
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', loadMonthlyData);
+        function showError(message) {
+            const container = document.getElementById('monthlyContainer');
+            container.innerHTML = `
+                <div class="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-400">${message}</p>
+                        <button onclick="loadMonthlyData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('loadingState').style.display = 'none';
+            container.style.display = 'block';
+        }
     </script>
 </body>
 </html>

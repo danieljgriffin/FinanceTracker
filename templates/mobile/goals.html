@@ -6,12 +6,35 @@
     <title>Goals - Portfolio Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon.png') }}">
-    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-    <meta name="theme-color" content="#1e293b">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/static/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <style>
+        .bottom-nav {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .nav-icon {
+            color: rgba(156, 163, 175, 1);
+            transition: all 0.2s ease;
+        }
+        
+        .nav-icon.active {
+            color: rgba(59, 130, 246, 1);
+        }
+        
+        .nav-icon:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+    </style>
 </head>
 <body class="bg-slate-900 text-white min-h-screen">
     <!-- Mobile Header -->
@@ -34,98 +57,113 @@
             </div>
         </div>
 
-        <!-- Goals Section -->
-        <div class="mb-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-white">Your Goals</h2>
-                <button class="text-blue-400 hover:text-blue-300">
-                    <i class="fas fa-plus text-sm"></i>
-                </button>
-            </div>
-            
+        <!-- Goals List -->
+        <div id="goalsContainer">
             <!-- Loading State -->
-            <div id="goalsLoading" class="text-center py-8">
-                <i class="fas fa-spinner fa-spin text-2xl text-blue-400"></i>
-                <p class="text-gray-400 mt-2">Loading goals...</p>
+            <div id="loadingState" class="text-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                <p class="text-gray-400">Loading goals...</p>
             </div>
 
-            <!-- Goals Container -->
-            <div id="goalsContainer" class="space-y-4" style="display: none;">
-                <!-- Goals will be dynamically inserted here -->
+            <!-- Goals will be dynamically loaded here -->
+            <div id="goalsList" class="space-y-4" style="display: none;">
+                <!-- Goals content goes here -->
             </div>
         </div>
 
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
-        <div class="flex justify-around py-3">
-            <a href="/mobile" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-home text-xl mb-1"></i>
+    <div class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+        <div class="flex justify-around items-center py-4 pb-3">
+            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-home text-lg mb-1"></i>
                 <span class="text-xs">Home</span>
             </a>
-            <a href="/mobile/investments" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-chart-line text-xl mb-1"></i>
+            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-chart-line text-lg mb-1"></i>
                 <span class="text-xs">Investments</span>
             </a>
-            <div class="flex flex-col items-center text-blue-400">
-                <i class="fas fa-bullseye text-xl mb-1"></i>
+            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon active">
+                <i class="fas fa-bullseye text-lg mb-1"></i>
                 <span class="text-xs">Goals</span>
-            </div>
-            <a href="/mobile/monthly" class="flex flex-col items-center text-gray-400 hover:text-white transition-colors">
-                <i class="fas fa-calendar-alt text-xl mb-1"></i>
+            </a>
+            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-calendar-alt text-lg mb-1"></i>
                 <span class="text-xs">Monthly</span>
+            </a>
+            <a href="#" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-chart-bar text-lg mb-1"></i>
+                <span class="text-xs">Tracker</span>
             </a>
         </div>
     </div>
 
     <script>
-        // Load current net worth
+        let currentNetWorth = 0;
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCurrentPosition();
+            loadGoals();
+        });
+
         async function loadCurrentPosition() {
             try {
                 const response = await fetch('/api/live-values');
                 const data = await response.json();
                 
+                currentNetWorth = data.current_net_worth;
+                
                 document.getElementById('currentNetWorth').textContent = 
-                    `£${data.current_net_worth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                    '£' + currentNetWorth.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 
                 if (data.last_updated) {
-                    document.getElementById('lastUpdated').textContent = `Last updated ${data.last_updated}`;
+                    document.getElementById('lastUpdated').textContent = 
+                        'Last updated: ' + data.last_updated;
                 } else {
                     document.getElementById('lastUpdated').textContent = 'Live data';
                 }
+                
             } catch (error) {
                 console.error('Error loading current position:', error);
-                document.getElementById('currentNetWorth').textContent = 'Error loading';
+                document.getElementById('currentNetWorth').textContent = 'Error loading data';
+                document.getElementById('lastUpdated').textContent = 'Failed to load';
             }
         }
 
-        // Load goals data
         async function loadGoals() {
             try {
                 const response = await fetch('/api/goals');
                 const goals = await response.json();
                 
-                document.getElementById('goalsLoading').style.display = 'none';
-                document.getElementById('goalsContainer').style.display = 'block';
+                if (goals.error) {
+                    showError('Failed to load goals');
+                    return;
+                }
                 
-                renderGoals(goals);
+                displayGoals(goals);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('goalsList').style.display = 'block';
+                
             } catch (error) {
                 console.error('Error loading goals:', error);
-                document.getElementById('goalsLoading').innerHTML = '<p class="text-red-400">Error loading goals</p>';
+                showError('Failed to load goals');
             }
         }
 
-        function renderGoals(goals) {
-            const container = document.getElementById('goalsContainer');
+        function displayGoals(goals) {
+            const container = document.getElementById('goalsList');
             container.innerHTML = '';
-            
+
             if (!goals || goals.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-bullseye text-4xl text-gray-600 mb-4"></i>
-                        <p class="text-gray-500">No goals set yet</p>
-                        <p class="text-sm text-gray-600 mt-2">Add your first financial goal to start tracking progress</p>
+                    <div class="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+                        <div class="text-center">
+                            <i class="fas fa-bullseye text-4xl text-gray-600 mb-4"></i>
+                            <p class="text-gray-500 mb-2">No goals set yet</p>
+                            <p class="text-sm text-gray-600">Add your first financial goal to start tracking progress</p>
+                        </div>
                     </div>
                 `;
                 return;
@@ -142,9 +180,9 @@
             goalDiv.className = 'bg-gray-900 rounded-2xl p-5 border border-gray-800';
             
             // Calculate progress
-            const currentNetWorth = parseFloat(document.getElementById('currentNetWorth').textContent.replace(/[£,]/g, ''));
-            const progressPercent = Math.min((currentNetWorth / goal.target_amount) * 100, 100);
-            const remaining = Math.max(goal.target_amount - currentNetWorth, 0);
+            const progressAmount = Math.min(currentNetWorth, goal.target_amount);
+            const progressPercent = (progressAmount / goal.target_amount) * 100;
+            const remaining = Math.max(0, goal.target_amount - currentNetWorth);
             
             // Calculate days remaining
             const targetDate = new Date(goal.target_date);
@@ -152,15 +190,15 @@
             const daysRemaining = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
             
             goalDiv.innerHTML = `
-                <!-- Goal Header -->
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex-1">
+                <div class="mb-4">
+                    <div class="flex justify-between items-start mb-2">
                         <h3 class="text-lg font-bold text-white">${goal.title}</h3>
-                        <p class="text-sm text-gray-400 mt-1">${goal.description || ''}</p>
+                        <span class="text-sm text-gray-500">${targetDate.toLocaleDateString()}</span>
                     </div>
-                    <div class="text-right">
-                        <p class="text-2xl font-bold text-blue-400">£${goal.target_amount.toLocaleString('en-GB')}</p>
-                        <p class="text-xs text-gray-400">${new Date(goal.target_date).toLocaleDateString('en-GB')}</p>
+                    ${goal.description ? `<p class="text-sm text-gray-400 mb-3">${goal.description}</p>` : ''}
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-500">Target</span>
+                        <span class="font-semibold text-white">£${goal.target_amount.toLocaleString('en-GB')}</span>
                     </div>
                 </div>
 
@@ -172,7 +210,7 @@
                     </div>
                     <div class="w-full bg-gray-800 rounded-full h-3">
                         <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-3 rounded-full transition-all duration-500" 
-                             style="width: ${progressPercent}%"></div>
+                             style="width: ${Math.min(progressPercent, 100)}%"></div>
                     </div>
                 </div>
 
@@ -185,7 +223,7 @@
                     <div class="text-center">
                         <p class="text-sm text-gray-500">${daysRemaining > 0 ? 'Days Left' : 'Overdue'}</p>
                         <p class="font-bold ${daysRemaining > 0 ? 'text-blue-400' : 'text-red-400'}">
-                            ${Math.abs(daysRemaining)} ${daysRemaining === 1 ? 'day' : 'days'}
+                            ${Math.abs(daysRemaining)} ${Math.abs(daysRemaining) === 1 ? 'day' : 'days'}
                         </p>
                     </div>
                 </div>
@@ -206,14 +244,22 @@
             return goalDiv;
         }
 
-        // Load data when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCurrentPosition();
-            loadGoals();
-        });
-
-        // Refresh current position every 10 seconds
-        setInterval(loadCurrentPosition, 10000);
+        function showError(message) {
+            const container = document.getElementById('goalsList');
+            container.innerHTML = `
+                <div class="bg-gray-900 rounded-2xl p-8 border border-gray-800">
+                    <div class="text-center">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+                        <p class="text-red-400">${message}</p>
+                        <button onclick="loadGoals()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('loadingState').style.display = 'none';
+            container.style.display = 'block';
+        }
     </script>
 </body>
 </html>
