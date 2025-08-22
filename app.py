@@ -2926,15 +2926,17 @@ def api_monthly_breakdown():
         # Format investment commitments for API
         investment_commitments = []
         
-        for platform, investments in platform_investments.items():
-            if investments and isinstance(investments, list):
-                for investment in investments:
-                    if isinstance(investment, dict) and investment.get('monthly_amount', 0) > 0:
-                        investment_commitments.append({
-                            'platform': platform,
-                            'name': investment.get('name', ''),
-                            'amount': investment.get('monthly_amount', 0)
-                        })
+        for platform, platform_data in platform_investments.items():
+            if platform_data and isinstance(platform_data, dict):
+                investments_list = platform_data.get('investments', [])
+                if investments_list and isinstance(investments_list, list):
+                    for investment in investments_list:
+                        if isinstance(investment, dict) and investment.get('monthly_amount', 0) > 0:
+                            investment_commitments.append({
+                                'platform': platform,
+                                'name': investment.get('name', ''),
+                                'amount': investment.get('monthly_amount', 0)
+                            })
         
         return jsonify({
             'monthly_income': monthly_income,

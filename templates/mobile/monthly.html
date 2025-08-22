@@ -239,6 +239,9 @@
                 return;
             }
             
+            // Sort expenses by amount (high to low)
+            expenses.sort((a, b) => b.amount - a.amount);
+            
             container.innerHTML = expenses.map(expense => `
                 <div class="flex items-center justify-between p-3 bg-red-500/10 rounded-xl border border-red-500/20 mb-2">
                     <div class="flex items-center flex-1">
