@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Tracker - Tracker</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Portfolio Tracker">
+    
+    <!-- Favicon and Icons -->
+    <link rel="apple-touch-icon" href="/static/icon-192.png">
+    <meta name="theme-color" content="#000000">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            background-color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        
+        .mobile-container {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background-color: #000000;
+            padding-bottom: 100px;
+        }
+        
+        .bottom-nav {
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #333;
+        }
+        
+        .nav-icon {
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-icon.active {
+            color: #3b82f6;
+        }
+        
+        .nav-icon:not(.active):hover {
+            color: #999;
+        }
+        
+        .year-button {
+            transition: all 0.3s ease;
+        }
+        
+        .year-button.active {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+        }
+        
+        .platform-card {
+            transition: all 0.3s ease;
+            border: 1px solid #333;
+        }
+        
+        .platform-card:hover {
+            border-color: #444;
+        }
+        
+        .progress-indicator {
+            transition: all 0.5s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-black text-white">
+    <div class="mobile-container">
+        <!-- Header -->
+        <div class="flex justify-between items-center p-6 pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white">Tracker</h1>
+                <p class="text-sm text-gray-400 mt-1">Portfolio progress tracking</p>
+            </div>
+            <button onclick="addNewYear()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                <i class="fas fa-plus mr-2"></i>Add Year
+            </button>
+        </div>
+        
+        <!-- Year Filter -->
+        <div class="px-6 mb-6">
+            <div class="flex space-x-2 overflow-x-auto pb-2" id="yearFilter">
+                <!-- Years will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Platform Progress Section -->
+        <div class="px-6 mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-white">Platform Progress</h2>
+                <div class="text-sm text-gray-400" id="selectedYearDisplay">2025</div>
+            </div>
+            
+            <div class="space-y-4" id="platformProgress">
+                <!-- Platform data will be loaded here -->
+            </div>
+            
+            <!-- Year Summary -->
+            <div class="mt-6 p-4 bg-gray-900/50 rounded-xl border border-gray-800">
+                <h3 class="text-sm font-semibold text-gray-300 mb-3">Year Summary</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs text-gray-400">Net Worth Growth</div>
+                        <div class="text-lg font-bold text-green-400" id="yearNetWorthGrowth">+£0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400">Total Net Worth</div>
+                        <div class="text-lg font-bold text-white" id="yearEndNetWorth">£0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Income vs Investments Section -->
+        <div class="px-6 mb-8">
+            <h2 class="text-lg font-semibold text-white mb-4">Income vs Investments</h2>
+            
+            <div class="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
+                <!-- Table Header -->
+                <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-700 bg-gray-800/50">
+                    <div class="text-xs font-semibold text-gray-300">Year</div>
+                    <div class="text-xs font-semibold text-gray-300 text-right">Take Home</div>
+                    <div class="text-xs font-semibold text-gray-300 text-right">Invested</div>
+                    <div class="text-xs font-semibold text-gray-300 text-right">% Invested</div>
+                </div>
+                
+                <!-- Table Body -->
+                <div id="incomeVsInvestments">
+                    <!-- Data will be loaded here -->
+                </div>
+                
+                <!-- Table Footer -->
+                <div class="grid grid-cols-4 gap-4 p-4 border-t border-gray-700 bg-gray-800/50">
+                    <div class="text-sm font-bold text-white">Total</div>
+                    <div class="text-sm font-bold text-green-400 text-right" id="totalTakeHome">£0</div>
+                    <div class="text-sm font-bold text-blue-400 text-right" id="totalInvested">£0</div>
+                    <div class="text-sm font-bold text-purple-400 text-right" id="overallPercentage">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+        <div class="flex justify-around items-center py-4 pb-3">
+            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-home text-lg mb-1"></i>
+                <span class="text-xs">Home</span>
+            </a>
+            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-chart-line text-lg mb-1"></i>
+                <span class="text-xs">Investments</span>
+            </a>
+            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-bullseye text-lg mb-1"></i>
+                <span class="text-xs">Goals</span>
+            </a>
+            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon">
+                <i class="fas fa-calendar-alt text-lg mb-1"></i>
+                <span class="text-xs">Monthly</span>
+            </a>
+            <a href="/mobile/tracker" class="flex flex-col items-center py-2 nav-icon active">
+                <i class="fas fa-chart-bar text-lg mb-1"></i>
+                <span class="text-xs">Tracker</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let trackerData = {};
+        let currentYear = new Date().getFullYear();
+
+        // Load data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTrackerData();
+        });
+
+        async function loadTrackerData() {
+            try {
+                const response = await fetch('/api/tracker-data');
+                const data = await response.json();
+                
+                trackerData = data;
+                updateYearFilter();
+                updatePlatformProgress();
+                updateIncomeVsInvestments();
+            } catch (error) {
+                console.error('Error loading tracker data:', error);
+            }
+        }
+
+        function updateYearFilter() {
+            const container = document.getElementById('yearFilter');
+            const years = trackerData.available_years || [currentYear];
+            
+            container.innerHTML = years.map(year => `
+                <button onclick="selectYear(${year})" class="year-button px-4 py-2 rounded-lg text-sm font-medium ${year === currentYear ? 'active' : 'bg-gray-800 text-gray-300'}" data-year="${year}">
+                    ${year}
+                </button>
+            `).join('');
+        }
+
+        function selectYear(year) {
+            currentYear = year;
+            
+            // Update button states
+            document.querySelectorAll('.year-button').forEach(btn => {
+                const btnYear = parseInt(btn.dataset.year);
+                if (btnYear === year) {
+                    btn.classList.add('active');
+                    btn.classList.remove('bg-gray-800', 'text-gray-300');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('bg-gray-800', 'text-gray-300');
+                }
+            });
+            
+            document.getElementById('selectedYearDisplay').textContent = year;
+            updatePlatformProgress();
+        }
+
+        function updatePlatformProgress() {
+            const container = document.getElementById('platformProgress');
+            const yearData = trackerData.platform_data?.[currentYear] || {};
+            const platforms = Object.keys(yearData);
+            
+            if (platforms.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-400">No platform data for ${currentYear}</p>
+                        <p class="text-sm text-gray-500 mt-2">Add monthly data to see progress</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = platforms.map(platform => {
+                const data = yearData[platform];
+                const months = data.months || {};
+                const monthNames = Object.keys(months).sort((a, b) => {
+                    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+                });
+                
+                const startValue = monthNames.length > 0 ? months[monthNames[0]]?.value || 0 : 0;
+                const endValue = monthNames.length > 0 ? months[monthNames[monthNames.length - 1]]?.value || 0 : 0;
+                const growth = endValue - startValue;
+                const growthPercent = startValue > 0 ? ((growth / startValue) * 100) : 0;
+                
+                return `
+                    <div class="platform-card p-4 bg-gray-900/30 rounded-xl">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-semibold text-white text-sm">${platform}</h3>
+                            <div class="text-right">
+                                <div class="text-sm font-bold text-white">£${endValue.toLocaleString('en-GB')}</div>
+                                <div class="text-xs ${growth >= 0 ? 'text-green-400' : 'text-red-400'}">
+                                    ${growth >= 0 ? '+' : ''}£${growth.toLocaleString('en-GB')} 
+                                    (${growthPercent >= 0 ? '+' : ''}${growthPercent.toFixed(1)}%)
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-6 gap-1 mb-2">
+                            ${monthNames.map(month => {
+                                const monthData = months[month];
+                                const hasData = monthData && monthData.value > 0;
+                                return `
+                                    <div class="text-center">
+                                        <div class="text-xs text-gray-400 mb-1">${month}</div>
+                                        <div class="h-2 rounded-full ${hasData ? 'bg-blue-500' : 'bg-gray-700'}"></div>
+                                        ${hasData ? `<div class="text-xs text-gray-300 mt-1">£${(monthData.value / 1000).toFixed(0)}k</div>` : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        
+                        <div class="text-xs text-gray-500 mt-2">
+                            ${monthNames.length} month${monthNames.length !== 1 ? 's' : ''} tracked
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update year summary
+            updateYearSummary(yearData);
+        }
+
+        function updateYearSummary(yearData) {
+            let totalStartValue = 0;
+            let totalEndValue = 0;
+            
+            Object.values(yearData).forEach(platformData => {
+                const months = platformData.months || {};
+                const monthNames = Object.keys(months).sort((a, b) => {
+                    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    return monthOrder.indexOf(a) - monthOrder.indexOf(b);
+                });
+                
+                if (monthNames.length > 0) {
+                    totalStartValue += months[monthNames[0]]?.value || 0;
+                    totalEndValue += months[monthNames[monthNames.length - 1]]?.value || 0;
+                }
+            });
+            
+            const netWorthGrowth = totalEndValue - totalStartValue;
+            
+            document.getElementById('yearNetWorthGrowth').textContent = `${netWorthGrowth >= 0 ? '+' : ''}£${netWorthGrowth.toLocaleString('en-GB')}`;
+            document.getElementById('yearEndNetWorth').textContent = `£${totalEndValue.toLocaleString('en-GB')}`;
+        }
+
+        function updateIncomeVsInvestments() {
+            const container = document.getElementById('incomeVsInvestments');
+            const incomeData = trackerData.income_vs_investments || {};
+            const years = Object.keys(incomeData).sort((a, b) => parseInt(b) - parseInt(a));
+            
+            if (years.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-gray-400">
+                        <p>No income vs investment data available</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let totalTakeHome = 0;
+            let totalInvested = 0;
+            
+            container.innerHTML = years.map(year => {
+                const data = incomeData[year];
+                const takeHome = data.take_home || 0;
+                const invested = data.invested || 0;
+                const percentage = takeHome > 0 ? (invested / takeHome) * 100 : 0;
+                
+                totalTakeHome += takeHome;
+                totalInvested += invested;
+                
+                return `
+                    <div class="grid grid-cols-4 gap-4 p-4 border-b border-gray-800/50 hover:bg-gray-800/20">
+                        <div class="text-sm font-medium text-white">${year}</div>
+                        <div class="text-sm text-green-400 text-right">£${takeHome.toLocaleString('en-GB')}</div>
+                        <div class="text-sm text-blue-400 text-right">£${invested.toLocaleString('en-GB')}</div>
+                        <div class="text-sm text-purple-400 text-right">${percentage.toFixed(1)}%</div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update totals
+            const overallPercentage = totalTakeHome > 0 ? (totalInvested / totalTakeHome) * 100 : 0;
+            document.getElementById('totalTakeHome').textContent = `£${totalTakeHome.toLocaleString('en-GB')}`;
+            document.getElementById('totalInvested').textContent = `£${totalInvested.toLocaleString('en-GB')}`;
+            document.getElementById('overallPercentage').textContent = `${overallPercentage.toFixed(1)}%`;
+        }
+
+        function addNewYear() {
+            const year = prompt('Enter new year (e.g., 2026):');
+            if (year && /^\d{4}$/.test(year)) {
+                const yearNum = parseInt(year);
+                if (yearNum >= 2020 && yearNum <= 2030) {
+                    addYear(yearNum);
+                } else {
+                    alert('Please enter a valid year between 2020 and 2030');
+                }
+            }
+        }
+
+        async function addYear(year) {
+            try {
+                const response = await fetch('/api/add-year', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    await loadTrackerData();
+                    selectYear(year);
+                } else {
+                    alert('Failed to add year: ' + result.message);
+                }
+            } catch (error) {
+                alert('Failed to add year');
+            }
+        }
+    </script>
+</body>
+</html>

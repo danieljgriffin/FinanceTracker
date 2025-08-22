@@ -821,6 +821,11 @@ def mobile_monthly():
     """Mobile monthly breakdown page"""
     return render_template('mobile/monthly.html')
 
+@app.route('/mobile/tracker')
+def mobile_tracker():
+    """Mobile tracker page"""
+    return render_template('mobile/tracker.html')
+
 @app.route('/yearly-tracker')
 @app.route('/yearly-tracker/<int:year>')
 def yearly_tracker(year=None):
@@ -2752,6 +2757,99 @@ def delete_investment_commitment():
         
     except Exception as e:
         logging.error(f"Error deleting investment commitment: {str(e)}")
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/tracker-data')
+def api_tracker_data():
+    """API endpoint for tracker page data"""
+    try:
+        data_manager = get_data_manager()
+        
+        # Get available years from networth data
+        available_years = []
+        networth_entries = NetworthEntry.query.with_entities(NetworthEntry.year).distinct().all()
+        available_years = sorted([entry[0] for entry in networth_entries], reverse=True)
+        
+        if not available_years:
+            available_years = [datetime.now().year]
+        
+        # Get platform progress data
+        platform_data = {}
+        for year in available_years:
+            year_entries = NetworthEntry.query.filter_by(year=year).order_by(NetworthEntry.id).all()
+            year_data = {}
+            
+            for entry in year_entries:
+                # Map platform names to database field names
+                platform_mappings = {
+                    'Trading212 ISA': 'trading212_isa',
+                    'Degiro': 'degiro',
+                    'InvestEngine ISA': 'investengine_isa', 
+                    'HL Stocks & Shares LISA': 'hl_stocks_and_shares_lisa',
+                    'Crypto': 'crypto',
+                    'EQ (GSK shares)': 'eq_gsk_shares',
+                    'Cash': 'cash'
+                }
+                
+                for platform_name, field_name in platform_mappings.items():
+                    if platform_name not in year_data:
+                        year_data[platform_name] = {'months': {}}
+                    
+                    # Get platform value from entry
+                    platform_value = getattr(entry, field_name, 0) or 0
+                    
+                    if platform_value > 0:
+                        year_data[platform_name]['months'][entry.month] = {
+                            'value': float(platform_value),
+                            'change': 0  # We'll calculate this later
+                        }
+            
+            platform_data[year] = year_data
+        
+        # Get income vs investments data
+        income_vs_investments = {}
+        income_entries = IncomeData.query.all()
+        
+        for entry in income_entries:
+            income_vs_investments[entry.year] = {
+                'take_home': entry.income or 0,
+                'invested': entry.investment or 0
+            }
+        
+        return jsonify({
+            'available_years': available_years,
+            'platform_data': platform_data,
+            'income_vs_investments': income_vs_investments
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting tracker data: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/add-year', methods=['POST'])
+def api_add_year():
+    """API endpoint to add a new year"""
+    try:
+        data = request.get_json()
+        year = data.get('year')
+        
+        if not year:
+            return jsonify({'success': False, 'message': 'Year is required'})
+        
+        # Check if year already exists
+        existing = IncomeData.query.filter_by(year=year).first()
+        if existing:
+            return jsonify({'success': False, 'message': 'Year already exists'})
+        
+        # Create new income data entry for the year
+        income_entry = IncomeData(year=year, income=0, investment=0)
+        db.session.add(income_entry)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': f'Year {year} added successfully'})
+        
+    except Exception as e:
+        logging.error(f"Error adding year: {str(e)}")
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/update-expense', methods=['POST'])
