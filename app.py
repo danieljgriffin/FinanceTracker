@@ -885,6 +885,9 @@ def mobile_investments():
         # Get bank account cash (Cash platform only)
         bank_account_cash = get_data_manager().get_platform_cash('Cash')
         
+        # Use consistent net worth calculation (same as other pages) - moved earlier to avoid scoping issue
+        current_net_worth = calculate_current_net_worth()
+        
         # Calculate overall portfolio metrics using consistent method (same as desktop)
         total_portfolio_pl = current_net_worth - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
@@ -926,9 +929,6 @@ def mobile_investments():
         sorted_platforms = sorted(platform_totals.items(), key=lambda x: x[1]['total_value'], reverse=True)
         sorted_investments_data = {platform: investments_data[platform] for platform, _ in sorted_platforms if platform in investments_data}
         sorted_platform_totals = {platform: totals for platform, totals in sorted_platforms}
-        
-        # Use consistent net worth calculation (same as other pages)
-        current_net_worth = calculate_current_net_worth()
         
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
