@@ -168,8 +168,7 @@
                     <div class="text-white font-semibold breakdown-value">£{{ "{:,.2f}".format(amount) }}</div>
                     {% set platform_change = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0}) %}
                     <div class="text-{% if platform_change.amount >= 0 %}green{% else %}red{% endif %}-400 text-sm">
-                        {% if platform_change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_change.amount) }}
-                        ({% if platform_change.percent >= 0 %}+{% endif %}{{ "{:.2f}".format(platform_change.percent) }}%)
+                        {% if platform_change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_change.amount) }} ({% if platform_change.percent >= 0 %}+{% endif %}{{ "{:.1f}".format(platform_change.percent) }}%)
                     </div>
                 </div>
             </div>
