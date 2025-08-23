@@ -2245,6 +2245,9 @@ def realtime_chart_data():
                 if time_filter == 'week':
                     # For weekly data, show day and time (e.g., "Mon 12:00")
                     time_label = bst_time.strftime('%a %H:%M')
+                elif time_filter == '1m':
+                    # For 1 month data, show date (e.g., "22/08")
+                    time_label = bst_time.strftime('%d/%m')
                 elif time_filter == 'month':
                     # For monthly data, show date and time (e.g., "22/08 12:00")
                     time_label = bst_time.strftime('%d/%m %H:%M')
