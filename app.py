@@ -846,15 +846,7 @@ def mobile_investments():
         total_current_value = 0
         total_amount_spent = 0
         platform_totals = {}
-        platform_colors = {
-            'Degiro': '#1e3a8a',
-            'InvestEngine ISA': '#7c3aed', 
-            'Trading212 ISA': '#dc2626',
-            'HL Stocks & Shares LISA': '#059669',
-            'EQ (GSK shares)': '#dc2626',
-            'Crypto': '#f59e0b',
-            'Cash': '#10b981'
-        }
+        platform_colors = PLATFORM_COLORS
         
         for platform, platform_investments in investments_data.items():
             if platform.endswith('_cash'):
