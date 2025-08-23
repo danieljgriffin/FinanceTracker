@@ -230,9 +230,9 @@
                 <span class="text-xs text-gray-400">Investments</span>
             </a>
             
-            <!-- Year Month Tracker -->
+            <!-- Year Month Tracker (Active) -->
             <a href="{{ url_for('mobile_tracker') }}" 
-               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 active">
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 active" style="background: rgba(59, 130, 246, 0.2); border-radius: 12px;">
                 <i class="fas fa-calendar-alt text-lg mb-1 text-blue-400"></i>
                 <span class="text-xs text-blue-400">Tracker</span>
             </a>
@@ -247,8 +247,8 @@
             <!-- Monthly Breakdown -->
             <a href="{{ url_for('mobile_monthly') }}" 
                class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
-                <i class="fas fa-chart-bar text-lg mb-1 text-gray-400"></i>
-                <span class="text-xs text-gray-400">Breakdown</span>
+                <i class="fas fa-chart-pie text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Monthly</span>
             </a>
         </div>
     </div>
