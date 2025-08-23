@@ -247,10 +247,12 @@
     <script>
         let trackerData = {};
         let currentYear = new Date().getFullYear();
+        let currentNetWorth = 0; // Store current live net worth
 
         // Load data on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadTrackerData();
+            loadCurrentNetWorth();
         });
 
         async function loadTrackerData() {
@@ -265,6 +267,23 @@
                 updateIncomeVsInvestments();
             } catch (error) {
                 console.error('Error loading tracker data:', error);
+            }
+        }
+
+        async function loadCurrentNetWorth() {
+            try {
+                const response = await fetch('/api/live-values');
+                const data = await response.json();
+                
+                currentNetWorth = data.current_net_worth || 0;
+                console.log('Current net worth loaded:', currentNetWorth);
+                
+                // Update year summary with current net worth if we're viewing current year
+                if (currentYear === new Date().getFullYear() && trackerData.platform_data) {
+                    updatePlatformProgress(); // This will trigger updateYearSummary
+                }
+            } catch (error) {
+                console.error('Error loading current net worth:', error);
             }
         }
 
@@ -300,35 +319,21 @@
         }
 
         function updateYearSummary(monthlyTotals) {
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            let startValue = 0;
-            let endValue = 0;
+            // CORRECTED: Use January value as start, current net worth as end
+            let startValue = 0; // January value
+            let endValue = 0;   // Current net worth
             
-            // Get start value from first month with data
-            for (const month of months) {
-                if (monthlyTotals[month] && monthlyTotals[month] > 0) {
-                    startValue = monthlyTotals[month];
-                    break;
-                }
-            }
-            
-            // Get end value from last month with data
-            for (let i = months.length - 1; i >= 0; i--) {
-                if (monthlyTotals[months[i]] && monthlyTotals[months[i]] > 0) {
-                    endValue = monthlyTotals[months[i]];
-                    break;
-                }
-            }
-            
-            // For 2025, use previous year December as starting point if no January data
-            if (startValue === 0) {
+            // Get January value for the selected year
+            if (monthlyTotals['Jan'] && monthlyTotals['Jan'] > 0) {
+                startValue = monthlyTotals['Jan'];
+            } else {
+                // If no January data, use previous year's December as fallback
                 const previousYear = currentYear - 1;
                 const previousYearData = trackerData.platform_data?.[previousYear];
                 if (previousYearData) {
                     let previousYearEndTotal = 0;
                     Object.values(previousYearData).forEach(platformData => {
                         const platformMonths = platformData.months || {};
-                        // Look for December data from previous year
                         if (platformMonths['1st Dec']?.value > 0) {
                             previousYearEndTotal += platformMonths['1st Dec'].value;
                         } else if (platformMonths['31st Dec']?.value > 0) {
@@ -339,10 +344,27 @@
                 }
             }
             
+            // For current year (2025), use current live net worth as end value
+            // For past years, use December or latest month value
+            if (currentYear === new Date().getFullYear()) {
+                // Use current live net worth for current year
+                endValue = currentNetWorth || 0;
+            } else {
+                // For past years, get end value from last month with data
+                const months = ['Dec', 'Nov', 'Oct', 'Sep', 'Aug', 'Jul', 'Jun', 'May', 'Apr', 'Mar', 'Feb', 'Jan'];
+                for (const month of months) {
+                    if (monthlyTotals[month] && monthlyTotals[month] > 0) {
+                        endValue = monthlyTotals[month];
+                        break;
+                    }
+                }
+            }
+            
             console.log('Year summary data:', {
                 startValue, 
                 endValue, 
-                currentYear, 
+                currentYear,
+                currentNetWorth,
                 monthlyTotals,
                 allMonthTotals: Object.keys(monthlyTotals).map(m => `${m}: ${monthlyTotals[m]}`)
             });
@@ -353,11 +375,6 @@
                 document.getElementById('yearGrowthPercent').textContent = '0%';
                 document.getElementById('yearGrowthPercent').className = 'text-lg font-bold text-gray-400';
                 return;
-            }
-            
-            // Use current end value if no starting value (first year scenario)
-            if (startValue === 0 && endValue > 0) {
-                startValue = endValue; // This would show 0% growth, but at least shows current value
             }
             
             const netWorthGrowth = endValue - startValue;
