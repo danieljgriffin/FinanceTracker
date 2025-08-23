@@ -210,30 +210,39 @@
     </div>
 
     <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
+    <nav class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
         <div class="flex justify-around items-center py-4 pb-3">
-            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon">
+            <!-- Home Button -->
+            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon" role="button">
                 <i class="fas fa-home text-lg mb-1"></i>
                 <span class="text-xs">Home</span>
             </a>
-            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon">
+            
+            <!-- Investments Button -->
+            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon" role="button">
                 <i class="fas fa-chart-line text-lg mb-1"></i>
                 <span class="text-xs">Investments</span>
             </a>
-            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon">
+            
+            <!-- Goals Button -->
+            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon" role="button">
                 <i class="fas fa-bullseye text-lg mb-1"></i>
                 <span class="text-xs">Goals</span>
             </a>
-            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon">
+            
+            <!-- Monthly Button -->
+            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon" role="button">
                 <i class="fas fa-calendar-alt text-lg mb-1"></i>
                 <span class="text-xs">Monthly</span>
             </a>
-            <a href="/mobile/tracker" class="flex flex-col items-center py-2 nav-icon active">
+            
+            <!-- Tracker Button (Active) -->
+            <a href="/mobile/tracker" class="flex flex-col items-center py-2 nav-icon active" role="button">
                 <i class="fas fa-chart-bar text-lg mb-1"></i>
                 <span class="text-xs">Tracker</span>
             </a>
         </div>
-    </div>
+    </nav>
 
     <script>
         let trackerData = {};
