@@ -512,29 +512,6 @@
             updateYearSummary(monthlyTotals);
         }
 
-        function updateYearSummary(yearData) {
-            let totalStartValue = 0;
-            let totalEndValue = 0;
-            
-            Object.values(yearData).forEach(platformData => {
-                const months = platformData.months || {};
-                const monthNames = Object.keys(months).sort((a, b) => {
-                    const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                    return monthOrder.indexOf(a) - monthOrder.indexOf(b);
-                });
-                
-                if (monthNames.length > 0) {
-                    totalStartValue += months[monthNames[0]]?.value || 0;
-                    totalEndValue += months[monthNames[monthNames.length - 1]]?.value || 0;
-                }
-            });
-            
-            const netWorthGrowth = totalEndValue - totalStartValue;
-            
-            document.getElementById('yearNetWorthGrowth').textContent = `${netWorthGrowth >= 0 ? '+' : ''}£${netWorthGrowth.toLocaleString('en-GB')}`;
-            document.getElementById('yearEndNetWorth').textContent = `£${totalEndValue.toLocaleString('en-GB')}`;
-        }
 
         function updateIncomeVsInvestments() {
             const container = document.getElementById('incomeVsInvestments');
