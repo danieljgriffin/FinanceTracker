@@ -153,10 +153,9 @@
                                 <div class="text-right">
                                     {% set platform_info = platform_totals.get(platform, {}) %}
                                     <div class="text-white font-semibold">£{{ "{:,.0f}".format(platform_info.get('total_value', 0)) }}</div>
-                                    {% set platform_change = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0}) %}
-                                    {% if platform_change.amount != 0 %}
-                                    <div class="text-{% if platform_change.amount >= 0 %}green{% else %}red{% endif %}-400 text-xs">
-                                        {% if platform_change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_change.amount) }} ({% if platform_change.percent >= 0 %}+{% endif %}{{ "{:.1f}".format(platform_change.percent) }}%)
+                                    {% if platform_info.get('total_pl', 0) != 0 %}
+                                    <div class="text-{% if platform_info.get('total_pl', 0) >= 0 %}green{% else %}red{% endif %}-400 text-xs">
+                                        {% if platform_info.get('total_pl', 0) >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_info.get('total_pl', 0)) }} ({% if platform_info.get('percentage_pl', 0) >= 0 %}+{% endif %}{{ "{:.1f}".format(platform_info.get('percentage_pl', 0)) }}%)
                                     </div>
                                     {% endif %}
                                 </div>
