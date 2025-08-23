@@ -122,7 +122,8 @@
                                 <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Sep</th>
                                 <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Oct</th>
                                 <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Nov</th>
-                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Dec</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Dec 1st</th>
+                                <th class="text-center p-3 text-xs font-semibold text-gray-300 min-w-[80px]">Dec 31st</th>
                             </tr>
                         </thead>
                         <tbody id="platformTable">
@@ -142,10 +143,11 @@
                                 <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalSep">£0</td>
                                 <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalOct">£0</td>
                                 <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalNov">£0</td>
-                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalDec">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalDec1st">£0</td>
+                                <td class="text-center p-3 text-sm font-bold text-blue-400" id="totalDec31st">£0</td>
                             </tr>
-                            <tr class="bg-gray-700/30 border-t border-gray-600">
-                                <td class="p-3 text-xs font-semibold text-gray-300 sticky left-0 bg-gray-700/30">M-o-M Change</td>
+                            <tr class="bg-gray-700 border-t border-gray-600">
+                                <td class="p-3 text-xs font-semibold text-gray-300 sticky left-0 bg-gray-700">M-o-M Change</td>
                                 <td class="text-center p-3 text-xs font-semibold" id="changeJan">-</td>
                                 <td class="text-center p-3 text-xs font-semibold" id="changeFeb">-</td>
                                 <td class="text-center p-3 text-xs font-semibold" id="changeMar">-</td>
@@ -157,7 +159,8 @@
                                 <td class="text-center p-3 text-xs font-semibold" id="changeSep">-</td>
                                 <td class="text-center p-3 text-xs font-semibold" id="changeOct">-</td>
                                 <td class="text-center p-3 text-xs font-semibold" id="changeNov">-</td>
-                                <td class="text-center p-3 text-xs font-semibold" id="changeDec">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeDec1st">-</td>
+                                <td class="text-center p-3 text-xs font-semibold" id="changeDec31st">-</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -345,17 +348,32 @@
             }
             
             // For current year (2025), use current live net worth as end value
-            // For past years, use December or latest month value
+            // For past years (2024, 2023), use Dec 31st specifically
             if (currentYear === new Date().getFullYear()) {
                 // Use current live net worth for current year
                 endValue = currentNetWorth || 0;
             } else {
-                // For past years, get end value from last month with data
-                const months = ['Dec', 'Nov', 'Oct', 'Sep', 'Aug', 'Jul', 'Jun', 'May', 'Apr', 'Mar', 'Feb', 'Jan'];
-                for (const month of months) {
-                    if (monthlyTotals[month] && monthlyTotals[month] > 0) {
-                        endValue = monthlyTotals[month];
-                        break;
+                // For past years, look for Dec 31st data specifically
+                const yearData = trackerData.platform_data?.[currentYear];
+                if (yearData) {
+                    let dec31stTotal = 0;
+                    Object.values(yearData).forEach(platformData => {
+                        const platformMonths = platformData.months || {};
+                        if (platformMonths['31st Dec']?.value > 0) {
+                            dec31stTotal += platformMonths['31st Dec'].value;
+                        }
+                    });
+                    if (dec31stTotal > 0) {
+                        endValue = dec31stTotal;
+                    } else {
+                        // Fallback to regular Dec data if 31st Dec not available
+                        const months = ['Dec', 'Nov', 'Oct', 'Sep', 'Aug', 'Jul', 'Jun', 'May', 'Apr', 'Mar', 'Feb', 'Jan'];
+                        for (const month of months) {
+                            if (monthlyTotals[month] && monthlyTotals[month] > 0) {
+                                endValue = monthlyTotals[month];
+                                break;
+                            }
+                        }
                     }
                 }
             }
@@ -439,14 +457,14 @@
             const container = document.getElementById('platformTable');
             const yearData = trackerData.platform_data?.[currentYear] || {};
             const platforms = Object.keys(yearData);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec1st', 'Dec31st'];
             
             console.log('Updating platform progress:', {currentYear, yearData, platforms});
             
             if (platforms.length === 0) {
                 container.innerHTML = `
                     <tr>
-                        <td colspan="13" class="text-center py-8 text-gray-400">
+                        <td colspan="14" class="text-center py-8 text-gray-400">
                             <i class="fas fa-chart-line text-gray-400 text-3xl mb-3 block"></i>
                             No platform data for ${currentYear}
                         </td>
@@ -473,14 +491,27 @@
                     let value = 0;
                     const monthKeys = Object.keys(platformMonths);
                     
-                    // Find matching month data (database uses "1st Jan", "1st Feb" format)
-                    const matchingKey = monthKeys.find(key => 
-                        key.includes(month) || 
-                        key.toLowerCase().includes(month.toLowerCase())
-                    );
-                    
-                    if (matchingKey) {
-                        value = platformMonths[matchingKey]?.value || 0;
+                    // Handle special December cases
+                    if (month === 'Dec1st') {
+                        const matchingKey = monthKeys.find(key => key === '1st Dec');
+                        if (matchingKey) {
+                            value = platformMonths[matchingKey]?.value || 0;
+                        }
+                    } else if (month === 'Dec31st') {
+                        const matchingKey = monthKeys.find(key => key === '31st Dec');
+                        if (matchingKey) {
+                            value = platformMonths[matchingKey]?.value || 0;
+                        }
+                    } else {
+                        // Find matching month data (database uses "1st Jan", "1st Feb" format)
+                        const matchingKey = monthKeys.find(key => 
+                            key.includes(month) || 
+                            key.toLowerCase().includes(month.toLowerCase())
+                        );
+                        
+                        if (matchingKey) {
+                            value = platformMonths[matchingKey]?.value || 0;
+                        }
                     }
                     
                     if (value > 0) {
