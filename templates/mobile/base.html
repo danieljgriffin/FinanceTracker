@@ -91,7 +91,7 @@
     </div>
     
     <!-- Mobile Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 mobile-glass border-t-0 z-50">
+    <div class="fixed bottom-0 left-0 right-0 z-50" style="background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.05);">
         <div class="flex justify-around items-center py-3 px-2">
             <!-- Home -->
             <a href="{{ url_for('mobile_dashboard') }}" 
@@ -103,7 +103,7 @@
             <!-- Investment Manager -->
             <a href="{{ url_for('mobile_investments') }}" 
                class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16 {% if request.endpoint == 'mobile_investments' %}active{% endif %}">
-                <i class="fas fa-briefcase text-lg mb-1 {% if request.endpoint == 'mobile_investments' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
+                <i class="fas fa-chart-line text-lg mb-1 {% if request.endpoint == 'mobile_investments' %}text-blue-400{% else %}text-gray-400{% endif %}"></i>
                 <span class="text-xs {% if request.endpoint == 'mobile_investments' %}text-blue-400{% else %}text-gray-400{% endif %}">Investments</span>
             </a>
             
@@ -132,7 +132,7 @@
     
     <!-- Mobile Menu Overlay -->
     <div id="mobileMenuOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-60 hidden" onclick="hideMobileMenu()"></div>
-    <div id="mobileMenu" class="fixed bottom-0 left-0 right-0 mobile-glass rounded-t-3xl p-6 z-70 transform translate-y-full transition-transform duration-300">
+    <div id="mobileMenu" class="fixed bottom-0 left-0 right-0 rounded-t-3xl p-6 z-70 transform translate-y-full transition-transform duration-300" style="background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1);">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-semibold text-white">Options</h3>
             <button onclick="hideMobileMenu()" class="text-gray-400 hover:text-white">
