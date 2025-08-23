@@ -38,12 +38,10 @@
                             <i class="fas fa-edit mr-2"></i><span class="hidden sm:inline">Edit</span><span class="sm:hidden">Edit</span>
                         </button>
                         
-                        <!-- Auto-populate Button (Only for 2025) -->
-                        {% if current_year == 2025 %}
-                            <button onclick="autoPopulateMonth()" class="flex-1 sm:flex-none px-2 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm">
-                                <i class="fas fa-magic mr-2"></i><span class="hidden lg:inline">Auto-populate Current Month</span><span class="lg:hidden">Auto</span>
-                            </button>
-                        {% endif %}
+                        <!-- Auto-population removed: Now handled automatically on 1st of each month -->
+                        <div class="text-sm text-gray-400 italic">
+                            <i class="fas fa-robot mr-1"></i>Tracker auto-populated on 1st of each month
+                        </div>
                     </div>
                 </div>
             </div>
@@ -394,22 +392,7 @@ function exitEditMode() {
     originalValues = {};
 }
 
-function autoPopulateMonth() {
-    // Create a form and submit it
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ url_for("auto_populate_month") }}';
-    
-    // Add year field
-    const yearInput = document.createElement('input');
-    yearInput.type = 'hidden';
-    yearInput.name = 'year';
-    yearInput.value = '{{ current_year }}';
-    form.appendChild(yearInput);
-    
-    document.body.appendChild(form);
-    form.submit();
-}
+// Auto-populate function removed - now handled automatically by background system
 
 function toggleIncomeEditMode() {
     const editBtn = document.getElementById('editSaveIncomeBtn');

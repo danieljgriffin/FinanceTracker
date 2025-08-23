@@ -1030,52 +1030,6 @@ def update_monthly_value():
     
     return redirect(url_for('yearly_tracker', year=year))
 
-@app.route('/auto-populate-month', methods=['POST'])
-def auto_populate_month():
-    """Auto-populate current month with investment data"""
-    try:
-        year = int(request.form.get('year'))
-        # Get current month in the format expected by yearly tracker (e.g., "1st Jul")
-        current_day = datetime.now().day
-        current_month_abbr = datetime.now().strftime('%b')
-        current_month = f"1st {current_month_abbr}"
-        
-        # Get current investment data
-        investments_data = get_data_manager().get_investments_data()
-        
-        # Calculate platform totals (investments + cash)
-        platform_totals = {}
-        for platform, investments in investments_data.items():
-            total_value = 0
-            
-            if isinstance(investments, list):
-                # Calculate investment values
-                for investment in investments:
-                    if isinstance(investment, dict) and 'holdings' in investment:
-                        try:
-                            holdings = float(investment.get('holdings', 0))
-                            price = float(investment.get('current_price', 0))
-                            total_value += holdings * price
-                        except (ValueError, TypeError):
-                            continue
-            
-            # Add cash balance
-            cash_balance = get_data_manager().get_platform_cash(platform)
-            total_value += cash_balance
-            
-            if total_value > 0:
-                platform_totals[platform] = total_value
-        
-        # Update monthly values for all platforms
-        for platform, value in platform_totals.items():
-            get_data_manager().update_monthly_networth(year, current_month, platform, value)
-        
-        flash(f'Auto-populated {current_month} {year} with current investment data', 'success')
-        return redirect(url_for('yearly_tracker', year=year))
-    except Exception as e:
-        logging.error(f"Error auto-populating month: {str(e)}")
-        flash(f'Error auto-populating month: {str(e)}', 'error')
-        return redirect(url_for('yearly_tracker'))
 
 @app.route('/update-income-data', methods=['POST'])
 def update_income_data():
@@ -1656,6 +1610,103 @@ def collect_daily_historical_data():
     except Exception as e:
         logging.error(f"Error collecting daily historical data: {str(e)}")
 
+def auto_populate_monthly_tracker():
+    """Automatically populate tracker with current month's data on 1st of month"""
+    try:
+        import pytz
+        
+        # Get current date in BST
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = datetime.now().astimezone(uk_tz)
+        
+        year = uk_now.year
+        current_month_abbr = uk_now.strftime('%b')
+        current_month = f"1st {current_month_abbr}"
+        
+        # Get current investment data  
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        # Calculate platform totals (investments + cash)
+        platform_totals = {}
+        for platform, investments in investments_data.items():
+            total_value = 0
+            
+            if isinstance(investments, list):
+                # Calculate investment values
+                for investment in investments:
+                    if isinstance(investment, dict) and 'holdings' in investment:
+                        try:
+                            holdings = float(investment.get('holdings', 0))
+                            price = float(investment.get('current_price', 0))
+                            total_value += holdings * price
+                        except (ValueError, TypeError):
+                            continue
+            
+            # Add cash balance
+            cash_balance = data_manager.get_platform_cash(platform)
+            total_value += cash_balance
+            
+            if total_value > 0:
+                platform_totals[platform] = total_value
+        
+        # Update monthly values for all platforms
+        for platform, value in platform_totals.items():
+            data_manager.update_monthly_networth(year, current_month, platform, value)
+        
+        logging.info(f"Auto-populated tracker: {current_month} {year} with {len(platform_totals)} platforms")
+        
+    except Exception as e:
+        logging.error(f"Error auto-populating monthly tracker: {str(e)}")
+
+def auto_populate_dec31_tracker():
+    """Automatically populate tracker with Dec 31st data for year-end"""
+    try:
+        import pytz
+        
+        # Get current date in BST
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = datetime.now().astimezone(uk_tz)
+        
+        year = uk_now.year
+        dec31_month = "31st Dec"
+        
+        # Get current investment data
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        # Calculate platform totals (investments + cash)
+        platform_totals = {}
+        for platform, investments in investments_data.items():
+            total_value = 0
+            
+            if isinstance(investments, list):
+                # Calculate investment values
+                for investment in investments:
+                    if isinstance(investment, dict) and 'holdings' in investment:
+                        try:
+                            holdings = float(investment.get('holdings', 0))
+                            price = float(investment.get('current_price', 0))
+                            total_value += holdings * price
+                        except (ValueError, TypeError):
+                            continue
+            
+            # Add cash balance
+            cash_balance = data_manager.get_platform_cash(platform)
+            total_value += cash_balance
+            
+            if total_value > 0:
+                platform_totals[platform] = total_value
+        
+        # Update Dec 31st values for all platforms
+        for platform, value in platform_totals.items():
+            data_manager.update_monthly_networth(year, dec31_month, platform, value)
+        
+        logging.info(f"Auto-populated tracker: {dec31_month} {year} with {len(platform_totals)} platforms")
+        
+    except Exception as e:
+        logging.error(f"Error auto-populating Dec 31st tracker: {str(e)}")
+
 def background_price_updater():
     """Background thread function to update prices every 15 minutes and collect historical data with smart intervals"""
     global last_historical_collection
@@ -1726,6 +1777,20 @@ def background_price_updater():
                 if is_daily_collection_time:
                     collect_daily_historical_data()
                     logging.info(f"✅ Daily historical collection completed at: {uk_now.strftime('%H:%M')} BST")
+                
+                # Check for monthly tracker auto-population (1st of month at 00:05)
+                is_monthly_tracker_time = (uk_now.day == 1 and current_hour == 0 and current_minute == 5)
+                
+                if is_monthly_tracker_time:
+                    auto_populate_monthly_tracker()
+                    logging.info(f"✅ Monthly tracker auto-populated at: {uk_now.strftime('%H:%M')} BST")
+                
+                # Check for December 31st tracker collection (Dec 31st at 23:55)
+                is_dec31_tracker_time = (uk_now.month == 12 and uk_now.day == 31 and current_hour == 23 and current_minute == 55)
+                
+                if is_dec31_tracker_time:
+                    auto_populate_dec31_tracker()
+                    logging.info(f"✅ Dec 31st tracker auto-populated at: {uk_now.strftime('%H:%M')} BST")
                 
                 # Clean up old data daily to maintain tiered storage
                 if (now - last_cleanup).total_seconds() >= 86400:  # 24 hours
