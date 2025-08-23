@@ -19,7 +19,7 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <!-- Update Prices button removed - now handled automatically every 15 minutes -->
-            <button onclick="showAddInvestmentModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); overflow: hidden;">
+            <button onclick="openInvestmentModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); overflow: hidden;">
                 <i class="fas fa-plus mr-2"></i>Add Investment
             </button>
         </div>
@@ -359,7 +359,7 @@
 </div>
 
 <script>
-function showAddInvestmentModal() {
+function openInvestmentModal() {
     const platforms = Object.keys({{ platform_colors|tojson }});
     const platformOptions = platforms.map(p => `<option value="${p}">${p}</option>`).join('');
     const investmentNames = {{ platform_investment_names|tojson }};
@@ -463,20 +463,17 @@ function showAddInvestmentModal() {
         // Submit the form
         fetch('/add-investment', {
             method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert('Error adding investment');
-                }
-            });
-            
-            closeModal();
-        } else {
-            alert('Please fill in all required fields with valid values.');
-        }
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error adding investment');
+            }
+        });
+        
+        closeModal();
     };
     
     document.getElementById('modalOverlay').classList.remove('hidden');
