@@ -845,7 +845,6 @@ def mobile_investments():
         # Calculate totals and metrics from live data - optimized
         total_current_value = 0
         total_amount_spent = 0
-        total_cash = 0
         platform_totals = {}
         platform_colors = {
             'Degiro': '#1e3a8a',
@@ -874,10 +873,9 @@ def mobile_investments():
             total_current_value += platform_investment_total
             total_amount_spent += platform_amount_spent
             
-            # Add cash to platform total
+            # Add cash to platform total (but don't sum for total_cash)
             cash_balance = get_data_manager().get_platform_cash(platform)
             platform_total_value = platform_investment_total + cash_balance
-            total_cash += cash_balance
             
             # Calculate P/L metrics for this platform
             platform_pl = platform_investment_total - platform_amount_spent
@@ -892,8 +890,11 @@ def mobile_investments():
                 'cash_balance': cash_balance
             }
         
-        # Calculate overall portfolio metrics (investments + cash)
-        total_portfolio_value = total_current_value + total_cash
+        # Get bank account cash (Cash platform only)
+        bank_account_cash = get_data_manager().get_platform_cash('Cash')
+        
+        # Calculate overall portfolio metrics (investments + bank cash)
+        total_portfolio_value = total_current_value + bank_account_cash
         total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
@@ -909,7 +910,7 @@ def mobile_investments():
                              investments_data=sorted_investments_data,
                              total_current_value=total_current_value or 0,
                              total_amount_spent=total_amount_spent or 0,
-                             total_cash=total_cash or 0,
+                             bank_account_cash=bank_account_cash or 0,
                              total_portfolio_pl=total_portfolio_pl or 0,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl or 0,
                              platform_totals=sorted_platform_totals or {},
@@ -924,7 +925,7 @@ def mobile_investments():
                              investments_data={}, 
                              total_current_value=0,
                              total_amount_spent=0, 
-                             total_cash=0, 
+                             bank_account_cash=0, 
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
                              platform_totals={},

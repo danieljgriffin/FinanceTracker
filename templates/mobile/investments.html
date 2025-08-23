@@ -115,7 +115,7 @@
         <div class="px-4 mb-6">
             <div class="trading-card rounded-xl p-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-white mb-1">£{{ "{:,.0f}".format(total_current_value + total_cash) }}</div>
+                    <div class="text-2xl font-bold text-white mb-1">£{{ "{:,.0f}".format(total_current_value + bank_account_cash) }}</div>
                     <div class="text-gray-400 text-sm">Total Portfolio Value</div>
                     {% if total_portfolio_percentage_pl != 0 %}
                     <div class="mt-2">
@@ -227,8 +227,8 @@
             </div>
         {% endif %}
         
-        <!-- Total Cash Section -->
-        {% if total_cash > 0 %}
+        <!-- Bank Account Cash Section -->
+        {% if bank_account_cash > 0 %}
         <div class="px-4 mt-6 mb-6">
             <div class="trading-card rounded-xl overflow-hidden border-l-4 border-green-500">
                 <!-- Cash Header -->
@@ -239,15 +239,15 @@
                                 <i class="fas fa-coins text-green-400 text-lg"></i>
                             </div>
                             <div>
-                                <h3 class="text-white font-semibold">Total Cash</h3>
-                                <div class="text-gray-400 text-xs">Available across all platforms</div>
+                                <h3 class="text-white font-semibold">Bank Account Cash</h3>
+                                <div class="text-gray-400 text-xs">Available in bank account</div>
                             </div>
                         </div>
                         <div class="flex items-center">
                             <div class="text-right mr-3">
-                                <div class="text-white font-semibold text-lg">£{{ "{:,.2f}".format(total_cash) }}</div>
+                                <div class="text-white font-semibold text-lg">£{{ "{:,.2f}".format(bank_account_cash) }}</div>
                             </div>
-                            <button onclick="editTotalCash({{ total_cash }})" class="p-2 text-gray-400 hover:text-green-400 transition-colors">
+                            <button onclick="showCashEditModal({{ bank_account_cash }})" class="p-2 text-gray-400 hover:text-green-400 transition-colors">
                                 <i class="fas fa-edit text-sm"></i>
                             </button>
                         </div>
@@ -379,6 +379,48 @@
         </div>
     </div>
 
+    <!-- Cash Edit Modal -->
+    <div id="cashEditModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="mobile-glass rounded-t-3xl w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-white">Edit Bank Account Cash</h3>
+                        <button onclick="closeCashModal()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form method="post" action="/update_total_cash_mobile">
+                        <div class="mb-6">
+                            <label class="block text-white text-sm font-medium mb-2">Cash Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">£</span>
+                                <input type="number" 
+                                       id="cashAmount" 
+                                       name="amount" 
+                                       step="0.01"
+                                       min="0"
+                                       class="w-full pl-8 pr-4 py-3 bg-gray-800/50 text-white rounded-xl border border-gray-700/50 focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/20" 
+                                       placeholder="0.00"
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeCashModal()" class="flex-1 py-3 px-4 bg-gray-700/50 text-white rounded-xl hover:bg-gray-600/50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" class="flex-1 py-3 px-4 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors font-medium">
+                                Update Cash
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {% include 'mobile/base.html' %}
 
     <script>
@@ -461,23 +503,9 @@
             document.getElementById('cashModal').classList.remove('hidden');
         }
 
-        function editTotalCash(currentTotal) {
-            const newCashAmount = prompt('Enter new total cash amount:', currentTotal.toString());
-            if (newCashAmount !== null && !isNaN(newCashAmount) && parseFloat(newCashAmount) >= 0) {
-                // Create a form to submit the cash update
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/update_total_cash_mobile';
-                
-                const amountInput = document.createElement('input');
-                amountInput.type = 'hidden';
-                amountInput.name = 'amount';
-                amountInput.value = parseFloat(newCashAmount);
-                form.appendChild(amountInput);
-                
-                document.body.appendChild(form);
-                form.submit();
-            }
+        function showCashEditModal(currentAmount) {
+            document.getElementById('cashAmount').value = currentAmount;
+            document.getElementById('cashEditModal').classList.remove('hidden');
         }
 
         function closeModal() {
@@ -485,7 +513,7 @@
         }
 
         function closeCashModal() {
-            document.getElementById('cashModal').classList.add('hidden');
+            document.getElementById('cashEditModal').classList.add('hidden');
         }
 
         function togglePlatform(platform) {
