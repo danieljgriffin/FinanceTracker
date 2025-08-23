@@ -1,0 +1,13 @@
+Flask==3.1.1
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.41
+gunicorn==23.0.0
+psycopg2-binary==2.9.10
+flask-dance==7.1.0
+flask-login==0.6.3
+email-validator==2.2.0
+pyjwt==2.10.1
+pytz==2025.2
+yfinance==0.2.65
+trafilatura==2.0.0
+oauthlib==3.3.1
