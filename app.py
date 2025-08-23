@@ -2097,6 +2097,13 @@ def realtime_chart_data():
                 MonthlyHistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(MonthlyHistoricalNetWorth.timestamp.asc()).all()
             
+        elif time_filter == '1m':
+            # Get daily data from the last 30 days - using end of day captures
+            cutoff_time = datetime.now() - timedelta(days=30)
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            
         elif time_filter == '3months':
             # Get daily data from the last 90 days
             cutoff_time = datetime.now() - timedelta(days=90)

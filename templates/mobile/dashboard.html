@@ -126,6 +126,7 @@
             <div class="flex justify-center space-x-4 mt-3 px-4 text-xs">
                 <span class="text-white font-semibold cursor-pointer" onclick="updateChart('1d')">1D</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1w')">1W</span>
+                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1m')">1M</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('3m')">3M</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1y')">1Y</span>
                 <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
@@ -253,6 +254,8 @@
                 apiFilter = '24h';
             } else if (range === '1w') {
                 apiFilter = 'week';
+            } else if (range === '1m') {
+                apiFilter = '1m';
             } else if (range === '3m') {
                 apiFilter = '3months';
             } else if (range === '1y') {
@@ -642,6 +645,8 @@
                         apiFilter = '24h';
                     } else if (currentRange === '1w') {
                         apiFilter = 'week';
+                    } else if (currentRange === '1m') {
+                        apiFilter = '1m';
                     } else if (currentRange === '3m') {
                         apiFilter = '3months';
                     } else if (currentRange === '1y') {

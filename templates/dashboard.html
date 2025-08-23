@@ -339,6 +339,10 @@
                                         class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
                                     Week
                                 </button>
+                                <button id="filter-1m" onclick="switchRealtimeFilter('1m')" 
+                                        class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
+                                    1M
+                                </button>
                                 <button id="filter-month" onclick="switchRealtimeFilter('month')" 
                                         class="px-2 py-1 text-xs rounded-lg bg-gray-600 hover:bg-gray-500 text-white transition-colors">
                                     Month
@@ -765,7 +769,7 @@
         currentRealtimeFilter = filter;
         
         // Update button styles
-        const buttons = ['filter-24h', 'filter-week', 'filter-month', 'filter-3months', 'filter-year', 'filter-2023', 'filter-2024', 'filter-2025', 'filter-all-years'];
+        const buttons = ['filter-24h', 'filter-week', 'filter-1m', 'filter-month', 'filter-3months', 'filter-year', 'filter-2023', 'filter-2024', 'filter-2025', 'filter-all-years'];
         
         buttons.forEach(buttonId => {
             const button = document.getElementById(buttonId);
