@@ -2976,6 +2976,31 @@ def update_cash_mobile():
     
     return redirect(url_for('mobile_investments'))
 
+@app.route('/update_total_cash_mobile', methods=['POST'])
+def update_total_cash_mobile():
+    """Update total cash amount from mobile"""
+    try:
+        new_total = float(request.form.get('amount', 0))
+        
+        # Set cash to main platform (typically 'Cash' platform)
+        get_data_manager().update_platform_cash('Cash', new_total)
+        
+        # Clear cash from all other platforms to avoid double counting
+        platforms = ['Degiro', 'InvestEngine ISA', 'Trading212 ISA', 'HL Stocks & Shares LISA', 'EQ (GSK shares)', 'Crypto']
+        for platform in platforms:
+            current_cash = get_data_manager().get_platform_cash(platform)
+            if current_cash > 0:
+                get_data_manager().update_platform_cash(platform, 0)
+        
+        flash(f'Total cash updated to £{new_total:,.2f}!', 'success')
+    except ValueError:
+        flash('Invalid cash amount entered!', 'error')
+    except Exception as e:
+        logging.error(f"Error updating total cash on mobile: {str(e)}")
+        flash(f'Error updating total cash: {str(e)}', 'error')
+    
+    return redirect(url_for('mobile_investments'))
+
 @app.route('/update-monthly-income', methods=['POST'])
 def update_monthly_income():
     """Update monthly income via API"""
