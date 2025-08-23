@@ -928,6 +928,9 @@ def mobile_investments():
         sorted_investments_data = {platform: investments_data[platform] for platform, _ in sorted_platforms if platform in investments_data}
         sorted_platform_totals = {platform: totals for platform, totals in sorted_platforms}
         
+        # Use consistent net worth calculation (same as other pages)
+        current_net_worth = calculate_current_net_worth()
+        
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
         
@@ -936,6 +939,7 @@ def mobile_investments():
                              total_current_value=total_current_value or 0,
                              total_amount_spent=total_amount_spent or 0,
                              bank_account_cash=bank_account_cash or 0,
+                             current_net_worth=current_net_worth or 0,
                              total_portfolio_pl=total_portfolio_pl or 0,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl or 0,
                              platform_totals=sorted_platform_totals or {},
@@ -952,6 +956,7 @@ def mobile_investments():
                              total_current_value=0,
                              total_amount_spent=0, 
                              bank_account_cash=0, 
+                             current_net_worth=0,
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
                              platform_totals={},

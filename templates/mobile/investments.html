@@ -115,7 +115,7 @@
         <div class="px-4 mb-6">
             <div class="trading-card rounded-xl p-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-white mb-1">£{{ "{:,.0f}".format(total_current_value + bank_account_cash) }}</div>
+                    <div class="text-2xl font-bold text-white mb-1">£{{ "{:,.2f}".format(current_net_worth) }}</div>
                     <div class="text-gray-400 text-sm">Total Portfolio Value</div>
                     {% if total_portfolio_percentage_pl != 0 %}
                     <div class="mt-2">
