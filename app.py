@@ -447,6 +447,21 @@ def dashboard():
             if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
         
+        # Sort platform allocations by value (high to low, with cash at bottom)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            sorted_platforms.append((platform, value))
+        
+        # Always add cash at the bottom if it exists
+        if cash_value > 0:
+            sorted_platforms.append(('Cash', cash_value))
+        
+        # Rebuild platform_allocations in sorted order
+        platform_allocations = dict(sorted_platforms)
+        
         # Calculate percentage allocations
         total_allocation = sum(platform_allocations.values())
         platform_percentages = {}
@@ -668,6 +683,21 @@ def mobile_dashboard():
             
             if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
+        
+        # Sort platform allocations by value (high to low, with cash at bottom)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            sorted_platforms.append((platform, value))
+        
+        # Always add cash at the bottom if it exists
+        if cash_value > 0:
+            sorted_platforms.append(('Cash', cash_value))
+        
+        # Rebuild platform_allocations in sorted order
+        platform_allocations = dict(sorted_platforms)
         
         # Calculate percentage allocations
         total_allocation = sum(platform_allocations.values())
