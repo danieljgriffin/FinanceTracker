@@ -170,12 +170,13 @@
                             {% for investment in investments %}
                             <div class="flex items-center justify-between py-2">
                                 <div class="flex-1">
-                                    <div class="text-white text-sm font-medium">{{ investment.name }}</div>
-                                    <div class="text-gray-400 text-xs">{{ "{:,.2f}".format(investment.holdings) }} shares</div>
+                                    <div class="text-white text-sm font-medium">{{ investment.get('name', 'Unknown Investment') }}</div>
+                                    <div class="text-gray-400 text-xs">{{ "{:,.2f}".format(investment.get('holdings', 0)) }} shares</div>
                                 </div>
                                 <div class="text-right">
-                                    <div class="text-white text-sm font-semibold">£{{ "{:,.0f}".format(investment.current_value) }}</div>
-                                    {% set investment_pl = investment.current_value - investment.amount_spent %}
+                                    {% set current_value = investment.get('holdings', 0) * investment.get('current_price', 0) %}
+                                    <div class="text-white text-sm font-semibold">£{{ "{:,.0f}".format(current_value) }}</div>
+                                    {% set investment_pl = current_value - investment.get('amount_spent', 0) %}
                                     {% if investment_pl != 0 %}
                                     <div class="text-xs">
                                         {% if investment_pl > 0 %}
@@ -186,7 +187,7 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                <button onclick="editInvestment('{{ platform }}', {{ investment.id }}, '{{ investment.name }}', {{ investment.holdings }}, {{ investment.amount_spent }}, '{{ investment.symbol }}')" class="ml-3 p-2 text-gray-400 hover:text-white">
+                                <button onclick="editInvestment('{{ platform }}', {{ investment.get('id', 0) }}, '{{ investment.get('name', '') }}', {{ investment.get('holdings', 0) }}, {{ investment.get('amount_spent', 0) }}, '{{ investment.get('symbol', '') }}')" class="ml-3 p-2 text-gray-400 hover:text-white">
                                     <i class="fas fa-edit text-sm"></i>
                                 </button>
                             </div>

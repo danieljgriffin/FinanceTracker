@@ -902,14 +902,14 @@ def mobile_investments():
         
         return render_template('mobile/investments.html',
                              investments_data=investments_data,
-                             total_current_value=total_current_value,
-                             total_amount_spent=total_amount_spent,
-                             total_cash=total_cash,
-                             total_portfolio_pl=total_portfolio_pl,
-                             total_portfolio_percentage_pl=total_portfolio_percentage_pl,
-                             platform_totals=platform_totals,
+                             total_current_value=total_current_value or 0,
+                             total_amount_spent=total_amount_spent or 0,
+                             total_cash=total_cash or 0,
+                             total_portfolio_pl=total_portfolio_pl or 0,
+                             total_portfolio_percentage_pl=total_portfolio_percentage_pl or 0,
+                             platform_totals=platform_totals or {},
                              platform_colors=platform_colors,
-                             unique_names=unique_names,
+                             unique_names=unique_names or [],
                              data_manager=get_data_manager())
     
     except Exception as e:
@@ -917,12 +917,21 @@ def mobile_investments():
         flash(f'Error loading investments: {str(e)}', 'error')
         return render_template('mobile/investments.html', 
                              investments_data={}, 
-                             total_current_value=0, 
+                             total_current_value=0,
+                             total_amount_spent=0, 
                              total_cash=0, 
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
                              platform_totals={},
-                             platform_colors={},
+                             platform_colors={
+                                 'Degiro': '#1e3a8a',
+                                 'InvestEngine ISA': '#7c3aed', 
+                                 'Trading212 ISA': '#dc2626',
+                                 'HL Stocks & Shares LISA': '#059669',
+                                 'EQ (GSK shares)': '#dc2626',
+                                 'Crypto': '#f59e0b',
+                                 'Cash': '#10b981'
+                             },
                              unique_names=[],
                              data_manager=get_data_manager())
 
