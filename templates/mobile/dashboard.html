@@ -149,7 +149,7 @@
         <!-- Investment List -->
         <div class="px-4 space-y-3">
             {% for platform, amount in platform_allocations.items() %}
-            <div class="flex items-center justify-between py-3 breakdown-item">
+            <div class="flex items-center justify-between py-3 breakdown-item" data-platform="{{ platform }}">
                 <div class="flex items-center space-x-3">
                     <!-- Platform Icon -->
                     <div class="w-3 h-3 rounded-full" 
@@ -602,15 +602,16 @@
                             }
                         }
                         
-                        // Update breakdown values
-                        const breakdownElements = document.querySelectorAll('.breakdown-value');
-                        const platformNames = Object.keys(data.platform_allocations);
-                        breakdownElements.forEach((element, index) => {
-                            const platformName = platformNames[index];
-                            if (platformName && data.platform_allocations[platformName] && !privacyMode) {
+                        // Update breakdown values by platform name (not by index)
+                        const breakdownItems = document.querySelectorAll('.breakdown-item[data-platform]');
+                        breakdownItems.forEach((item) => {
+                            const platformName = item.getAttribute('data-platform');
+                            const valueElement = item.querySelector('.breakdown-value');
+                            
+                            if (platformName && data.platform_allocations[platformName] && valueElement && !privacyMode) {
                                 const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                                if (element.textContent !== newValue) {
-                                    element.textContent = newValue;
+                                if (valueElement.textContent !== newValue) {
+                                    valueElement.textContent = newValue;
                                     console.log(`Updated ${platformName} value to:`, newValue);
                                 }
                             }
