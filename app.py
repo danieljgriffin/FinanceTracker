@@ -885,9 +885,8 @@ def mobile_investments():
         # Get bank account cash (Cash platform only)
         bank_account_cash = get_data_manager().get_platform_cash('Cash')
         
-        # Calculate overall portfolio metrics (investments + bank cash)
-        total_portfolio_value = total_current_value + bank_account_cash
-        total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
+        # Calculate overall portfolio metrics using consistent method (same as desktop)
+        total_portfolio_pl = current_net_worth - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
         # Calculate month-on-month platform changes
