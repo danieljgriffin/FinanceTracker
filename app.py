@@ -890,6 +890,39 @@ def mobile_investments():
         total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
+        # Calculate month-on-month platform changes
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            for platform in platform_totals.keys():
+                try:
+                    current_platform_value = platform_totals[platform]['total_value']
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if month_start_platform_value > 0:
+                        platform_change_amount = current_platform_value - month_start_platform_value
+                        platform_change_percent = (platform_change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': platform_change_amount,
+                            'percent': platform_change_percent
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+        except Exception as e:
+            logging.error(f"Error calculating monthly changes: {str(e)}")
+        
         # Sort platforms by highest to lowest total value
         sorted_platforms = sorted(platform_totals.items(), key=lambda x: x[1]['total_value'], reverse=True)
         sorted_investments_data = {platform: investments_data[platform] for platform, _ in sorted_platforms if platform in investments_data}
@@ -907,6 +940,7 @@ def mobile_investments():
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl or 0,
                              platform_totals=sorted_platform_totals or {},
                              platform_colors=platform_colors,
+                             platform_monthly_changes=platform_monthly_changes or {},
                              unique_names=unique_names or [],
                              data_manager=get_data_manager())
     
@@ -921,15 +955,8 @@ def mobile_investments():
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
                              platform_totals={},
-                             platform_colors={
-                                 'Degiro': '#1e3a8a',
-                                 'InvestEngine ISA': '#7c3aed', 
-                                 'Trading212 ISA': '#dc2626',
-                                 'HL Stocks & Shares LISA': '#059669',
-                                 'EQ (GSK shares)': '#dc2626',
-                                 'Crypto': '#f59e0b',
-                                 'Cash': '#10b981'
-                             },
+                             platform_colors=PLATFORM_COLORS,
+                             platform_monthly_changes={},
                              unique_names=[],
                              data_manager=get_data_manager())
 
