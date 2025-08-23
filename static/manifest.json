@@ -3,8 +3,9 @@
   "short_name": "NetWorth",
   "description": "Personal finance and net worth tracking application",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#1a1a2e",
+  "background_color": "#0f172a",
   "theme_color": "#3b82f6",
   "orientation": "portrait",
   "icons": [
@@ -19,6 +20,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "/static/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "apple-touch-icon"
     }
   ],
   "shortcuts": [
@@ -34,6 +41,13 @@
       "short_name": "Goals",
       "description": "View financial goals",
       "url": "/goals",
+      "icons": [{"src": "/static/icons/icon-192x192.png", "sizes": "192x192"}]
+    },
+    {
+      "name": "Tracker",
+      "short_name": "Tracker",
+      "description": "Monthly net worth tracker",
+      "url": "/tracker",
       "icons": [{"src": "/static/icons/icon-192x192.png", "sizes": "192x192"}]
     }
   ]

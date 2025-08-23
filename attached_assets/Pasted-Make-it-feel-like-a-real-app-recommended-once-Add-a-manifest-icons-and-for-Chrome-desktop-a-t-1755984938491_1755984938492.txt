@@ -1,0 +1,76 @@
+Make it feel like a real app (recommended once)
+
+Add a manifest, icons, and (for Chrome/desktop) a tiny service worker.
+
+1) Files to add in your repo
+
+Put these in your static folder (or wherever you serve static files):
+
+static/manifest.webmanifest
+
+{
+  "name": "Portfolio Tracker",
+  "short_name": "Portfolio",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+
+
+Add icons (export any simple logo):
+
+static/icons/icon-192.png
+
+static/icons/icon-512.png
+
+static/icons/apple-touch-icon.png (180×180)
+
+static/service-worker.js (minimal cache; OK to keep tiny)
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open('v1').then(c => c.addAll(['/'])));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+});
+
+2) Make Flask serve them at the right URLs
+
+Add these routes in app.py (near the bottom is fine):
+
+from flask import send_from_directory
+
+@app.route('/manifest.webmanifest')
+def manifest():
+    return send_from_directory('static', 'manifest.webmanifest', mimetype='application/manifest+json')
+
+@app.route('/service-worker.js')
+def service_worker():
+    # service worker must be at the root scope
+    return send_from_directory('static', 'service-worker.js', mimetype='application/javascript')
+
+3) Link them in your base HTML (templates/base.html or similar)
+
+Inside <head>:
+
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0f172a">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+</script>
+
+
+Push to GitHub → Render auto-deploys.
+
+4) Install like a real app
