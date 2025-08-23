@@ -1408,7 +1408,9 @@ def investment_manager():
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
                              unique_names=[],
-                             data_manager=data_manager)
+                             platform_investment_names={},
+                             data_manager=data_manager,
+                             last_price_update=None)
 
 @app.route('/add-investment', methods=['POST'])
 def add_investment():

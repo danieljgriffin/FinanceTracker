@@ -19,8 +19,8 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <!-- Update Prices button removed - now handled automatically every 15 minutes -->
-            <button onclick="showAddInvestmentModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);">
-                <i class="fas fa-plus mr-2"></i><span class="hidden sm:inline">Add Investment</span><span class="sm:hidden">Add Investment</span>
+            <button onclick="showAddInvestmentModal()" class="flex-1 sm:flex-none px-4 sm:px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-300 hover:transform hover:scale-105 text-center" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); overflow: hidden;">
+                <i class="fas fa-plus mr-2"></i>Add Investment
             </button>
         </div>
     </div>
@@ -410,6 +410,9 @@ function showAddInvestmentModal() {
     updateInvestmentNameOptions();
     
     document.getElementById('modalSubmit').onclick = function() {
+        // Clear previous validation errors
+        clearValidationErrors();
+        
         const platform = document.getElementById('investmentPlatform').value;
         const name = document.getElementById('investmentName').value.trim();
         const holdings = parseFloat(document.getElementById('investmentHoldings').value);
@@ -418,20 +421,48 @@ function showAddInvestmentModal() {
         const averageBuyPrice = parseFloat(document.getElementById('averageBuyPrice').value) || 0;
         const symbol = document.getElementById('investmentSymbol').value.trim();
         
-        if (name && !isNaN(holdings) && holdings > 0) {
-            // Create form data
-            const formData = new FormData();
-            formData.append('platform', platform);
-            formData.append('name', name);
-            formData.append('holdings', holdings);
-            formData.append('input_type', inputType);
-            formData.append('amount_spent', amountSpent);
-            formData.append('average_buy_price', averageBuyPrice);
-            formData.append('symbol', symbol);
-            
-            // Submit the form
-            fetch('/add-investment', {
-                method: 'POST',
+        // Validation with in-modal error display
+        let hasErrors = false;
+        
+        if (!platform) {
+            showFieldError('investmentPlatform', 'Platform is required');
+            hasErrors = true;
+        }
+        if (!name) {
+            showFieldError('investmentName', 'Investment name is required');
+            hasErrors = true;
+        }
+        if (isNaN(holdings) || holdings <= 0) {
+            showFieldError('investmentHoldings', 'Holdings must be greater than 0');
+            hasErrors = true;
+        }
+        if (inputType === 'amount_spent' && amountSpent <= 0) {
+            showFieldError('amountSpent', 'Amount spent must be greater than 0');
+            hasErrors = true;
+        }
+        if (inputType === 'average_buy_price' && averageBuyPrice <= 0) {
+            showFieldError('averageBuyPrice', 'Average buy price must be greater than 0');
+            hasErrors = true;
+        }
+        
+        // If validation fails, don't submit and keep modal open
+        if (hasErrors) {
+            return;
+        }
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('platform', platform);
+        formData.append('name', name);
+        formData.append('holdings', holdings);
+        formData.append('input_type', inputType);
+        formData.append('amount_spent', amountSpent);
+        formData.append('average_buy_price', averageBuyPrice);
+        formData.append('symbol', symbol);
+        
+        // Submit the form
+        fetch('/add-investment', {
+            method: 'POST',
                 body: formData
             })
             .then(response => {
@@ -638,6 +669,45 @@ function updateInvestmentNameOptions() {
             datalist.appendChild(option);
         });
     }
+}
+
+// Validation helper functions for modal
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        // Add red border
+        field.style.borderColor = '#ef4444';
+        field.style.boxShadow = '0 0 0 2px rgba(239, 68, 68, 0.2)';
+        
+        // Remove existing error message
+        const existingError = field.parentNode.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error text-red-400 text-xs mt-1';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
+}
+
+function clearValidationErrors() {
+    // Remove red borders and error messages
+    const fields = ['investmentPlatform', 'investmentName', 'investmentHoldings', 'amountSpent', 'averageBuyPrice'];
+    fields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.style.borderColor = '';
+            field.style.boxShadow = '';
+            
+            const error = field.parentNode.querySelector('.validation-error');
+            if (error) {
+                error.remove();
+            }
+        }
+    });
 }
 </script>
 {% endblock %}
