@@ -3,361 +3,467 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investments - Portfolio Tracker</title>
+    <title>Investments - Net Worth Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="/static/icon-192x192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
+        body {
+            background: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .trading-card {
+            background: rgba(20, 20, 20, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
         .bottom-nav {
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(10, 10, 10, 0.95);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(75, 85, 99, 0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .nav-icon {
-            color: rgba(156, 163, 175, 1);
             transition: all 0.2s ease;
         }
         
         .nav-icon.active {
-            color: rgba(59, 130, 246, 1);
+            color: #00d4ff !important;
+        }
+
+        .mobile-glass {
+            background: rgba(20, 20, 20, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-card {
+            background: rgba(40, 40, 40, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .nav-icon:hover {
-            color: rgba(255, 255, 255, 1);
+        .form-input {
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
         }
+        
+        .form-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+        
+        .form-select {
+            background: rgba(40, 40, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .form-select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(100, 100, 100, 0.3);
+            color: white;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
     </style>
 </head>
 <body class="bg-black text-white min-h-screen">
-    <!-- Mobile Header -->
-    <div class="bg-black p-4">
-        <h1 class="text-xl font-bold text-white">Investments</h1>
-    </div>
-
+    
     <!-- Main Content -->
-    <div class="px-4 py-6 pb-24">
+    <div class="pb-24">
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4">
+            <div>
+                <h1 class="text-white text-lg font-semibold">Investments</h1>
+            </div>
+            <button onclick="showAddModal()" class="p-2 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors">
+                <i class="fas fa-plus text-white text-lg"></i>
+            </button>
+        </div>
         
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto mb-4"></div>
-            <p class="text-gray-400">Loading investment data...</p>
-        </div>
-
-        <!-- Investment Platforms Container -->
-        <div id="investmentsContainer" class="space-y-6" style="display: none;">
-            <!-- Platforms will be dynamically loaded here -->
-        </div>
-
-    </div>
-
-    <!-- Bottom Navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bottom-nav" style="padding-bottom: env(safe-area-inset-bottom, 16px);">
-        <div class="flex justify-around items-center py-4 pb-3">
-            <a href="/mobile" class="flex flex-col items-center py-2 nav-icon">
-                <i class="fas fa-home text-lg mb-1"></i>
-                <span class="text-xs">Home</span>
-            </a>
-            <a href="/mobile/investments" class="flex flex-col items-center py-2 nav-icon active">
-                <i class="fas fa-chart-line text-lg mb-1"></i>
-                <span class="text-xs">Investments</span>
-            </a>
-            <a href="/mobile/goals" class="flex flex-col items-center py-2 nav-icon">
-                <i class="fas fa-bullseye text-lg mb-1"></i>
-                <span class="text-xs">Goals</span>
-            </a>
-            <a href="/mobile/monthly" class="flex flex-col items-center py-2 nav-icon">
-                <i class="fas fa-calendar-alt text-lg mb-1"></i>
-                <span class="text-xs">Monthly</span>
-            </a>
-            <a href="/mobile/tracker" class="flex flex-col items-center py-2 nav-icon">
-                <i class="fas fa-chart-bar text-lg mb-1"></i>
-                <span class="text-xs">Tracker</span>
-            </a>
-        </div>
-    </div>
-
-    <script>
-        // Load investment data on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            loadInvestmentData();
-        });
-
-        async function loadInvestmentData() {
-            try {
-                const response = await fetch('/api/investment-details');
-                const data = await response.json();
-                
-                if (data.error) {
-                    showError('Failed to load investment data');
-                    return;
-                }
-                
-                displayInvestmentData(data.platforms);
-                document.getElementById('loadingState').style.display = 'none';
-                document.getElementById('investmentsContainer').style.display = 'block';
-                
-            } catch (error) {
-                console.error('Error loading investment data:', error);
-                showError('Failed to load investment data');
-            }
-        }
-
-        function displayInvestmentData(platforms) {
-            const container = document.getElementById('investmentsContainer');
-            container.innerHTML = '';
-
-            // Calculate total portfolio value
-            let totalPortfolioValue = 0;
-            Object.values(platforms).forEach(platformData => {
-                const platformValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, 0) + (platformData.cash || 0);
-                totalPortfolioValue += platformValue;
-            });
-
-            Object.entries(platforms).forEach(([platformName, platformData]) => {
-                const platformElement = createPlatformElement(platformName, platformData, totalPortfolioValue);
-                container.appendChild(platformElement);
-            });
-        }
-
-        function createPlatformElement(platformName, platformData, totalPortfolioValue) {
-            // Calculate platform totals
-            const totalValue = platformData.investments.reduce((sum, inv) => sum + inv.current_value, 0) + (platformData.cash || 0);
-            const totalPL = platformData.investments.reduce((sum, inv) => sum + (inv.profit_loss || 0), 0);
-            const totalCost = platformData.investments.reduce((sum, inv) => sum + inv.amount_spent, 0);
-            const totalPLPercent = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
-            const platformPercent = totalPortfolioValue > 0 ? (totalValue / totalPortfolioValue) * 100 : 0;
-            
-            const platformId = platformName.replace(/\s+/g, '_');
-            
-            const platformDiv = document.createElement('div');
-            platformDiv.className = 'mb-6 border-b border-gray-600 pb-6 last:border-b-0';
-            
-            platformDiv.innerHTML = `
-                <!-- Platform Header (Collapsible) -->
-                <div class="cursor-pointer" onclick="togglePlatform('${platformId}')">
-                    <div class="flex justify-between items-center py-3">
-                        <div class="flex items-center space-x-2">
-                            <h2 class="text-xl font-bold text-white">${platformName}</h2>
-                            <i id="arrow_${platformId}" class="fas fa-chevron-down text-gray-400 text-sm transition-transform duration-200"></i>
-                        </div>
-                        <div class="text-white font-bold text-lg">£${totalValue.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        <!-- Portfolio Summary -->
+        <div class="px-4 mb-6">
+            <div class="trading-card rounded-xl p-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-white mb-1">£{{ "{:,.0f}".format(total_current_value + total_cash) }}</div>
+                    <div class="text-gray-400 text-sm">Total Portfolio Value</div>
+                    {% if total_portfolio_percentage_pl != 0 %}
+                    <div class="mt-2">
+                        {% if total_portfolio_percentage_pl > 0 %}
+                            <span class="inline-flex items-center text-green-400 text-sm font-medium">
+                                <i class="fas fa-arrow-up mr-1"></i>
+                                +£{{ "{:,.0f}".format(total_portfolio_pl) }} (+{{ "{:.1f}".format(total_portfolio_percentage_pl) }}%)
+                            </span>
+                        {% else %}
+                            <span class="inline-flex items-center text-red-400 text-sm font-medium">
+                                <i class="fas fa-arrow-down mr-1"></i>
+                                -£{{ "{:,.0f}".format(-total_portfolio_pl) }} ({{ "{:.1f}".format(total_portfolio_percentage_pl) }}%)
+                            </span>
+                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
+            </div>
+        </div>
 
-                <!-- Collapsible Content -->
-                <div id="content_${platformId}" class="mt-4">
-                    <!-- Individual Investments -->
-                    <div class="space-y-0 mb-4">
-                        ${platformData.investments.map(investment => `
-                            <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
-                                <div class="flex items-center space-x-3">
-                                    <!-- Company Logo -->
-                                    <div class="w-12 h-12 rounded-xl overflow-hidden flex items-center justify-center" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-                                        <img 
-                                            src="https://logo.clearbit.com/${getCompanyDomain(investment.ticker || investment.name)}" 
-                                            alt="${investment.name}" 
-                                            class="w-full h-full object-cover rounded-xl"
-                                            onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'text-white text-xs font-bold\\'>${getInitials(investment.name)}</div>';"
-                                        />
-                                    </div>
-                                    
-                                    <!-- Investment Info -->
-                                    <div>
-                                        <div class="text-white font-semibold text-base">${investment.name}</div>
-                                        <div class="text-gray-400 text-sm">${(investment.holdings || 0).toLocaleString('en-GB', { maximumFractionDigits: 8 })} SHARES</div>
-                                    </div>
+        <!-- Investment Platforms -->
+        {% if investments_data %}
+            <div class="space-y-4 px-4">
+                {% for platform, investments in investments_data.items() %}
+                    {% if not platform.endswith('_cash') and investments %}
+                    <div class="trading-card rounded-xl overflow-hidden">
+                        <!-- Platform Header -->
+                        <div class="p-4 border-b border-gray-700/50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-3 h-3 rounded-full mr-3" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
+                                    <h3 class="text-white font-semibold">{{ platform }}</h3>
                                 </div>
-                                
-                                <!-- Value and P&L -->
                                 <div class="text-right">
-                                    <div class="text-white font-bold text-lg">£${investment.current_value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                    ${investment.profit_loss !== undefined ? `
-                                        <div class="text-${investment.profit_loss >= 0 ? 'green' : 'red'}-400 text-sm font-semibold">
-                                            ${investment.profit_loss >= 0 ? '+' : ''}£${Math.abs(investment.profit_loss).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 
-                                            (${investment.profit_loss_percent >= 0 ? '+' : ''}${investment.profit_loss_percent.toFixed(2)}%)
-                                        </div>
-                                    ` : `
-                                        <div class="text-gray-500 text-sm">No P&L data</div>
-                                    `}
+                                    {% set platform_info = platform_totals.get(platform, {}) %}
+                                    <div class="text-white font-semibold">£{{ "{:,.0f}".format(platform_info.get('total_value', 0)) }}</div>
+                                    {% if platform_info.get('percentage_pl', 0) != 0 %}
+                                    <div class="text-xs">
+                                        {% if platform_info.get('percentage_pl', 0) > 0 %}
+                                            <span class="text-green-400">+{{ "{:.1f}".format(platform_info.get('percentage_pl', 0)) }}%</span>
+                                        {% else %}
+                                            <span class="text-red-400">{{ "{:.1f}".format(platform_info.get('percentage_pl', 0)) }}%</span>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
-                        `).join('')}
+                        </div>
                         
-                        <!-- Cash Balance (if exists) -->
-                        ${platformData.cash ? `
-                            <div class="flex items-center justify-between py-4 border-b border-gray-800 last:border-b-0">
-                                <div class="flex items-center space-x-3">
-                                    <!-- Cash Icon -->
-                                    <div class="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
-                                        <i class="fas fa-coins text-white text-lg"></i>
-                                    </div>
-                                    
-                                    <!-- Cash Info -->
-                                    <div>
-                                        <div class="text-white font-semibold text-base">Cash Balance</div>
-                                        <div class="text-gray-400 text-sm">Available funds</div>
-                                    </div>
+                        <!-- Investments List -->
+                        <div class="p-4 space-y-3">
+                            {% for investment in investments %}
+                            <div class="flex items-center justify-between py-2">
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">{{ investment.name }}</div>
+                                    <div class="text-gray-400 text-xs">{{ "{:,.2f}".format(investment.holdings) }} shares</div>
                                 </div>
-                                
-                                <!-- Cash Value -->
-                                <div class="text-right flex items-center">
-                                    <div>
-                                        <div class="text-green-400 font-bold text-lg">£${platformData.cash.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                                        <div class="text-gray-500 text-sm">Cash</div>
+                                <div class="text-right">
+                                    <div class="text-white text-sm font-semibold">£{{ "{:,.0f}".format(investment.current_value) }}</div>
+                                    {% set investment_pl = investment.current_value - investment.amount_spent %}
+                                    {% if investment_pl != 0 %}
+                                    <div class="text-xs">
+                                        {% if investment_pl > 0 %}
+                                            <span class="text-green-400">+£{{ "{:,.0f}".format(investment_pl) }}</span>
+                                        {% else %}
+                                            <span class="text-red-400">-£{{ "{:,.0f}".format(-investment_pl) }}</span>
+                                        {% endif %}
                                     </div>
-                                    <button onclick="editCashBalance('${platformName}', ${platformData.cash})" class="text-gray-400 hover:text-white ml-3">
-                                        <i class="fas fa-edit text-sm"></i>
+                                    {% endif %}
+                                </div>
+                                <button onclick="editInvestment('{{ platform }}', {{ investment.id }}, '{{ investment.name }}', {{ investment.holdings }}, {{ investment.amount_spent }}, '{{ investment.symbol }}')" class="ml-3 p-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                            
+                            <!-- Cash Balance -->
+                            {% set cash_balance = data_manager.get_platform_cash(platform) %}
+                            {% if cash_balance > 0 %}
+                            <div class="flex items-center justify-between py-2 border-t border-gray-700/30 mt-3">
+                                <div class="flex-1">
+                                    <div class="text-white text-sm font-medium">Cash Balance</div>
+                                    <div class="text-gray-400 text-xs">Available funds</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-white text-sm font-semibold">£{{ "{:,.2f}".format(cash_balance) }}</div>
+                                </div>
+                                <button onclick="editCash('{{ platform }}', {{ cash_balance }})" class="ml-3 p-2 text-gray-400 hover:text-white">
+                                    <i class="fas fa-edit text-sm"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-12 px-4">
+                <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+                <h3 class="text-white text-lg font-semibold mb-2">No Investments Yet</h3>
+                <p class="text-gray-400 text-sm mb-6">Add your first investment to start tracking your portfolio</p>
+                <button onclick="showAddModal()" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Add Investment
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add/Edit Investment Modal -->
+    <div id="investmentModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="mobile-glass rounded-t-3xl w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 id="modalTitle" class="text-lg font-semibold text-white">Add Investment</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="investmentForm" method="post">
+                        <input type="hidden" id="investmentId" name="investment_id">
+                        <input type="hidden" id="formAction" name="action" value="add">
+                        
+                        <div class="space-y-4">
+                            <!-- Platform Selection -->
+                            <div>
+                                <label class="block text-white text-sm font-medium mb-2">Platform</label>
+                                <select id="platform" name="platform" class="form-select w-full p-3" required>
+                                    <option value="">Select Platform</option>
+                                    <option value="Degiro">Degiro</option>
+                                    <option value="InvestEngine ISA">InvestEngine ISA</option>
+                                    <option value="Trading212 ISA">Trading212 ISA</option>
+                                    <option value="HL Stocks & Shares LISA">HL Stocks & Shares LISA</option>
+                                    <option value="EQ (GSK shares)">EQ (GSK shares)</option>
+                                    <option value="Crypto">Crypto</option>
+                                    <option value="Cash">Cash</option>
+                                </select>
+                            </div>
+
+                            <!-- Investment Name -->
+                            <div>
+                                <label class="block text-white text-sm font-medium mb-2">Investment Name</label>
+                                <div class="relative">
+                                    <input type="text" id="investmentName" name="name" class="form-input w-full p-3" placeholder="Enter or select investment name" required autocomplete="off">
+                                    <div id="investmentSuggestions" class="absolute top-full left-0 right-0 mobile-glass rounded-lg mt-1 max-h-48 overflow-y-auto hidden z-10"></div>
+                                </div>
+                            </div>
+
+                            <!-- Holdings -->
+                            <div>
+                                <label class="block text-white text-sm font-medium mb-2">Holdings</label>
+                                <input type="number" id="holdings" name="holdings" step="0.00001" class="form-input w-full p-3" placeholder="Number of shares/units" required>
+                            </div>
+
+                            <!-- Input Type Toggle -->
+                            <div>
+                                <label class="block text-white text-sm font-medium mb-2">Input Method</label>
+                                <div class="flex bg-gray-800/50 rounded-lg p-1">
+                                    <button type="button" id="amountSpentBtn" onclick="setInputType('amount_spent')" class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors bg-blue-600 text-white">
+                                        Total Spent
+                                    </button>
+                                    <button type="button" id="avgPriceBtn" onclick="setInputType('average_buy_price')" class="flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors text-gray-400 hover:text-white">
+                                        Average Price
                                     </button>
                                 </div>
                             </div>
-                        ` : ''}
+
+                            <!-- Amount Input -->
+                            <div id="amountSpentDiv">
+                                <label class="block text-white text-sm font-medium mb-2">Total Amount Spent (£)</label>
+                                <input type="number" id="amountSpent" name="amount_spent" step="0.01" class="form-input w-full p-3" placeholder="Total amount invested">
+                            </div>
+
+                            <div id="avgPriceDiv" class="hidden">
+                                <label class="block text-white text-sm font-medium mb-2">Average Buy Price (£)</label>
+                                <input type="number" id="avgPrice" name="average_buy_price" step="0.01" class="form-input w-full p-3" placeholder="Average price per share">
+                            </div>
+
+                            <!-- Symbol -->
+                            <div>
+                                <label class="block text-white text-sm font-medium mb-2">Symbol (Optional)</label>
+                                <input type="text" id="symbol" name="symbol" class="form-input w-full p-3" placeholder="e.g. AAPL, TSLA">
+                                <p class="text-xs text-gray-400 mt-1">For automatic price updates</p>
+                            </div>
+
+                            <input type="hidden" id="inputType" name="input_type" value="amount_spent">
+                        </div>
+
+                        <div class="flex gap-3 mt-6">
+                            <button type="button" onclick="closeModal()" class="flex-1 btn-secondary">Cancel</button>
+                            <button type="submit" id="submitBtn" class="flex-1 btn-primary">Add Investment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash Edit Modal -->
+    <div id="cashModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-end justify-center min-h-screen">
+            <div class="mobile-glass rounded-t-3xl w-full max-w-md">
+                <div class="p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-lg font-semibold text-white">Update Cash Balance</h3>
+                        <button onclick="closeCashModal()" class="text-gray-400 hover:text-white">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
                     </div>
+                    
+                    <form id="cashForm" method="post" action="/update_cash_mobile">
+                        <input type="hidden" id="cashPlatform" name="platform">
+                        
+                        <div class="mb-6">
+                            <label class="block text-white text-sm font-medium mb-2">Cash Amount (£)</label>
+                            <input type="number" id="cashAmount" name="cash_amount" step="0.01" class="form-input w-full p-3" placeholder="Enter cash balance" required>
+                        </div>
 
-
+                        <div class="flex gap-3">
+                            <button type="button" onclick="closeCashModal()" class="flex-1 btn-secondary">Cancel</button>
+                            <button type="submit" class="flex-1 btn-primary">Update</button>
+                        </div>
+                    </form>
                 </div>
-            `;
+            </div>
+        </div>
+    </div>
+
+    {% include 'mobile/base.html' %}
+
+    <script>
+        let currentInputType = 'amount_spent';
+        let uniqueInvestmentNames = {{ unique_names | tojson }};
+
+        // Investment name autocomplete
+        document.getElementById('investmentName').addEventListener('input', function() {
+            const input = this.value.toLowerCase();
+            const suggestions = document.getElementById('investmentSuggestions');
             
-            return platformDiv;
-        }
-
-        // Toggle platform expansion/collapse
-        function togglePlatform(platformId) {
-            const content = document.getElementById(`content_${platformId}`);
-            const arrow = document.getElementById(`arrow_${platformId}`);
-            
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                arrow.style.transform = 'rotate(0deg)';
-            } else {
-                content.style.display = 'none';
-                arrow.style.transform = 'rotate(-90deg)';
-            }
-        }
-
-        function editCashBalance(platformName, currentAmount) {
-            const newAmount = prompt(`Enter new cash balance for ${platformName}:`, currentAmount);
-            if (newAmount !== null && !isNaN(newAmount)) {
-                updateCashBalance(platformName, parseFloat(newAmount));
-            }
-        }
-
-        async function updateCashBalance(platformName, amount) {
-            try {
-                const response = await fetch('/api/update-cash-balance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        platform: platformName,
-                        amount: amount
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    // Reload the data to show updated balance
-                    loadInvestmentData();
+            if (input.length > 0) {
+                const matches = uniqueInvestmentNames.filter(name => 
+                    name.toLowerCase().includes(input)
+                );
+                
+                if (matches.length > 0) {
+                    suggestions.innerHTML = matches.map(name => 
+                        `<div onclick="selectInvestment('${name}')" class="p-3 hover:bg-gray-700/50 cursor-pointer text-white text-sm border-b border-gray-700/30 last:border-0">
+                            ${name}
+                        </div>`
+                    ).join('');
+                    suggestions.classList.remove('hidden');
                 } else {
-                    alert('Failed to update cash balance: ' + result.message);
+                    suggestions.classList.add('hidden');
                 }
-            } catch (error) {
-                console.error('Error updating cash balance:', error);
-                alert('Failed to update cash balance');
+            } else {
+                suggestions.classList.add('hidden');
             }
-        }
+        });
 
-        function showError(message) {
-            const container = document.getElementById('investmentsContainer');
-            container.innerHTML = `
-                <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
-                    <p class="text-red-400">${message}</p>
-                    <button onclick="loadInvestmentData()" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg">
-                        Try Again
-                    </button>
-                </div>
-            `;
-            document.getElementById('loadingState').style.display = 'none';
-            container.style.display = 'block';
-        }
-
-        // Smart logo system functions
-        function getCompanyDomain(tickerOrName) {
-            // Map common tickers to company domains
-            const tickerToDomain = {
-                'AAPL': 'apple.com',
-                'META': 'meta.com',
-                'GOOGL': 'google.com',
-                'GOOG': 'google.com',
-                'TSLA': 'tesla.com',
-                'MSFT': 'microsoft.com',
-                'AMZN': 'amazon.com',
-                'NVDA': 'nvidia.com',
-                'NFLX': 'netflix.com',
-                'KO': 'coca-cola.com',
-                'MCD': 'mcdonalds.com',
-                'ABBV': 'abbvie.com',
-                'LLY': 'lilly.com',
-                'NVO': 'novonordisk.com',
-                'PLTR': 'palantir.com',
-                'ACHR': 'archer.com',
-                'BTC': 'bitcoin.org',
-                'ETH': 'ethereum.org',
-                'SOL': 'solana.com',
-                'FET': 'fetch.ai',
-                'TRX': 'tron.network',
-                'GSK': 'gsk.com',
-                'RR': 'rolls-royce.com'
-            };
-
-            // Check if it's a known ticker
-            if (tickerToDomain[tickerOrName]) {
-                return tickerToDomain[tickerOrName];
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('investmentName').contains(e.target) && 
+                !document.getElementById('investmentSuggestions').contains(e.target)) {
+                document.getElementById('investmentSuggestions').classList.add('hidden');
             }
+        });
 
-            // For company names, try to extract domain
-            const name = tickerOrName.toLowerCase();
-            if (name.includes('apple')) return 'apple.com';
-            if (name.includes('microsoft')) return 'microsoft.com';
-            if (name.includes('google') || name.includes('alphabet')) return 'google.com';
-            if (name.includes('meta') || name.includes('facebook')) return 'meta.com';
-            if (name.includes('tesla')) return 'tesla.com';
-            if (name.includes('amazon')) return 'amazon.com';
-            if (name.includes('nvidia')) return 'nvidia.com';
-            if (name.includes('netflix')) return 'netflix.com';
-            if (name.includes('coca-cola') || name.includes('coke')) return 'coca-cola.com';
-            if (name.includes('mcdonald')) return 'mcdonalds.com';
-            if (name.includes('abbvie')) return 'abbvie.com';
-            if (name.includes('lilly')) return 'lilly.com';
-            if (name.includes('novo nordisk')) return 'novonordisk.com';
-            if (name.includes('palantir')) return 'palantir.com';
-            if (name.includes('gsk') || name.includes('glaxosmith')) return 'gsk.com';
-            if (name.includes('rolls-royce')) return 'rolls-royce.com';
-            if (name.includes('bitcoin')) return 'bitcoin.org';
-            if (name.includes('ethereum')) return 'ethereum.org';
-            if (name.includes('solana')) return 'solana.com';
-            if (name.includes('fidelity')) return 'fidelity.com';
-            if (name.includes('vanguard')) return 'vanguard.com';
-
-            // Fallback to generic domain
-            return 'example.com';
+        function selectInvestment(name) {
+            document.getElementById('investmentName').value = name;
+            document.getElementById('investmentSuggestions').classList.add('hidden');
         }
 
-        function getInitials(name) {
-            return name.split(' ')
-                .map(word => word.charAt(0))
-                .join('')
-                .substring(0, 2)
-                .toUpperCase();
+        function showAddModal() {
+            document.getElementById('modalTitle').textContent = 'Add Investment';
+            document.getElementById('submitBtn').textContent = 'Add Investment';
+            document.getElementById('formAction').value = 'add';
+            document.getElementById('investmentForm').action = '/add_investment_mobile';
+            
+            // Reset form
+            document.getElementById('investmentForm').reset();
+            document.getElementById('investmentId').value = '';
+            setInputType('amount_spent');
+            
+            document.getElementById('investmentModal').classList.remove('hidden');
+        }
+
+        function editInvestment(platform, id, name, holdings, amountSpent, symbol) {
+            document.getElementById('modalTitle').textContent = 'Edit Investment';
+            document.getElementById('submitBtn').textContent = 'Update Investment';
+            document.getElementById('formAction').value = 'edit';
+            document.getElementById('investmentForm').action = '/update_investment_mobile';
+            
+            // Fill form
+            document.getElementById('investmentId').value = id;
+            document.getElementById('platform').value = platform;
+            document.getElementById('investmentName').value = name;
+            document.getElementById('holdings').value = holdings;
+            document.getElementById('amountSpent').value = amountSpent;
+            document.getElementById('symbol').value = symbol;
+            
+            setInputType('amount_spent');
+            document.getElementById('investmentModal').classList.remove('hidden');
+        }
+
+        function editCash(platform, currentAmount) {
+            document.getElementById('cashPlatform').value = platform;
+            document.getElementById('cashAmount').value = currentAmount;
+            document.getElementById('cashModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('investmentModal').classList.add('hidden');
+        }
+
+        function closeCashModal() {
+            document.getElementById('cashModal').classList.add('hidden');
+        }
+
+        function setInputType(type) {
+            currentInputType = type;
+            document.getElementById('inputType').value = type;
+            
+            const amountBtn = document.getElementById('amountSpentBtn');
+            const avgBtn = document.getElementById('avgPriceBtn');
+            const amountDiv = document.getElementById('amountSpentDiv');
+            const avgDiv = document.getElementById('avgPriceDiv');
+            
+            if (type === 'amount_spent') {
+                amountBtn.classList.add('bg-blue-600', 'text-white');
+                amountBtn.classList.remove('text-gray-400');
+                avgBtn.classList.remove('bg-blue-600', 'text-white');
+                avgBtn.classList.add('text-gray-400');
+                amountDiv.classList.remove('hidden');
+                avgDiv.classList.add('hidden');
+                document.getElementById('avgPrice').required = false;
+                document.getElementById('amountSpent').required = true;
+            } else {
+                avgBtn.classList.add('bg-blue-600', 'text-white');
+                avgBtn.classList.remove('text-gray-400');
+                amountBtn.classList.remove('bg-blue-600', 'text-white');
+                amountBtn.classList.add('text-gray-400');
+                avgDiv.classList.remove('hidden');
+                amountDiv.classList.add('hidden');
+                document.getElementById('amountSpent').required = false;
+                document.getElementById('avgPrice').required = true;
+            }
         }
     </script>
 </body>

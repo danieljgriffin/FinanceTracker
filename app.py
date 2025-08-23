@@ -838,8 +838,93 @@ def mobile_info():
 
 @app.route('/mobile/investments')
 def mobile_investments():
-    """Mobile investments page"""
-    return render_template('mobile/investments.html')
+    """Mobile investments page with full functionality"""
+    try:
+        investments_data = get_data_manager().get_investments_data()
+        
+        # Calculate totals and metrics from live data - optimized
+        total_current_value = 0
+        total_amount_spent = 0
+        total_cash = 0
+        platform_totals = {}
+        platform_colors = {
+            'Degiro': '#1e3a8a',
+            'InvestEngine ISA': '#7c3aed', 
+            'Trading212 ISA': '#dc2626',
+            'HL Stocks & Shares LISA': '#059669',
+            'EQ (GSK shares)': '#dc2626',
+            'Crypto': '#f59e0b',
+            'Cash': '#10b981'
+        }
+        
+        for platform, platform_investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
+            
+            # Use list comprehensions for better performance
+            platform_investment_total = sum(
+                investment.get('holdings', 0) * investment.get('current_price', 0)
+                for investment in platform_investments
+            )
+            platform_amount_spent = sum(
+                investment.get('amount_spent', 0)
+                for investment in platform_investments
+            )
+            
+            total_current_value += platform_investment_total
+            total_amount_spent += platform_amount_spent
+            
+            # Add cash to platform total
+            cash_balance = get_data_manager().get_platform_cash(platform)
+            platform_total_value = platform_investment_total + cash_balance
+            total_cash += cash_balance
+            
+            # Calculate P/L metrics for this platform
+            platform_pl = platform_investment_total - platform_amount_spent
+            platform_percentage_pl = (platform_pl / platform_amount_spent * 100) if platform_amount_spent > 0 else 0
+            
+            platform_totals[platform] = {
+                'total_value': platform_total_value,
+                'investment_value': platform_investment_total,
+                'amount_spent': platform_amount_spent,
+                'total_pl': platform_pl,
+                'percentage_pl': platform_percentage_pl,
+                'cash_balance': cash_balance
+            }
+        
+        # Calculate overall portfolio metrics (investments + cash)
+        total_portfolio_value = total_current_value + total_cash
+        total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
+        total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
+        
+        # Get unique investment names for dropdown
+        unique_names = get_data_manager().get_unique_investment_names()
+        
+        return render_template('mobile/investments.html',
+                             investments_data=investments_data,
+                             total_current_value=total_current_value,
+                             total_amount_spent=total_amount_spent,
+                             total_cash=total_cash,
+                             total_portfolio_pl=total_portfolio_pl,
+                             total_portfolio_percentage_pl=total_portfolio_percentage_pl,
+                             platform_totals=platform_totals,
+                             platform_colors=platform_colors,
+                             unique_names=unique_names,
+                             data_manager=get_data_manager())
+    
+    except Exception as e:
+        logging.error(f"Error in mobile investments: {str(e)}")
+        flash(f'Error loading investments: {str(e)}', 'error')
+        return render_template('mobile/investments.html', 
+                             investments_data={}, 
+                             total_current_value=0, 
+                             total_cash=0, 
+                             total_portfolio_pl=0,
+                             total_portfolio_percentage_pl=0,
+                             platform_totals={},
+                             platform_colors={},
+                             unique_names=[],
+                             data_manager=get_data_manager())
 
 @app.route('/mobile/goals')
 def mobile_goals():
@@ -2763,6 +2848,124 @@ def update_cash(platform):
         flash(f'Error updating cash: {str(e)}', 'error')
     
     return redirect(url_for('investment_manager'))
+
+@app.route('/add_investment_mobile', methods=['POST'])
+def add_investment_mobile():
+    """Add new investment from mobile"""
+    try:
+        platform = request.form.get('platform')
+        name = request.form.get('name')
+        holdings = float(request.form.get('holdings', 0))
+        input_type = request.form.get('input_type', 'amount_spent')
+        symbol = request.form.get('symbol', '')
+        
+        if not platform or not name or holdings <= 0:
+            flash('Platform, investment name, and holdings are required', 'error')
+            return redirect(url_for('mobile_investments'))
+        
+        # Handle different input types
+        if input_type == 'amount_spent':
+            amount_spent = float(request.form.get('amount_spent', 0))
+            if amount_spent <= 0:
+                flash('Amount spent must be greater than 0', 'error')
+                return redirect(url_for('mobile_investments'))
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': amount_spent,
+                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'symbol': symbol,
+                'current_price': 0.0
+            }
+            get_data_manager().add_investment(platform, investment_data)
+        elif input_type == 'average_buy_price':
+            average_buy_price = float(request.form.get('average_buy_price', 0))
+            if average_buy_price <= 0:
+                flash('Average buy price must be greater than 0', 'error')
+                return redirect(url_for('mobile_investments'))
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': average_buy_price * holdings,
+                'average_buy_price': average_buy_price,
+                'symbol': symbol,
+                'current_price': 0.0
+            }
+            get_data_manager().add_investment(platform, investment_data)
+        else:
+            flash('Invalid input type', 'error')
+            return redirect(url_for('mobile_investments'))
+        
+        flash(f'Investment {name} added successfully to {platform}', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error adding investment on mobile: {str(e)}")
+        flash(f'Error adding investment: {str(e)}', 'error')
+    
+    return redirect(url_for('mobile_investments'))
+
+@app.route('/update_investment_mobile', methods=['POST'])
+def update_investment_mobile():
+    """Update existing investment from mobile"""
+    try:
+        investment_id = int(request.form.get('investment_id'))
+        name = request.form.get('name')
+        holdings = float(request.form.get('holdings', 0))
+        input_type = request.form.get('input_type', 'amount_spent')
+        symbol = request.form.get('symbol', '')
+        
+        if not name or holdings <= 0:
+            flash('Investment name and holdings are required', 'error')
+            return redirect(url_for('mobile_investments'))
+        
+        # Prepare update data
+        updates = {
+            'name': name,
+            'holdings': holdings,
+            'symbol': symbol
+        }
+        
+        # Handle different input types
+        if input_type == 'amount_spent':
+            amount_spent = float(request.form.get('amount_spent', 0))
+            if amount_spent <= 0:
+                flash('Amount spent must be greater than 0', 'error')
+                return redirect(url_for('mobile_investments'))
+            updates['amount_spent'] = amount_spent
+            updates['average_buy_price'] = amount_spent / holdings
+        elif input_type == 'average_buy_price':
+            average_buy_price = float(request.form.get('average_buy_price', 0))
+            if average_buy_price <= 0:
+                flash('Average buy price must be greater than 0', 'error')
+                return redirect(url_for('mobile_investments'))
+            updates['average_buy_price'] = average_buy_price
+            updates['amount_spent'] = average_buy_price * holdings
+        
+        # Update the investment directly by ID
+        get_data_manager().update_investment(investment_id, updates)
+        flash(f'Investment {name} updated successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error updating investment on mobile: {str(e)}")
+        flash(f'Error updating investment: {str(e)}', 'error')
+    
+    return redirect(url_for('mobile_investments'))
+
+@app.route('/update_cash_mobile', methods=['POST'])
+def update_cash_mobile():
+    """Update cash balance for a platform from mobile"""
+    try:
+        platform = request.form.get('platform')
+        cash_amount = float(request.form.get('cash_amount', 0))
+        get_data_manager().update_platform_cash(platform, cash_amount)
+        flash(f'Cash balance updated for {platform}!', 'success')
+    except ValueError:
+        flash('Invalid cash amount entered!', 'error')
+    except Exception as e:
+        logging.error(f"Error updating cash on mobile: {str(e)}")
+        flash(f'Error updating cash: {str(e)}', 'error')
+    
+    return redirect(url_for('mobile_investments'))
 
 @app.route('/update-monthly-income', methods=['POST'])
 def update_monthly_income():
