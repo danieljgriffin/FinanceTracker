@@ -498,5 +498,45 @@
             }
         }
     </script>
+
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 z-50 bottom-nav">
+        <div class="flex justify-around items-center py-3 px-2">
+            <!-- Home -->
+            <a href="{{ url_for('mobile_dashboard') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-home text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Home</span>
+            </a>
+            
+            <!-- Investment Manager -->
+            <a href="{{ url_for('mobile_investments') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-chart-line text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Investments</span>
+            </a>
+            
+            <!-- Year Month Tracker -->
+            <a href="{{ url_for('mobile_tracker') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-calendar-alt text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Tracker</span>
+            </a>
+            
+            <!-- Goals (Active) -->
+            <a href="{{ url_for('mobile_goals') }}" 
+               class="mobile-nav-item active flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-target text-lg mb-1 text-blue-400"></i>
+                <span class="text-xs text-blue-400">Goals</span>
+            </a>
+            
+            <!-- Monthly Breakdown -->
+            <a href="{{ url_for('mobile_monthly') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-chart-pie text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Monthly</span>
+            </a>
+        </div>
+    </div>
 </body>
 </html>
