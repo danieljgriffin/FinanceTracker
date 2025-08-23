@@ -897,17 +897,22 @@ def mobile_investments():
         total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
+        # Sort platforms by highest to lowest total value
+        sorted_platforms = sorted(platform_totals.items(), key=lambda x: x[1]['total_value'], reverse=True)
+        sorted_investments_data = {platform: investments_data[platform] for platform, _ in sorted_platforms if platform in investments_data}
+        sorted_platform_totals = {platform: totals for platform, totals in sorted_platforms}
+        
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
         
         return render_template('mobile/investments.html',
-                             investments_data=investments_data,
+                             investments_data=sorted_investments_data,
                              total_current_value=total_current_value or 0,
                              total_amount_spent=total_amount_spent or 0,
                              total_cash=total_cash or 0,
                              total_portfolio_pl=total_portfolio_pl or 0,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl or 0,
-                             platform_totals=platform_totals or {},
+                             platform_totals=sorted_platform_totals or {},
                              platform_colors=platform_colors,
                              unique_names=unique_names or [],
                              data_manager=get_data_manager())
