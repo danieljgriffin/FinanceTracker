@@ -528,12 +528,13 @@ class PriceFetcher:
                 'Accept-Language': 'en-US,en;q=0.9'
             }
             
-            # Retry logic for rate limiting
+            # Try batch first with aggressive retry logic
+            batch_success = False
             for attempt in range(3):
                 try:
                     if attempt > 0:
-                        wait_time = 2 ** attempt  # Exponential backoff: 2, 4 seconds
-                        self.logger.warning(f"Batch crypto fetch rate limited, waiting {wait_time}s before retry {attempt + 1}/3")
+                        wait_time = [10, 30, 60][attempt - 1]  # Much longer waits: 10s, 30s, 60s
+                        self.logger.warning(f"CoinGecko rate limited, waiting {wait_time}s before retry {attempt + 1}/3")
                         time.sleep(wait_time)
                     
                     response = requests.get(url, headers=headers, timeout=15)
@@ -548,25 +549,90 @@ class PriceFetcher:
                                     symbol = symbol_to_id[coin_id]
                                     prices[symbol] = price_gbp
                                     self.logger.info(f"Batch fetched {symbol}: £{price_gbp}")
+                        batch_success = True
                         break  # Success, exit retry loop
                         
                     elif response.status_code == 429:
-                        if attempt == 2:  # Last attempt
-                            self.logger.error(f"Batch crypto fetch failed with rate limit after 3 attempts")
+                        self.logger.warning(f"CoinGecko rate limit hit, attempt {attempt + 1}/3")
                         continue  # Try again
                     else:
                         self.logger.error(f"Batch crypto fetch failed with status {response.status_code}")
                         break  # Don't retry for other errors
                         
                 except requests.RequestException as e:
-                    if attempt == 2:
-                        self.logger.error(f"Batch crypto fetch request failed after 3 attempts: {str(e)}")
+                    self.logger.warning(f"Batch crypto fetch request failed: {str(e)}")
                     continue
+            
+            # If batch failed, try individual calls with longer delays
+            if not batch_success and len(crypto_symbols) <= 5:  # Only for small lists to avoid too many calls
+                self.logger.info("Batch failed, trying individual crypto calls...")
+                for i, symbol in enumerate(crypto_symbols):
+                    if i > 0:
+                        time.sleep(15)  # 15 second delay between individual calls
+                    
+                    try:
+                        individual_price = self.get_crypto_price_individual(symbol)
+                        if individual_price:
+                            prices[symbol] = individual_price
+                            self.logger.info(f"Individual fetch {symbol}: £{individual_price}")
+                    except Exception as e:
+                        self.logger.error(f"Individual crypto fetch failed for {symbol}: {str(e)}")
+                        continue
                 
         except Exception as e:
             self.logger.error(f"Error in batch crypto fetch: {str(e)}")
             
         return prices
+    
+    def get_crypto_price_individual(self, symbol: str) -> Optional[float]:
+        """
+        Fallback method for individual crypto price when batch fails
+        Uses much longer delays to handle aggressive rate limiting
+        """
+        try:
+            clean_symbol = symbol.replace('-USD', '').upper()
+            
+            if clean_symbol not in self.crypto_mappings:
+                self.logger.warning(f"No CoinGecko mapping found for {clean_symbol}")
+                return None
+                
+            coin_id = self.crypto_mappings[clean_symbol]
+            url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=gbp"
+            
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
+                'Accept-Language': 'en-US,en;q=0.9'
+            }
+            
+            # Much more aggressive retry for fallback scenario
+            for attempt in range(2):  # Only 2 attempts to avoid too long delays
+                try:
+                    if attempt > 0:
+                        wait_time = 30  # 30 second wait for fallback
+                        self.logger.warning(f"Individual crypto fallback rate limited, waiting {wait_time}s for {symbol}")
+                        time.sleep(wait_time)
+                    
+                    response = requests.get(url, headers=headers, timeout=15)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if coin_id in data and 'gbp' in data[coin_id]:
+                            price_gbp = float(data[coin_id]['gbp'])
+                            if price_gbp > 0 and price_gbp < 1000000:
+                                return price_gbp
+                    elif response.status_code == 429:
+                        continue  # Try again with longer delay
+                    else:
+                        break  # Don't retry for other errors
+                        
+                except requests.RequestException:
+                    continue
+                    
+        except Exception as e:
+            self.logger.error(f"Individual crypto fallback failed for {symbol}: {str(e)}")
+            
+        return None
     
     def get_usd_to_gbp_rate(self) -> Optional[float]:
         """Get current USD to GBP exchange rate"""
