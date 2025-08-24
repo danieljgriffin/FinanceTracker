@@ -2862,41 +2862,53 @@ CRON_TOKEN = os.getenv("CRON_TOKEN", "")
 
 def run_15m_job():
     with app.app_context():
-        # Run price updates and historical data collection
-        update_all_prices()
-        collect_historical_data()
-        app.logger.info("15m job ran at %s", datetime.utcnow())
+        try:
+            # Run price updates and historical data collection
+            app.logger.info("🚀 External 15m job starting at %s", datetime.utcnow())
+            update_all_prices()
+            collect_historical_data()
+            app.logger.info("✅ External 15m job completed at %s", datetime.utcnow())
+        except Exception as e:
+            app.logger.error("❌ External 15m job failed: %s", str(e))
 
 def run_6h_job():
     with app.app_context():
-        # Run weekly historical data collection
-        collect_weekly_historical_data()
-        app.logger.info("6h job ran at %s", datetime.utcnow())
+        try:
+            app.logger.info("🚀 External 6h job starting at %s", datetime.utcnow())
+            collect_weekly_historical_data()
+            app.logger.info("✅ External 6h job completed at %s", datetime.utcnow())
+        except Exception as e:
+            app.logger.error("❌ External 6h job failed: %s", str(e))
 
 def run_daily_job():
     with app.app_context():
-        # Run daily cleanup and monthly tracker checks
-        collect_daily_historical_data()
-        cleanup_old_historical_data()
-        
-        # Check if it's the 1st of the month for monthly tracker
-        import pytz
-        uk_tz = pytz.timezone('Europe/London')
-        uk_now = datetime.now().astimezone(uk_tz)
-        if uk_now.day == 1 and uk_now.hour == 0:  # 1st of month at midnight
-            auto_populate_monthly_tracker()
-        
-        # Check if it's December 31st for year-end tracker
-        if uk_now.month == 12 and uk_now.day == 31 and uk_now.hour == 23:  # Dec 31st at 11 PM
-            auto_populate_dec31_tracker()
+        try:
+            app.logger.info("🚀 External daily job starting at %s", datetime.utcnow())
             
-        app.logger.info("daily job ran at %s", datetime.utcnow())
+            # Run daily cleanup and monthly tracker checks
+            collect_daily_historical_data()
+            cleanup_old_historical_data()
+            
+            # Check if it's the 1st of the month for monthly tracker
+            import pytz
+            uk_tz = pytz.timezone('Europe/London')
+            uk_now = datetime.now().astimezone(uk_tz)
+            if uk_now.day == 1 and uk_now.hour == 0:  # 1st of month at midnight
+                auto_populate_monthly_tracker()
+            
+            # Check if it's December 31st for year-end tracker
+            if uk_now.month == 12 and uk_now.day == 31 and uk_now.hour == 23:  # Dec 31st at 11 PM
+                auto_populate_dec31_tracker()
+                
+            app.logger.info("✅ External daily job completed at %s", datetime.utcnow())
+        except Exception as e:
+            app.logger.error("❌ External daily job failed: %s", str(e))
 
 # temporarily allow GET for testing; keep POST for real use
 @app.route("/tasks/run", methods=["POST", "GET"])
 def tasks_run():
     if request.method == "GET":
-        return jsonify(ok=True, hint="use POST with Authorization header"), 200
+        return jsonify(ok=True, hint="use POST with Authorization header", cron_token_set=bool(CRON_TOKEN)), 200
 
     if not CRON_TOKEN:
         abort(500, "CRON_TOKEN missing on server")
@@ -2911,6 +2923,7 @@ def tasks_run():
     if not fn:
         abort(400, "unknown task")
 
+    app.logger.info("🎯 Received external task request: %s at %s", job, datetime.utcnow())
     threading.Thread(target=fn, daemon=True).start()
     return jsonify(ok=True, started=job), 202
 # --- end scheduled tasks endpoint ---
@@ -2920,7 +2933,34 @@ USE_EXTERNAL_SCHEDULING = os.environ.get("USE_EXTERNAL_SCHEDULING", "false").low
 if not USE_EXTERNAL_SCHEDULING:
     start_background_updater()
 else:
-    logging.info("External scheduling enabled - background thread disabled")
+    logging.info("External scheduling enabled - starting lightweight background thread for live price updates only")
+    # Start a lightweight background thread for live price updates only
+    def external_mode_price_updater():
+        """Lightweight price updater for external scheduling mode - only updates prices, no historical data"""
+        global last_price_update
+        last_price_update = datetime.now() - timedelta(minutes=16)  # Trigger first update soon
+        
+        while True:
+            try:
+                time.sleep(30)  # 30-second intervals for live price updates
+                with app.app_context():
+                    now = datetime.now()
+                    
+                    # Update prices every 30 seconds for live dashboard
+                    time_since_price_update = (now - last_price_update).total_seconds()
+                    if time_since_price_update >= 30:
+                        update_all_prices()
+                        last_price_update = now
+                        logging.debug("Live price update completed (external mode)")
+                        
+            except Exception as e:
+                logging.error(f"Error in external mode price updater: {str(e)}")
+                time.sleep(30)
+    
+    # Start the lightweight updater for live prices
+    price_thread = threading.Thread(target=external_mode_price_updater, daemon=True)
+    price_thread.start()
+    logging.info("Lightweight price updater started for external scheduling mode")
 
 @app.route('/edit-investment/<platform>/<int:index>')
 def edit_investment(platform, index):
