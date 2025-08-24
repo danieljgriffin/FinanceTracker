@@ -60,12 +60,13 @@ def get_last_update_utc():
     return None
 
 def ensure_recent_prices():
-    """Ensure prices are recent (within 20 minutes) for better user experience"""
-    MAX_AGE = timedelta(minutes=20)
+    """Ensure prices are recent (within 5 minutes) for better user experience"""
+    MAX_AGE = timedelta(minutes=5)  # Reduced from 20 to 5 minutes for fresher data
     last_update = get_last_update_utc()
     
     if not last_update or datetime.now() - last_update > MAX_AGE:
-        logging.info("Prices are stale, triggering update")
+        logging.info("Prices are stale, triggering immediate update")
+        # Synchronous update to ensure fresh data on page load
         update_all_prices()
         return True
     return False
@@ -437,7 +438,7 @@ def dashboard():
     """Main dashboard showing current net worth and allocations"""
     # Ensure data is fresh when users visit
     ensure_recent_prices()
-    ensure_recent_historical_data()
+    # Note: Historical data collection only happens at scheduled times (:00, :15, :30, :45)
     
     # Check if this is a mobile device and redirect to mobile version
     user_agent = request.headers.get('User-Agent', '').lower()
@@ -698,7 +699,7 @@ def mobile_dashboard():
     """Mobile-only dashboard with Trading212-style interface"""
     # Ensure data is fresh when mobile users visit
     ensure_recent_prices()
-    ensure_recent_historical_data()
+    # Note: Historical data collection only happens at scheduled times (:00, :15, :30, :45)
     
     try:
         # Get current net worth data
