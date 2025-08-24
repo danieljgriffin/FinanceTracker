@@ -57,21 +57,21 @@
         </div>
 
         <!-- Middle Row: Net Worth Breakdown + Financial Target Progress + £1M Prediction (Equal Thirds) -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6" style="height: 646px;">
             <!-- Left Third: Net Worth Breakdown -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
-                <div class="px-6 py-5 border-b border-gray-600/30">
+            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important; height: 646px;">
+                <div class="px-6 py-4 border-b border-gray-600/30">
                     <h2 class="text-xl font-semibold text-white">Net Worth Breakdown</h2>
                 </div>
-                <div class="p-6">
+                <div class="p-4 h-full overflow-y-auto" style="height: calc(646px - 60px);">
                     {% if platform_allocations %}
-                        <div class="space-y-5">
+                        <div class="space-y-3">
                             {% for platform, amount in platform_allocations.items() %}
-                                <div class="flex items-start justify-between py-2">
+                                <div class="flex items-start justify-between py-1">
                                     <div class="flex items-center min-w-0 flex-1">
                                         <div class="w-3 h-3 rounded-full mr-3 flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
                                         <div class="min-w-0 flex-1">
-                                            <h3 class="font-medium text-white text-sm truncate">{{ platform }}</h3>
+                                            <h3 class="font-medium text-white truncate" style="font-size: 16px;">{{ platform }}</h3>
                                             <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
                                         </div>
                                     </div>
@@ -81,7 +81,7 @@
                                         {% if change_data.get('previous', 0) > 0 %}
                                             {% set change_amount = change_data.get('amount', 0) %}
                                             {% set change_percent = change_data.get('percent', 0) %}
-                                            <div class="mt-1">
+                                            <div class="mt-0.5">
                                                 {% if change_amount > 0 %}
                                                     <span class="inline-flex items-center text-green-500 text-xs font-medium privacy-sensitive">
                                                         <i class="fas fa-arrow-up mr-1"></i>
@@ -115,13 +115,13 @@
             </div>
 
             <!-- Middle Third: Financial Target Progress -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
-                <div class="px-6 py-5 border-b border-gray-600/30">
+            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important; height: 646px;">
+                <div class="px-6 py-4 border-b border-gray-600/30">
                     <h2 class="text-xl font-semibold text-white">
                         Financial Target Progress{% if next_target %} - {{ next_target.target_date.strftime('%b %Y') }} Target{% endif %}
                     </h2>
                 </div>
-                <div class="p-6">
+                <div class="p-4 h-full overflow-y-auto" style="height: calc(646px - 60px);">
                     {% if next_target %}
                     <div class="space-y-4">
                         <!-- Goal Name -->
@@ -234,8 +234,8 @@
                 </div>
 
             <!-- Right Third: £1M Prediction Chart -->
-            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important;">
-                <div class="px-6 py-5 border-b border-gray-600/30 flex items-center justify-between">
+            <div class="card" style="background: rgba(255, 255, 255, 0.05) !important; height: 646px;">
+                <div class="px-6 py-4 border-b border-gray-600/30 flex items-center justify-between">
                     <h2 class="text-xl font-semibold text-white">£1M Prediction</h2>
                     <div class="flex items-center space-x-2">
                         <button onclick="refreshPrices()" 
@@ -244,9 +244,9 @@
                         </button>
                     </div>
                 </div>
-                <div class="p-6">
-                    <div class="relative h-64 bg-gray-800/50 rounded-xl p-3 privacy-sensitive">
-                        <canvas id="millionPredictionChart" width="400" height="200"></canvas>
+                <div class="p-4 h-full overflow-y-auto" style="height: calc(646px - 60px);">
+                    <div class="relative bg-gray-800/50 rounded-xl p-3 privacy-sensitive" style="height: 200px;">
+                        <canvas id="millionPredictionChart" width="400" height="180"></canvas>
                     </div>
                     <div id="predictionChartLoading" class="text-center py-6 hidden">
                         <i class="fas fa-spinner fa-spin text-gray-400 text-xl mb-2"></i>
@@ -254,22 +254,22 @@
                     </div>
                     
                     <!-- Key Milestones -->
-                    <div class="mt-4 space-y-2 privacy-sensitive">
+                    <div class="mt-3 space-y-2 privacy-sensitive">
                         <h3 class="text-xs font-semibold text-gray-300 mb-2">Key Milestones</h3>
-                        <div class="grid grid-cols-2 gap-2 text-xs">
-                            <div id="milestone-100k" class="flex justify-between p-1.5 bg-gray-700/30 rounded text-xs">
+                        <div class="grid grid-cols-2 gap-1 text-xs">
+                            <div id="milestone-100k" class="flex justify-between p-1 bg-gray-700/30 rounded text-xs">
                                 <span class="text-gray-400">£100k:</span>
                                 <span class="text-white" id="date-100k">Calculating...</span>
                             </div>
-                            <div id="milestone-250k" class="flex justify-between p-1.5 bg-gray-700/30 rounded text-xs">
+                            <div id="milestone-250k" class="flex justify-between p-1 bg-gray-700/30 rounded text-xs">
                                 <span class="text-gray-400">£250k:</span>
                                 <span class="text-white" id="date-250k">Calculating...</span>
                             </div>
-                            <div id="milestone-500k" class="flex justify-between p-1.5 bg-gray-700/30 rounded text-xs">
+                            <div id="milestone-500k" class="flex justify-between p-1 bg-gray-700/30 rounded text-xs">
                                 <span class="text-gray-400">£500k:</span>
                                 <span class="text-white" id="date-500k">Calculating...</span>
                             </div>
-                            <div id="milestone-1m" class="flex justify-between p-1.5 bg-gray-700/30 rounded text-xs">
+                            <div id="milestone-1m" class="flex justify-between p-1 bg-gray-700/30 rounded text-xs">
                                 <span class="text-gray-400">£1M:</span>
                                 <span class="text-white" id="date-1m">Calculating...</span>
                             </div>
