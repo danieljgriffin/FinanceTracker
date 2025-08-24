@@ -72,14 +72,24 @@ def ensure_recent_prices():
     return False
 
 def ensure_recent_historical_data():
-    """Ensure historical data is recent (within 20 minutes)"""
+    """Ensure historical data has been collected recently - only at clean BST intervals"""
     MAX_AGE = timedelta(minutes=20)
     global last_historical_collection
     
     if not last_historical_collection or datetime.now() - last_historical_collection > MAX_AGE:
-        logging.info("Historical data is stale, triggering collection")
-        collect_historical_data()
-        return True
+        # Check if we're at a clean BST 15-minute interval before collecting
+        import pytz
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = datetime.now().astimezone(uk_tz)
+        current_minute = uk_now.minute
+        
+        if current_minute in [0, 15, 30, 45]:
+            logging.info(f"Historical data is stale, collecting at valid BST interval ({uk_now.strftime('%H:%M')})")
+            collect_historical_data()
+            return True
+        else:
+            logging.info(f"Historical data is stale but not at valid BST interval ({uk_now.strftime('%H:%M')}), waiting for next collection time")
+            return False
     return False
 
 def prepare_mobile_chart_data(data_manager):
