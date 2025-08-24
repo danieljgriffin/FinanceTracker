@@ -460,6 +460,9 @@ def dashboard():
     ensure_recent_prices()
     # Note: Historical data collection only happens at scheduled times (:00, :15, :30, :45)
     
+    # Force no-cache to ensure fresh content (fix browser cache issue)
+    from flask import make_response
+    
     # Check if this is a mobile device and redirect to mobile version
     user_agent = request.headers.get('User-Agent', '').lower()
     if any(device in user_agent for device in ['mobile', 'android', 'iphone', 'ipad', 'tablet']):
@@ -660,7 +663,8 @@ def dashboard():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
-        return render_template(get_template_path('dashboard.html'), 
+        # Create response with no-cache headers to prevent browser cache issues
+        response = make_response(render_template(get_template_path('dashboard.html'), 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -676,7 +680,13 @@ def dashboard():
                              next_target=next_target,
                              progress_info=progress_info,
                              upcoming_targets=upcoming_targets,
-                             is_mobile=is_mobile_device())
+                             is_mobile=is_mobile_device()))
+        
+        # Force fresh content, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
@@ -2059,6 +2069,10 @@ def live_values():
     ensure_recent_prices()
     
     try:
+        # Force database session refresh to ensure API always returns fresh data
+        from app import db
+        db.session.expire_all()
+        
         # Use the unified calculation - SINGLE SOURCE OF TRUTH
         platform_allocations = calculate_platform_totals()
         current_net_worth = sum(platform_allocations.values())
