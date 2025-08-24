@@ -669,49 +669,38 @@ def dashboard():
             logging.error(f"Error calculating next target: {str(e)}")
         
         # Create response with no-cache headers to prevent browser cache issues
+        # CLEAN TEMPLATE: Only pass essential variables for goal tracking and charts
         response = make_response(render_template(get_template_path('dashboard.html'), 
-                             current_net_worth=current_net_worth,
-                             platform_allocations=platform_allocations,
-                             platform_percentages=platform_percentages,
-                             platform_monthly_changes=platform_monthly_changes,
-                             mom_change=mom_change,
-                             mom_amount_change=mom_amount_change,
-                             yearly_increase=yearly_increase,
-                             yearly_amount_change=yearly_amount_change,
-                             platform_colors=PLATFORM_COLORS,
-                             current_date=datetime.now().strftime('%B %d, %Y'),
-                             today=datetime.now(),
-                             last_price_update=last_price_update,
+                             # Essential data for goals section
                              next_target=next_target,
                              progress_info=progress_info,
                              upcoming_targets=upcoming_targets,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
                              is_mobile=is_mobile_device()))
         
-        # Force fresh content, disable all caching
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
-        response.headers['Pragma'] = 'no-cache' 
-        response.headers['Expires'] = '0'
+        # Ultra-strong cache prevention headers
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, private'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        response.headers['Last-Modified'] = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+        response.headers['ETag'] = f'"{int(time.time())}"'
         return response
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
-        return render_template(get_template_path('dashboard.html'), 
-                             current_net_worth=0,
-                             platform_allocations={},
-                             platform_percentages={},
-                             platform_monthly_changes={},
-                             mom_change=0,
-                             mom_amount_change=0,
-                             yearly_increase=0,
-                             yearly_amount_change=0,
-                             platform_colors=PLATFORM_COLORS,
+        # Clean error response with cache prevention
+        response = make_response(render_template(get_template_path('dashboard.html'), 
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             today=datetime.now(),
-                             last_price_update=None,
                              next_target=None,
                              progress_info=None,
                              upcoming_targets=[],
-                             is_mobile=is_mobile_device())
+                             is_mobile=is_mobile_device()))
+        
+        # Apply cache prevention to error response too
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, private'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '-1'
+        return response
 
 @app.route('/mobile')
 def mobile_dashboard():
