@@ -2908,7 +2908,15 @@ def run_daily_job():
 @app.route("/tasks/run", methods=["POST", "GET"])
 def tasks_run():
     if request.method == "GET":
-        return jsonify(ok=True, hint="use POST with Authorization header", cron_token_set=bool(CRON_TOKEN)), 200
+        # Debug what environment variables we're actually getting
+        return jsonify(
+            ok=True, 
+            hint="use POST with Authorization header", 
+            cron_token_set=bool(CRON_TOKEN),
+            cron_token_value=CRON_TOKEN[:10] + "..." if CRON_TOKEN else "EMPTY",
+            external_scheduling=os.getenv("USE_EXTERNAL_SCHEDULING", "NOT_SET"),
+            all_env_vars={k: v[:10] + "..." if len(v) > 10 else v for k, v in os.environ.items() if "CRON" in k or "EXTERNAL" in k}
+        ), 200
 
     if not CRON_TOKEN:
         abort(500, "CRON_TOKEN missing on server")
@@ -2928,8 +2936,14 @@ def tasks_run():
     return jsonify(ok=True, started=job), 202
 # --- end scheduled tasks endpoint ---
 
+# Debug environment variables at startup
+logging.info(f"🔍 CRON_TOKEN at startup: {'SET' if CRON_TOKEN else 'NOT SET'}")
+logging.info(f"🔍 USE_EXTERNAL_SCHEDULING raw value: {os.environ.get('USE_EXTERNAL_SCHEDULING', 'NOT_FOUND')}")
+
 # Start background updater when app starts (only if not using external scheduling)
 USE_EXTERNAL_SCHEDULING = os.environ.get("USE_EXTERNAL_SCHEDULING", "false").lower() == "true"
+logging.info(f"🔍 External scheduling mode: {USE_EXTERNAL_SCHEDULING}")
+
 if not USE_EXTERNAL_SCHEDULING:
     start_background_updater()
 else:
