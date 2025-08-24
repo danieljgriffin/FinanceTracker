@@ -1,27 +1,27 @@
 name: Scheduled Background Tasks
 on:
   schedule:
-    # Combined jobs every 15 minutes
     - cron: "*/15 * * * *"
-    # 6-hour jobs (weekly data) at 00:01, 06:01, 12:01, 18:01
     - cron: "1 0,6,12,18 * * *"
-    # Daily jobs at 23:55 UTC (handles cleanup, daily data, monthly tracker checks)
     - cron: "55 23 * * *"
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:  # manual trigger
 
 jobs:
   scheduled-tasks:
     runs-on: ubuntu-latest
     steps:
+      - name: Show current UTC time
+        run: echo "Now: $(date -u '+%Y-%m-%d %H:%M:%S')  •  Event: ${{ github.event_name }}  •  Schedule: ${{ github.event.schedule }}"
+
       - name: 15-minute jobs (price updates + historical data)
         if: github.event.schedule == '*/15 * * * *'
         run: |
           curl -fsS -X POST \
             -H "Authorization: Bearer $CRON_TOKEN" \
             "${TASK_URL}?t=15m" || echo "15m job failed"
-        env: 
+        env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL: ${{ secrets.TASK_URL }}
+          TASK_URL:   ${{ secrets.TASK_URL }}
 
       - name: 6-hour jobs (weekly data)
         if: github.event.schedule == '1 0,6,12,18 * * *'
@@ -29,9 +29,9 @@ jobs:
           curl -fsS -X POST \
             -H "Authorization: Bearer $CRON_TOKEN" \
             "${TASK_URL}?t=6h" || echo "6h job failed"
-        env: 
+        env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL: ${{ secrets.TASK_URL }}
+          TASK_URL:   ${{ secrets.TASK_URL }}
 
       - name: Daily jobs (cleanup, daily data, tracker checks)
         if: github.event.schedule == '55 23 * * *'
@@ -39,32 +39,29 @@ jobs:
           curl -fsS -X POST \
             -H "Authorization: Bearer $CRON_TOKEN" \
             "${TASK_URL}?t=daily" || echo "Daily job failed"
-        env: 
+        env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL: ${{ secrets.TASK_URL }}
+          TASK_URL:   ${{ secrets.TASK_URL }}
 
   manual-trigger:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch'
     steps:
+      - name: Show current UTC time
+        run: echo "Now: $(date -u '+%Y-%m-%d %H:%M:%S')  •  Event: ${{ github.event_name }}  •  Schedule: ${{ github.event.schedule }}"
+
       - name: Manual trigger - run all tasks
         run: |
           echo "Running all tasks manually..."
-          
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
-            "${TASK_URL}?t=15m" || echo "15m job failed"
-          
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=15m" || echo "15m job failed"
           sleep 10
-          
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
-            "${TASK_URL}?t=6h" || echo "6h job failed"
-          
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=6h"  || echo "6h job failed"
           sleep 10
-          
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=daily" || echo "Daily job failed"
+        env:
+          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
+          TASK_URL:   ${{ secrets.TASK_URL }}
+
             "${TASK_URL}?t=daily" || echo "Daily job failed"
         env: 
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
