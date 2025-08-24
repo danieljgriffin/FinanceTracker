@@ -432,6 +432,11 @@ def calculate_platform_totals():
             # Add cash balance for this platform
             platform_total += data_manager.get_platform_cash(platform)
             
+            # DEBUG: Track the exact source of 25,925 crypto value
+            if platform == 'Crypto':
+                crypto_investments = [(inv.get('symbol', 'Unknown'), inv.get('holdings', 0), inv.get('current_price', 0), inv.get('holdings', 0) * inv.get('current_price', 0)) for inv in investments]
+                logging.error(f"🔍 CRYPTO CALCULATION: {crypto_investments}")
+                logging.error(f"🔍 CRYPTO TOTAL: £{platform_total:,.0f} (Target: should be ~25,640, NOT 25,925)")
             
             # Only include platforms with value
             if platform_total > 0:
@@ -668,117 +673,9 @@ def dashboard():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
-        # SINGLE SOURCE OF TRUTH - Use same calculation as investment manager
-        current_net_worth = calculate_current_net_worth()  # Same as "Total Portfolio Value" on investment manager
-        platform_allocations_raw = calculate_platform_totals()  # Same platform totals as investment manager
-        
-        # Sort platforms by total value (highest to lowest) for better display
-        platform_allocations = dict(sorted(platform_allocations_raw.items(), key=lambda x: x[1], reverse=True))
-        
-        # Calculate platform percentages
-        platform_percentages = {}
-        if current_net_worth > 0:
-            for platform, amount in platform_allocations.items():
-                platform_percentages[platform] = (amount / current_net_worth) * 100
-        
-        # Calculate month-on-month and yearly changes using historical data
-        mom_change = 0
-        mom_amount_change = 0
-        try:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            
-            # Map month number to month name
-            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            current_month_name = f"1st {month_names[current_month - 1]}"
-            
-            # Get current year's data
-            current_year_data = get_data_manager().get_networth_data(current_year)
-            
-            # Get current month's 1st day data
-            month_start_data = current_year_data.get(current_month_name, {})
-            month_start_total = 0
-            
-            # Calculate month start total
-            for platform, value in month_start_data.items():
-                if platform != 'total_net_worth' and isinstance(value, (int, float)):
-                    month_start_total += value
-            
-            # Calculate changes
-            if month_start_total > 0:
-                mom_amount_change = current_net_worth - month_start_total
-                mom_change = (mom_amount_change / month_start_total) * 100
-            
-        except Exception as e:
-            logging.error(f"Error calculating month-on-month change: {str(e)}")
-            mom_change = 0
-            mom_amount_change = 0
-        
-        # Calculate yearly net worth increase (current live portfolio vs 1st Jan current year)
-        yearly_increase = 0
-        yearly_amount_change = 0
-        try:
-            current_year = datetime.now().year
-            
-            # Get current year's 1st January data
-            current_year_data = get_data_manager().get_networth_data(current_year)
-            jan_total = 0
-            
-            # Get 1st Jan data
-            jan_data = current_year_data.get('1st Jan', {})
-            
-            # Calculate January total
-            for platform, value in jan_data.items():
-                if platform != 'total_net_worth' and isinstance(value, (int, float)):
-                    jan_total += value
-            
-            # Calculate changes
-            if jan_total > 0:
-                yearly_amount_change = current_net_worth - jan_total
-                yearly_increase = (yearly_amount_change / jan_total) * 100
-            
-        except Exception as e:
-            logging.error(f"Error calculating yearly increase: {str(e)}")
-            yearly_increase = 0
-            yearly_amount_change = 0
-
-        # Calculate platform monthly changes for breakdown section
-        platform_monthly_changes = {}
-        try:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
-            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-            current_month_name = f"1st {month_names[current_month - 1]}"
-            
-            current_year_data = get_data_manager().get_networth_data(current_year)
-            month_start_data = current_year_data.get(current_month_name, {})
-            
-            for platform, current_amount in platform_allocations.items():
-                previous_amount = month_start_data.get(platform, 0)
-                if isinstance(previous_amount, (int, float)) and previous_amount > 0:
-                    change_amount = current_amount - previous_amount
-                    change_percent = (change_amount / previous_amount) * 100
-                    platform_monthly_changes[platform] = {
-                        'previous': previous_amount,
-                        'amount': change_amount,
-                        'percent': change_percent
-                    }
-                else:
-                    platform_monthly_changes[platform] = {
-                        'previous': 0,
-                        'amount': 0,
-                        'percent': 0
-                    }
-        except Exception as e:
-            logging.error(f"Error calculating platform monthly changes: {str(e)}")
-            platform_monthly_changes = {}
-
         # Create response with no-cache headers to prevent browser cache issues
         response = make_response(render_template(get_template_path('dashboard.html'), 
-                             # NET WORTH DASHBOARD DATA - Same source as investment manager
-                             current_net_worth=current_net_worth,  # Same as "Total Portfolio Value"
+                             current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
                              platform_monthly_changes=platform_monthly_changes,
@@ -788,35 +685,38 @@ def dashboard():
                              yearly_amount_change=yearly_amount_change,
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
-                             # GOAL TRACKING DATA
+                             today=datetime.now(),
+                             last_price_update=last_price_update,
                              next_target=next_target,
                              progress_info=progress_info,
                              upcoming_targets=upcoming_targets,
                              is_mobile=is_mobile_device()))
         
-        # Ultra-strong cache prevention headers
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, private'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
-        response.headers['Last-Modified'] = datetime.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
-        response.headers['ETag'] = f'"{int(time.time())}"'
+        # Force fresh content, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
         return response
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
-        # Clean error response with cache prevention
-        response = make_response(render_template(get_template_path('dashboard.html'), 
+        return render_template(get_template_path('dashboard.html'), 
+                             current_net_worth=0,
+                             platform_allocations={},
+                             platform_percentages={},
+                             platform_monthly_changes={},
+                             mom_change=0,
+                             mom_amount_change=0,
+                             yearly_increase=0,
+                             yearly_amount_change=0,
+                             platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
+                             last_price_update=None,
                              next_target=None,
                              progress_info=None,
                              upcoming_targets=[],
-                             is_mobile=is_mobile_device()))
-        
-        # Apply cache prevention to error response too
-        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0, private'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '-1'
-        return response
+                             is_mobile=is_mobile_device())
 
 @app.route('/mobile')
 def mobile_dashboard():
