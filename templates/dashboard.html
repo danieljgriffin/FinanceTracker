@@ -24,15 +24,6 @@
 
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4 sm:mb-6">
-        <!-- Current Net Worth -->
-        <div class="card p-3 sm:p-4 lg:p-6">
-            <div class="flex items-center justify-between">
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Current Net Worth</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate privacy-sensitive">£{{ "{:,.2f}".format(current_net_worth) }}</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Month-on-Month Change -->
         <div class="card p-3 sm:p-4 lg:p-6">
@@ -59,71 +50,11 @@
         </div>
     </div>
 
-    <!-- Main Layout: Sidebar + Right Column -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="background: transparent !important;">
-        <!-- Net Worth Breakdown (Left Third) -->
-        <div class="card lg:col-span-1" style="background: rgba(255, 255, 255, 0.05) !important;">
-            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
-                <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
-            </div>
-            <div class="p-3 sm:p-4 lg:p-6">
-                {% if platform_allocations %}
-                    <div class="space-y-2">
-                        {% for platform, amount in platform_allocations.items() %}
-                            <div class="py-1.5">
-                                <!-- Main row with platform name and amount -->
-                                <div class="flex items-baseline justify-between">
-                                    <div class="flex items-baseline">
-                                        <div class="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0 mt-1" style="background-color: {{ platform_colors.get(platform, '#6b7280') }}"></div>
-                                        <h3 class="font-medium text-white text-base">{{ platform }}</h3>
-                                    </div>
-                                    <div class="font-bold text-white text-sm privacy-sensitive">£{{ "{:,.0f}".format(amount) }}</div>
-                                </div>
-                                
-                                <!-- Secondary row with percentage and change -->
-                                <div class="flex justify-between mt-0.5">
-                                    <div class="ml-5">
-                                        <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
-                                    </div>
-                                    <div class="text-right">
-                                        {% set change_data = platform_monthly_changes.get(platform, {}) %}
-                                        {% if change_data.get('previous', 0) > 0 %}
-                                            {% set change_amount = change_data.get('amount', 0) %}
-                                            {% set change_percent = change_data.get('percent', 0) %}
-                                            {% if change_amount > 0 %}
-                                                <span class="inline-flex items-center text-green-500 text-xs font-medium">
-                                                    <i class="fas fa-arrow-up mr-1"></i>
-                                                    +£{{ "{:,.0f}".format(change_amount) }} (+{{ "{:.1f}".format(change_percent) }}%)
-                                                </span>
-                                            {% elif change_amount < 0 %}
-                                                <span class="inline-flex items-center text-red-500 text-xs font-medium">
-                                                    <i class="fas fa-arrow-down mr-1"></i>
-                                                    -£{{ "{:,.0f}".format(-change_amount) }} ({{ "{:.1f}".format(change_percent) }}%)
-                                                </span>
-                                            {% else %}
-                                                <span class="inline-flex items-center text-gray-400 text-xs">
-                                                    <i class="fas fa-minus mr-1"></i>
-                                                    No change
-                                                </span>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-6 sm:py-8">
-                        <i class="fas fa-chart-pie text-gray-400 text-2xl sm:text-3xl lg:text-4xl mb-3 sm:mb-4"></i>
-                        <p class="text-gray-400 text-sm sm:text-base">No allocation data available</p>
-                        <p class="text-xs sm:text-sm text-gray-500">Add investments to see net worth allocation</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
+    <!-- Main Layout: Full Width -->
+    <div class="grid grid-cols-1 gap-6" style="background: transparent !important;">
 
-        <!-- Right Column: Financial Target Progress + £1M Prediction -->
-        <div class="lg:col-span-2" style="background: transparent !important;">
+        <!-- Financial Target Progress + £1M Prediction -->
+        <div style="background: transparent !important;">
             <!-- Split Section: Financial Target Progress + £1M Prediction -->
             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <!-- Left Half: Financial Target Progress -->

@@ -84,46 +84,6 @@
             </div>
         </div>
         
-        <!-- Portfolio Value -->
-        <div class="px-4 mb-6">
-            <div class="mb-2 flex items-center justify-between">
-                <span id="portfolioValue" class="text-3xl font-bold text-white">£{{ "{:,.2f}".format(current_net_worth) }}</span>
-                <button onclick="togglePrivacy()" class="ml-3 p-2 rounded-full bg-gray-800/50 hover:bg-gray-700/50 transition-colors">
-                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
-                </button>
-            </div>
-            
-            <!-- Last Updated Info -->
-            <div class="mb-4">
-                <span class="text-gray-400 text-xs">Last updated {{ last_updated.strftime('%d/%m/%Y %H:%M') if last_updated else 'Never' }}</span>
-            </div>
-            
-            <!-- Monthly and Yearly Stats -->
-            <div class="flex space-x-8 mb-2">
-                <div>
-                    <span class="text-gray-400 text-xs uppercase tracking-wide">MONTHLY</span>
-                    <div class="flex items-center space-x-1">
-                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 font-semibold text-sm">
-                            {% if mom_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(mom_amount_change) }}
-                        </span>
-                        <span class="text-{% if mom_change >= 0 %}green{% else %}red{% endif %}-400 text-xs">
-                            ({% if mom_change >= 0 %}+{% endif %}{{ "{:.1f}".format(mom_change) }}%)
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <span class="text-gray-400 text-xs uppercase tracking-wide">YEARLY</span>
-                    <div class="flex items-center space-x-1">
-                        <span class="text-{% if yoy_amount_change >= 0 %}green{% else %}red{% endif %}-400 font-semibold text-sm">
-                            {% if yoy_amount_change >= 0 %}+{% endif %}£{{ "{:,.0f}".format(yoy_amount_change) }}
-                        </span>
-                        <span class="text-{% if yoy_amount_change >= 0 %}green{% else %}red{% endif %}-400 text-xs">
-                            ({% if yoy_amount_change >= 0 %}+{% endif %}{{ "{:.1f}".format(yoy_percentage_change) }}%)
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
         
         <!-- Full Width Chart -->
         <div class="mb-6">
@@ -161,45 +121,6 @@
             </div>
         </div>
         
-        <!-- Section Tabs -->
-        <div class="px-4 mb-4">
-            <div class="flex">
-                <button class="flex-1 py-3 text-center text-white border-b-2 border-blue-400">
-                    <span class="font-medium">Net Worth Breakdown</span>
-                </button>
-            </div>
-        </div>
-        
-
-        
-        <!-- Investment List -->
-        <div class="px-4 space-y-3">
-            {% for platform, amount in platform_allocations.items() %}
-            <div class="flex items-center justify-between py-3 breakdown-item" data-platform="{{ platform }}">
-                <div class="flex items-center space-x-3">
-                    <!-- Platform Icon -->
-                    <div class="w-3 h-3 rounded-full" 
-                         style="background-color: {{ platform_colors[platform] }}">
-                    </div>
-                    
-                    <!-- Platform Info -->
-                    <div>
-                        <div class="text-white font-medium">{{ platform }}</div>
-                        <div class="text-gray-400 text-sm">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of portfolio</div>
-                    </div>
-                </div>
-                
-                <!-- Value and Change -->
-                <div class="text-right">
-                    <div class="text-white font-semibold breakdown-value">£{{ "{:,.2f}".format(amount) }}</div>
-                    {% set platform_change = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0}) %}
-                    <div class="text-{% if platform_change.amount >= 0 %}green{% else %}red{% endif %}-400 text-sm">
-                        {% if platform_change.amount >= 0 %}+{% endif %}£{{ "{:,.0f}".format(platform_change.amount) }} ({% if platform_change.percent >= 0 %}+{% endif %}{{ "{:.1f}".format(platform_change.percent) }}%)
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
     </div>
     
     <!-- Mobile Bottom Navigation -->
