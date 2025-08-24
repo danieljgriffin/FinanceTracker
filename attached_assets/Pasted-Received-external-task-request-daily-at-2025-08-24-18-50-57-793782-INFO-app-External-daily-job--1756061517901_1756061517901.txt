@@ -1,0 +1,88 @@
+Received external task request: daily at 2025-08-24 18:50:57.793782
+INFO:app:🚀 External daily job starting at 2025-08-24 18:50:57.794078
+127.0.0.1 - - [24/Aug/2025:18:50:57 +0000] "POST /tasks/run?t=daily HTTP/1.1" 202 30 "-" "curl/8.5.0"
+DEBUG:yfinance:response code=200
+DEBUG:yfinance: Exiting _make_request()
+DEBUG:yfinance:Exiting get()
+DEBUG:yfinance:get_raw_json(): https://query1.finance.yahoo.com/v7/finance/quote?
+DEBUG:yfinance:Entering get()
+DEBUG:yfinance: Entering _make_request()
+DEBUG:yfinance:url=https://query1.finance.yahoo.com/v7/finance/quote?
+DEBUG:yfinance:params={'symbols': 'VUSA.L', 'formatted': 'false'}
+DEBUG:yfinance:  Entering _get_cookie_and_crumb()
+DEBUG:yfinance:cookie_mode = 'basic'
+DEBUG:yfinance:   Entering _get_cookie_and_crumb_basic()
+DEBUG:yfinance:    Entering _get_cookie_basic()
+DEBUG:yfinance:reusing cookie
+DEBUG:yfinance:    Exiting _get_cookie_basic()
+DEBUG:yfinance:    Entering _get_crumb_basic()
+DEBUG:yfinance:reusing crumb
+DEBUG:yfinance:    Exiting _get_crumb_basic()
+DEBUG:yfinance:   Exiting _get_cookie_and_crumb_basic()
+DEBUG:yfinance:  Exiting _get_cookie_and_crumb()
+DEBUG:yfinance:response code=200
+DEBUG:yfinance: Exiting _make_request()
+DEBUG:yfinance:Exiting get()
+DEBUG:utils.price_fetcher:Price for VUSA.L: 90.8
+DEBUG:utils.price_fetcher:Currency for VUSA.L: GBP
+DEBUG:utils.price_fetcher:Price already in GBP: 90.8
+DEBUG:yfinance:get_raw_json(): https://query2.finance.yahoo.com/v10/finance/quoteSummary/MCD
+DEBUG:yfinance:Entering get()
+DEBUG:yfinance: Entering _make_request()
+DEBUG:yfinance:url=https://query2.finance.yahoo.com/v10/finance/quoteSummary/MCD
+DEBUG:yfinance:params={'modules': 'financialData,quoteType,defaultKeyStatistics,assetProfile,summaryDetail', 'corsDomain': 'finance.yahoo.com', 'formatted': 'false', 'symbol': 'MCD'}
+DEBUG:yfinance:  Entering _get_cookie_and_crumb()
+DEBUG:yfinance:cookie_mode = 'basic'
+DEBUG:yfinance:   Entering _get_cookie_and_crumb_basic()
+DEBUG:yfinance:    Entering _get_cookie_basic()
+DEBUG:yfinance:reusing cookie
+DEBUG:yfinance:    Exiting _get_cookie_basic()
+DEBUG:yfinance:    Entering _get_crumb_basic()
+DEBUG:yfinance:reusing crumb
+DEBUG:yfinance:    Exiting _get_crumb_basic()
+DEBUG:yfinance:   Exiting _get_cookie_and_crumb_basic()
+DEBUG:yfinance:  Exiting _get_cookie_and_crumb()
+DEBUG:yfinance:response code=200
+DEBUG:yfinance: Exiting _make_request()
+DEBUG:yfinance:Exiting get()
+DEBUG:yfinance:get_raw_json(): https://query1.finance.yahoo.com/v7/finance/quote?
+DEBUG:yfinance:Entering get()
+DEBUG:yfinance: Entering _make_request()
+DEBUG:yfinance:url=https://query1.finance.yahoo.com/v7/finance/quote?
+DEBUG:yfinance:params={'symbols': 'MCD', 'formatted': 'false'}
+DEBUG:yfinance:  Entering _get_cookie_and_crumb()
+DEBUG:yfinance:cookie_mode = 'basic'
+DEBUG:yfinance:   Entering _get_cookie_and_crumb_basic()
+DEBUG:yfinance:    Entering _get_cookie_basic()
+DEBUG:yfinance:reusing cookie
+DEBUG:yfinance:    Exiting _get_cookie_basic()
+DEBUG:yfinance:    Entering _get_crumb_basic()
+DEBUG:yfinance:reusing crumb
+DEBUG:yfinance:    Exiting _get_crumb_basic()
+DEBUG:yfinance:   Exiting _get_cookie_and_crumb_basic()
+DEBUG:yfinance:  Exiting _get_cookie_and_crumb()
+INFO:root:Daily historical data collected: £115,522.71 at 19:50
+DEBUG:yfinance:response code=200
+DEBUG:yfinance: Exiting _make_request()
+DEBUG:yfinance:Exiting get()
+DEBUG:utils.price_fetcher:Price for MCD: 314.07
+DEBUG:utils.price_fetcher:Currency for MCD: USD
+DEBUG:utils.price_fetcher:Converted 314.07 USD to 232.17939771006814 GBP
+DEBUG:yfinance:get_raw_json(): https://query2.finance.yahoo.com/v10/finance/quoteSummary/XDEW.L
+DEBUG:yfinance:Entering get()
+DEBUG:yfinance: Entering _make_request()
+DEBUG:yfinance:url=https://query2.finance.yahoo.com/v10/finance/quoteSummary/XDEW.L
+DEBUG:yfinance:params={'modules': 'financialData,quoteType,defaultKeyStatistics,assetProfile,summaryDetail', 'corsDomain': 'finance.yahoo.com', 'formatted': 'false', 'symbol': 'XDEW.L'}
+DEBUG:yfinance:  Entering _get_cookie_and_crumb()
+DEBUG:yfinance:cookie_mode = 'basic'
+DEBUG:yfinance:   Entering _get_cookie_and_crumb_basic()
+DEBUG:yfinance:    Entering _get_cookie_basic()
+DEBUG:yfinance:reusing cookie
+DEBUG:yfinance:    Exiting _get_cookie_basic()
+DEBUG:yfinance:    Entering _get_crumb_basic()
+DEBUG:yfinance:reusing crumb
+DEBUG:yfinance:    Exiting _get_crumb_basic()
+DEBUG:yfinance:   Exiting _get_cookie_and_crumb_basic()
+DEBUG:yfinance:  Exiting _get_cookie_and_crumb()
+INFO:root:Historical data cleanup completed
+INFO:app:✅ External daily job completed at 2025-08-24 18:50:58.229204

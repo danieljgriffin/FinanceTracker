@@ -528,20 +528,40 @@ class PriceFetcher:
                 'Accept-Language': 'en-US,en;q=0.9'
             }
             
-            response = requests.get(url, headers=headers, timeout=15)
-            
-            if response.status_code == 200:
-                data = response.json()
-                
-                for coin_id, price_data in data.items():
-                    if 'gbp' in price_data and coin_id in symbol_to_id:
-                        price_gbp = float(price_data['gbp'])
-                        if price_gbp > 0 and price_gbp < 1000000:
-                            symbol = symbol_to_id[coin_id]
-                            prices[symbol] = price_gbp
-                            self.logger.info(f"Batch fetched {symbol}: £{price_gbp}")
-            else:
-                self.logger.error(f"Batch crypto fetch failed with status {response.status_code}")
+            # Retry logic for rate limiting
+            for attempt in range(3):
+                try:
+                    if attempt > 0:
+                        wait_time = 2 ** attempt  # Exponential backoff: 2, 4 seconds
+                        self.logger.warning(f"Batch crypto fetch rate limited, waiting {wait_time}s before retry {attempt + 1}/3")
+                        time.sleep(wait_time)
+                    
+                    response = requests.get(url, headers=headers, timeout=15)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        for coin_id, price_data in data.items():
+                            if 'gbp' in price_data and coin_id in symbol_to_id:
+                                price_gbp = float(price_data['gbp'])
+                                if price_gbp > 0 and price_gbp < 1000000:
+                                    symbol = symbol_to_id[coin_id]
+                                    prices[symbol] = price_gbp
+                                    self.logger.info(f"Batch fetched {symbol}: £{price_gbp}")
+                        break  # Success, exit retry loop
+                        
+                    elif response.status_code == 429:
+                        if attempt == 2:  # Last attempt
+                            self.logger.error(f"Batch crypto fetch failed with rate limit after 3 attempts")
+                        continue  # Try again
+                    else:
+                        self.logger.error(f"Batch crypto fetch failed with status {response.status_code}")
+                        break  # Don't retry for other errors
+                        
+                except requests.RequestException as e:
+                    if attempt == 2:
+                        self.logger.error(f"Batch crypto fetch request failed after 3 attempts: {str(e)}")
+                    continue
                 
         except Exception as e:
             self.logger.error(f"Error in batch crypto fetch: {str(e)}")
