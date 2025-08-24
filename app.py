@@ -404,33 +404,43 @@ def app_icons(filename):
 last_price_update = None
 price_update_thread = None
 
-def calculate_current_net_worth():
-    """Calculate current net worth using stored investment prices (consistent across dashboard and tracker)"""
-    data_manager = get_data_manager()
-    investments_data = get_data_manager().get_investments_data()
-    current_net_worth = 0
-    
-    # Calculate platform allocations using current investment values
-    for platform, investments in investments_data.items():
-        if platform.endswith('_cash'):
-            continue  # Skip cash keys only
+def calculate_platform_totals():
+    """Calculate total value for each platform - SINGLE SOURCE OF TRUTH"""
+    try:
+        data_manager = get_data_manager()
+        investments_data = data_manager.get_investments_data()
+        
+        platform_totals = {}
+        
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash'):
+                continue  # Skip cash keys
+                
+            platform_total = 0
             
-        platform_total = 0
+            # Calculate investment values (skip for Cash platform since it has no investments)
+            if platform != 'Cash':
+                platform_total = sum(
+                    investment.get('holdings', 0) * investment.get('current_price', 0)
+                    for investment in investments
+                )
+            
+            # Add cash balance for this platform
+            platform_total += data_manager.get_platform_cash(platform)
+            
+            # Only include platforms with value
+            if platform_total > 0:
+                platform_totals[platform] = platform_total
         
-        # Calculate investment values (skip for Cash platform since it has no investments)
-        if platform != 'Cash':
-            platform_total = sum(
-                investment.get('holdings', 0) * investment.get('current_price', 0)
-                for investment in investments
-            )
-        
-        # Add cash balance (for all platforms including Cash)
-        platform_total += get_data_manager().get_platform_cash(platform)
-        
-        if platform_total > 0:  # Only include platforms with value
-            current_net_worth += platform_total
-    
-    return current_net_worth
+        return platform_totals
+    except Exception as e:
+        logging.error(f"Error calculating platform totals: {str(e)}")
+        return {}
+
+def calculate_current_net_worth():
+    """Calculate current net worth by summing all platform totals"""
+    platform_totals = calculate_platform_totals()
+    return sum(platform_totals.values())
 
 # Investment platform color scheme
 PLATFORM_COLORS = {
@@ -476,30 +486,9 @@ def dashboard():
                             except:
                                 pass
         
-        # Calculate both current net worth AND platform allocations using shared function
-        platform_allocations = {}
-        current_net_worth = 0
-        
-        # SINGLE calculation source to prevent discrepancies
-        for platform, investments in investments_data.items():
-            if platform.endswith('_cash'):
-                continue  # Skip cash keys only
-                
-            platform_total = 0
-            
-            # Calculate investment values (skip for Cash platform since it has no investments)
-            if platform != 'Cash':
-                platform_total = sum(
-                    investment.get('holdings', 0) * investment.get('current_price', 0)
-                    for investment in investments
-                )
-            
-            # Add cash balance (for all platforms including Cash)
-            platform_total += get_data_manager().get_platform_cash(platform)
-            
-            if platform_total > 0:  # Only include platforms with value
-                platform_allocations[platform] = platform_total
-                current_net_worth += platform_total
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
         
         # Sort platform allocations by value (high to low, with cash at bottom)
         sorted_platforms = []
@@ -718,29 +707,9 @@ def mobile_dashboard():
         networth_data = get_data_manager().get_networth_data()
         investments_data = get_data_manager().get_investments_data()
         
-        # Calculate current net worth using shared function
-        current_net_worth = calculate_current_net_worth()
-        
-        # Calculate platform allocations using current investment values
-        platform_allocations = {}
-        for platform, investments in investments_data.items():
-            if platform.endswith('_cash'):
-                continue  # Skip cash keys only
-                
-            platform_total = 0
-            
-            # Calculate investment values (skip for Cash platform since it has no investments)
-            if platform != 'Cash':
-                platform_total = sum(
-                    investment.get('holdings', 0) * investment.get('current_price', 0)
-                    for investment in investments
-                )
-            
-            # Add cash balance (for all platforms including Cash)
-            platform_total += get_data_manager().get_platform_cash(platform)
-            
-            if platform_total > 0:  # Only include platforms with value
-                platform_allocations[platform] = platform_total
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
         
         # Sort platform allocations by value (high to low, with cash at bottom)
         sorted_platforms = []
@@ -906,15 +875,16 @@ def mobile_investments():
         platform_totals = {}
         platform_colors = PLATFORM_COLORS
         
+        # Get platform totals using unified calculation
+        platform_totals_dict = calculate_platform_totals()
+        
         for platform, platform_investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys
             
-            # Use list comprehensions for better performance
-            platform_investment_total = sum(
-                investment.get('holdings', 0) * investment.get('current_price', 0)
-                for investment in platform_investments
-            )
+            # Get the total from our unified calculation instead of recalculating
+            platform_total_value = platform_totals_dict.get(platform, 0)
+            platform_investment_total = platform_total_value - get_data_manager().get_platform_cash(platform)
             platform_amount_spent = sum(
                 investment.get('amount_spent', 0)
                 for investment in platform_investments
@@ -1392,15 +1362,16 @@ def investment_manager():
         total_cash = 0
         platform_totals = {}
         
+        # Get platform totals using unified calculation
+        platform_totals_dict = calculate_platform_totals()
+        
         for platform, platform_investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys
             
-            # Use list comprehensions for better performance
-            platform_investment_total = sum(
-                investment.get('holdings', 0) * investment.get('current_price', 0)
-                for investment in platform_investments
-            )
+            # Get the total from our unified calculation instead of recalculating
+            platform_total_value = platform_totals_dict.get(platform, 0)
+            platform_investment_total = platform_total_value - get_data_manager().get_platform_cash(platform)
             platform_amount_spent = sum(
                 investment.get('amount_spent', 0)
                 for investment in platform_investments
@@ -2080,33 +2051,9 @@ def live_values():
     ensure_recent_prices()
     
     try:
-        # Use the SAME unified calculation logic as the dashboard route
-        data_manager = get_data_manager()
-        investments_data = data_manager.get_investments_data()
-        
-        current_net_worth = 0
-        platform_allocations = {}
-        
-        # Calculate exactly the same way as dashboard route (line 483-505)
-        for platform, investments in investments_data.items():
-            if platform.endswith('_cash'):
-                continue  # Skip cash keys only
-                
-            platform_total = 0
-            
-            # Calculate investment values (skip for Cash platform since it has no investments)
-            if platform != 'Cash':
-                platform_total = sum(
-                    investment.get('holdings', 0) * investment.get('current_price', 0)
-                    for investment in investments
-                )
-            
-            # Add cash balance (for all platforms including Cash)
-            platform_total += data_manager.get_platform_cash(platform)
-            
-            if platform_total > 0:  # Only include platforms with value
-                platform_allocations[platform] = platform_total
-                current_net_worth += platform_total
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
         
         # Get last updated time
         global last_price_update
