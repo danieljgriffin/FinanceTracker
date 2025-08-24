@@ -2317,6 +2317,15 @@ def realtime_chart_data():
         logging.error(f"Error getting real-time chart data: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/manual-collection')
+def manual_collection():
+    """Manually trigger historical data collection"""
+    try:
+        collect_historical_data()
+        return jsonify({'success': True, 'message': 'Data collection completed'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/api/price-status')
 def price_status():
     """API endpoint to check when prices were last updated"""
