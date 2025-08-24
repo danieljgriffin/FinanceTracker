@@ -1953,28 +1953,26 @@ def background_price_updater():
                 else:
                     logging.debug(f"⏳ Not collection time - current minute: {current_minute}, next at: {[x for x in [0,15,30,45] if x > current_minute] or [0]}")
                 
-                # Check if we're on a 6-hour boundary for weekly data (00:01, 6am, noon, 6pm)
-                # Moved midnight collection to 00:01 to avoid conflict with 15-minute collection at 00:00
+                # Check if we're on a 6-hour boundary for weekly data (00:00, 6am, noon, 6pm)
+                # Midnight collection at 00:00 for proper end-of-day snapshots
                 current_hour = uk_now.hour
-                is_6hour_collection_time = ((current_hour == 0 and current_minute == 1) or 
-                                           (current_hour in [6, 12, 18] and current_minute == 0))
+                is_6hour_collection_time = (current_hour in [0, 6, 12, 18] and current_minute == 0)
                 
                 if is_6hour_collection_time:
                     collect_weekly_historical_data()
                     logging.info(f"✅ Weekly historical collection completed at: {uk_now.strftime('%H:%M')} BST")
                 
-                # Check if we're on a 12-hour boundary for monthly data (00:02, noon)
-                # Moved midnight collection to 00:02 to avoid conflict with other collections
-                is_12hour_collection_time = ((current_hour == 0 and current_minute == 2) or 
-                                            (current_hour == 12 and current_minute == 0))
+                # Check if we're on a 12-hour boundary for monthly data (00:00, noon)
+                # Midnight collection at 00:00 for proper end-of-day snapshots
+                is_12hour_collection_time = (current_hour in [0, 12] and current_minute == 0)
                 
                 if is_12hour_collection_time:
                     collect_monthly_historical_data()
                     logging.info(f"✅ Monthly historical collection completed at: {uk_now.strftime('%H:%M')} BST")
                 
-                # Check if we're at end of day for daily data (23:59)
-                # Moved to 23:59 to capture true end-of-day and avoid midnight conflicts
-                is_daily_collection_time = current_hour == 23 and current_minute == 59
+                # Check if we're at end of day for daily data (00:00)
+                # Midnight collection for proper end-of-day snapshots
+                is_daily_collection_time = current_hour == 0 and current_minute == 0
                 
                 if is_daily_collection_time:
                     collect_daily_historical_data()
