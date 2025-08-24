@@ -466,6 +466,10 @@ def dashboard():
         return mobile_dashboard()
     
     try:
+        # Force database session refresh to ensure fresh data on every page load
+        from app import db
+        db.session.expire_all()
+        
         # Get current net worth data
         data_manager = get_data_manager()
         networth_data = get_data_manager().get_networth_data()
@@ -702,6 +706,10 @@ def mobile_dashboard():
     # Note: Historical data collection only happens at scheduled times (:00, :15, :30, :45)
     
     try:
+        # Force database session refresh to ensure fresh data on every page load
+        from app import db
+        db.session.expire_all()
+        
         # Get current net worth data
         data_manager = get_data_manager()
         networth_data = get_data_manager().get_networth_data()
