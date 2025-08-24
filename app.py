@@ -2853,13 +2853,67 @@ def start_background_updater():
         price_update_thread.start()
         logging.info("Background price updater started")
 
-# Register tasks blueprint for external scheduling
-try:
-    from tasks import tasks_bp
-    app.register_blueprint(tasks_bp)
-    logging.info("Tasks blueprint registered successfully")
-except ImportError as e:
-    logging.warning(f"Could not import tasks blueprint: {e}")
+# --- scheduled tasks endpoint ---
+import os, threading
+from flask import request, abort, jsonify
+from datetime import datetime
+
+CRON_TOKEN = os.getenv("CRON_TOKEN", "")
+
+def run_15m_job():
+    with app.app_context():
+        # Run price updates and historical data collection
+        update_all_prices()
+        collect_historical_data()
+        app.logger.info("15m job ran at %s", datetime.utcnow())
+
+def run_6h_job():
+    with app.app_context():
+        # Run weekly historical data collection
+        collect_weekly_historical_data()
+        app.logger.info("6h job ran at %s", datetime.utcnow())
+
+def run_daily_job():
+    with app.app_context():
+        # Run daily cleanup and monthly tracker checks
+        collect_daily_historical_data()
+        cleanup_old_historical_data()
+        
+        # Check if it's the 1st of the month for monthly tracker
+        import pytz
+        uk_tz = pytz.timezone('Europe/London')
+        uk_now = datetime.now().astimezone(uk_tz)
+        if uk_now.day == 1 and uk_now.hour == 0:  # 1st of month at midnight
+            auto_populate_monthly_tracker()
+        
+        # Check if it's December 31st for year-end tracker
+        if uk_now.month == 12 and uk_now.day == 31 and uk_now.hour == 23:  # Dec 31st at 11 PM
+            auto_populate_dec31_tracker()
+            
+        app.logger.info("daily job ran at %s", datetime.utcnow())
+
+# temporarily allow GET for testing; keep POST for real use
+@app.route("/tasks/run", methods=["POST", "GET"])
+def tasks_run():
+    if request.method == "GET":
+        return jsonify(ok=True, hint="use POST with Authorization header"), 200
+
+    if not CRON_TOKEN:
+        abort(500, "CRON_TOKEN missing on server")
+
+    auth = request.headers.get("Authorization", "")
+    if auth != f"Bearer {CRON_TOKEN}":
+        abort(401)
+
+    job = request.args.get("t")
+    mapping = {"15m": run_15m_job, "6h": run_6h_job, "daily": run_daily_job}
+    fn = mapping.get(job)
+    if not fn:
+        abort(400, "unknown task")
+
+    threading.Thread(target=fn, daemon=True).start()
+    return jsonify(ok=True, started=job), 202
+# --- end scheduled tasks endpoint ---
 
 # Start background updater when app starts (only if not using external scheduling)
 USE_EXTERNAL_SCHEDULING = os.environ.get("USE_EXTERNAL_SCHEDULING", "false").lower() == "true"
