@@ -670,7 +670,10 @@ def dashboard():
         
         # SINGLE SOURCE OF TRUTH - Use same calculation as investment manager
         current_net_worth = calculate_current_net_worth()  # Same as "Total Portfolio Value" on investment manager
-        platform_allocations = calculate_platform_totals()  # Same platform totals as investment manager
+        platform_allocations_raw = calculate_platform_totals()  # Same platform totals as investment manager
+        
+        # Sort platforms by total value (highest to lowest) for better display
+        platform_allocations = dict(sorted(platform_allocations_raw.items(), key=lambda x: x[1], reverse=True))
         
         # Calculate platform percentages
         platform_percentages = {}
