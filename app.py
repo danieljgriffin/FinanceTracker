@@ -351,6 +351,11 @@ def sw():
     return send_from_directory("static", "service-worker.js",
                                mimetype="application/javascript")
 
+@app.route("/apple-touch-icon.png")
+def apple_touch_icon():
+    return send_from_directory("static", "apple-touch-icon.png",
+                               mimetype="image/png")
+
 @app.route('/static/icons/<path:filename>')
 def app_icons(filename):
     return send_from_directory('static/icons', filename)
