@@ -1,0 +1,129 @@
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 3/3
+INFO:utils.price_fetcher:Batch failed, trying individual crypto calls...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for BTC-USD
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin,ethereum,fetch-ai,solana,tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 3/3
+INFO:utils.price_fetcher:Batch failed, trying individual crypto calls...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for BTC-USD
+==> Detected service running on port 10000
+==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin,ethereum,fetch-ai,solana,tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 3/3
+INFO:utils.price_fetcher:Batch failed, trying individual crypto calls...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for BTC-USD
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+INFO:root:Batch updating prices for 30 investments
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin,ethereum,fetch-ai,solana,tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 1/3
+WARNING:utils.price_fetcher:CoinGecko rate limited, waiting 10s before retry 2/3
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for ETH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin,ethereum,fetch-ai,solana,tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 2/3
+WARNING:utils.price_fetcher:CoinGecko rate limited, waiting 30s before retry 3/3
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for ETH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for ETH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for ETH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin,ethereum,fetch-ai,solana,tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:CoinGecko rate limit hit, attempt 3/3
+INFO:utils.price_fetcher:Batch failed, trying individual crypto calls...
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for BTC-USD
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for FET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for FET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for FET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=bitcoin&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for FET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for ETH
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for SOL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for SOL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for SOL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=ethereum&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for SOL
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for FET
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for TRX
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=solana&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for TRX
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for TRX
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=fetch-ai&vs_currencies=gbp HTTP/1.1" 429 187
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): api.coingecko.com:443
+DEBUG:urllib3.connectionpool:https://api.coingecko.com:443 "GET /api/v3/simple/price?ids=tron&vs_currencies=gbp HTTP/1.1" 429 187
+WARNING:utils.price_fetcher:Individual crypto fallback rate limited, waiting 30s for TRX
