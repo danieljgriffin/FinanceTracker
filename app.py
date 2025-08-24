@@ -2865,7 +2865,19 @@ def run_15m_job():
             # Run price updates and historical data collection
             app.logger.info("🚀 External 15m job starting at %s", datetime.utcnow())
             update_all_prices()
-            collect_historical_data()
+            
+            # Only collect historical data if we're on a clean BST 15-minute boundary
+            import pytz
+            uk_tz = pytz.timezone('Europe/London')
+            uk_now = datetime.now().astimezone(uk_tz)
+            current_minute = uk_now.minute
+            
+            if current_minute in [0, 15, 30, 45]:
+                app.logger.info("✅ External call at valid BST interval (%s), collecting data", uk_now.strftime('%H:%M'))
+                collect_historical_data()
+            else:
+                app.logger.info("⏭️ External call at invalid BST interval (%s), skipping historical collection", uk_now.strftime('%H:%M'))
+                
             app.logger.info("✅ External 15m job completed at %s", datetime.utcnow())
         except Exception as e:
             app.logger.error("❌ External 15m job failed: %s", str(e))
