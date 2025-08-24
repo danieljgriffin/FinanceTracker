@@ -34,9 +34,9 @@ db.init_app(app)
 # Initialize utilities with caching
 price_fetcher = PriceFetcher()
 
-# Add simple price cache for performance
+# Add simple price cache for performance - DISABLED TO ENSURE FRESH DATA
 price_cache = {}
-CACHE_DURATION = 300  # 5 minutes cache for API calls
+CACHE_DURATION = 0  # Disabled: was 300 (5 minutes) - now always fresh data
 
 # Global variable to track last price update
 last_price_update = None
