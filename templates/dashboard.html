@@ -86,18 +86,8 @@
                                     <!-- Progress Fill with enhanced styling -->
                                     <div class="h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
                                          style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb) !important;">
-                                        <!-- Current Value Inside Bar -->
-                                        {% if progress_info.progress_percentage > 20 %}
-                                        <span class="text-white font-semibold text-sm drop-shadow-lg privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
-                                        {% endif %}
                                     </div>
                                     
-                                    <!-- Current Value Outside Bar (if bar too small) -->
-                                    {% if progress_info.progress_percentage <= 20 %}
-                                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
-                                    </div>
-                                    {% endif %}
                                     
                                     <!-- Target Amount at End -->
                                     <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
@@ -783,11 +773,7 @@
                     // Update current net worth with smooth animation
                     const netWorthElement = document.querySelector('.privacy-sensitive');
                     if (netWorthElement && netWorthElement.textContent.includes('£')) {
-                        const currentText = netWorthElement.textContent;
-                        const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
-                        const newValue = data.current_net_worth;
-                        
-                        const change = Math.abs(currentValue - newValue);
+                        // Net worth animation removed
                         console.log(`Net worth change: £${change.toFixed(2)} (from £${currentValue.toFixed(2)} to £${newValue.toFixed(2)})`);
                         
                         if (change > 0.01) { // Only animate if there's a meaningful change
@@ -921,8 +907,6 @@
         const ctx = document.getElementById('millionPredictionChart');
         if (!ctx) return;
         
-        // Get current net worth from the page
-        const currentNetWorth = {{ current_net_worth }};
         const targetAmount = 1000000;
         
         const prediction = calculateCompoundInterestData(currentNetWorth, monthlyInvestment, annualReturn, targetAmount);
@@ -1084,10 +1068,8 @@
                 });
                 element.textContent = dateStr;
                 
-                // Mark as achieved if current net worth is already above this milestone
-                const currentNetWorth = {{ current_net_worth }};
+                // Milestone achievement checking removed
                 const milestoneParent = element.closest('div');
-                if (currentNetWorth >= parseInt(amount)) {
                     milestoneParent.classList.remove('bg-gray-700/30');
                     milestoneParent.classList.add('bg-green-600/20', 'border', 'border-green-500/30');
                     element.textContent = 'Achieved!';
