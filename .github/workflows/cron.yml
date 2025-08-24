@@ -1,68 +1,64 @@
 name: Scheduled Background Tasks
+
 on:
   schedule:
-    - cron: "*/15 * * * *"
-    - cron: "1 0,6,12,18 * * *"
-    - cron: "55 23 * * *"
-  workflow_dispatch:  # manual trigger
+    - cron: "*/15 * * * *"      # every 15 minutes (UTC)
+    - cron: "1 0,6,12,18 * * *" # 00:01, 06:01, 12:01, 18:01 (UTC)
+    - cron: "55 23 * * *"       # 23:55 (UTC)
+  workflow_dispatch:            # allow manual run
 
 jobs:
-  scheduled-tasks:
+  every_15m:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/15 * * * *'
     runs-on: ubuntu-latest
     steps:
       - name: Show current UTC time
-        run: echo "Now: $(date -u '+%Y-%m-%d %H:%M:%S')  •  Event: ${{ github.event_name }}  •  Schedule: ${{ github.event.schedule }}"
-
-      - name: 15-minute jobs (price updates + historical data)
-        if: github.event.schedule == '*/15 * * * *'
+        shell: bash
         run: |
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
-            "${TASK_URL}?t=15m" || echo "15m job failed"
+          echo "Now     : $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Event   : ${{ github.event_name }}"
+          echo "Schedule: ${{ github.event.schedule }}"
+      - name: Call 15m endpoint
+        shell: bash
         env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
           TASK_URL:   ${{ secrets.TASK_URL }}
-
-      - name: 6-hour jobs (weekly data)
-        if: github.event.schedule == '1 0,6,12,18 * * *'
         run: |
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
-            "${TASK_URL}?t=6h" || echo "6h job failed"
-        env:
-          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL:   ${{ secrets.TASK_URL }}
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=15m"
 
-      - name: Daily jobs (cleanup, daily data, tracker checks)
-        if: github.event.schedule == '55 23 * * *'
-        run: |
-          curl -fsS -X POST \
-            -H "Authorization: Bearer $CRON_TOKEN" \
-            "${TASK_URL}?t=daily" || echo "Daily job failed"
-        env:
-          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL:   ${{ secrets.TASK_URL }}
-
-  manual-trigger:
+  every_6h:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '1 0,6,12,18 * * *'
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'
     steps:
       - name: Show current UTC time
-        run: echo "Now: $(date -u '+%Y-%m-%d %H:%M:%S')  •  Event: ${{ github.event_name }}  •  Schedule: ${{ github.event.schedule }}"
-
-      - name: Manual trigger - run all tasks
+        shell: bash
         run: |
-          echo "Running all tasks manually..."
-          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=15m" || echo "15m job failed"
-          sleep 10
-          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=6h"  || echo "6h job failed"
-          sleep 10
-          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=daily" || echo "Daily job failed"
+          echo "Now     : $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Event   : ${{ github.event_name }}"
+          echo "Schedule: ${{ github.event.schedule }}"
+      - name: Call 6h endpoint
+        shell: bash
         env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
           TASK_URL:   ${{ secrets.TASK_URL }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=6h"
 
-            "${TASK_URL}?t=daily" || echo "Daily job failed"
-        env: 
+  daily:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '55 23 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show current UTC time
+        shell: bash
+        run: |
+          echo "Now     : $(date -u '+%Y-%m-%d %H:%M:%S')"
+          echo "Event   : ${{ github.event_name }}"
+          echo "Schedule: ${{ github.event.schedule }}"
+      - name: Call daily endpoint
+        shell: bash
+        env:
           CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
-          TASK_URL: ${{ secrets.TASK_URL }}
+          TASK_URL:   ${{ secrets.TASK_URL }}
+        run: |
+          curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=daily"
+
