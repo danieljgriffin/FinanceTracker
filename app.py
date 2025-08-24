@@ -10,6 +10,8 @@ import json
 import threading
 import time
 
+# Tasks blueprint will be imported later to avoid circular imports
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -49,6 +51,35 @@ from datetime import timedelta
 def get_data_manager():
     """Get data manager instance (lazy initialization)"""
     return DatabaseDataManager()
+
+def get_last_update_utc():
+    """Get the last price update time in UTC"""
+    global last_price_update
+    if last_price_update:
+        return last_price_update
+    return None
+
+def ensure_recent_prices():
+    """Ensure prices are recent (within 20 minutes) for better user experience"""
+    MAX_AGE = timedelta(minutes=20)
+    last_update = get_last_update_utc()
+    
+    if not last_update or datetime.now() - last_update > MAX_AGE:
+        logging.info("Prices are stale, triggering update")
+        update_all_prices()
+        return True
+    return False
+
+def ensure_recent_historical_data():
+    """Ensure historical data is recent (within 20 minutes)"""
+    MAX_AGE = timedelta(minutes=20)
+    global last_historical_collection
+    
+    if not last_historical_collection or datetime.now() - last_historical_collection > MAX_AGE:
+        logging.info("Historical data is stale, triggering collection")
+        collect_historical_data()
+        return True
+    return False
 
 def prepare_mobile_chart_data(data_manager):
     """Prepare chart data for mobile dashboard using real monthly data"""
@@ -404,6 +435,10 @@ PLATFORM_COLORS = {
 @app.route('/')
 def dashboard():
     """Main dashboard showing current net worth and allocations"""
+    # Ensure data is fresh when users visit
+    ensure_recent_prices()
+    ensure_recent_historical_data()
+    
     # Check if this is a mobile device and redirect to mobile version
     user_agent = request.headers.get('User-Agent', '').lower()
     if any(device in user_agent for device in ['mobile', 'android', 'iphone', 'ipad', 'tablet']):
@@ -661,6 +696,10 @@ def dashboard():
 @app.route('/mobile')
 def mobile_dashboard():
     """Mobile-only dashboard with Trading212-style interface"""
+    # Ensure data is fresh when mobile users visit
+    ensure_recent_prices()
+    ensure_recent_historical_data()
+    
     try:
         # Get current net worth data
         data_manager = get_data_manager()
@@ -2027,6 +2066,9 @@ def test_daily_collection():
 @app.route('/api/live-values')
 def live_values():
     """API endpoint for live value updates"""
+    # Check for fresh data before serving live values
+    ensure_recent_prices()
+    
     try:
         # Get current net worth data
         current_net_worth = calculate_current_net_worth()
@@ -2083,6 +2125,9 @@ def manual_collect_historical_data():
 @app.route('/api/realtime-chart-data')
 def realtime_chart_data():
     """API endpoint for real-time historical chart data - supports multiple time ranges"""
+    # Ensure historical data is fresh for real-time charts
+    ensure_recent_historical_data()
+    
     try:
         from models import HistoricalNetWorth, WeeklyHistoricalNetWorth, MonthlyHistoricalNetWorth, DailyHistoricalNetWorth
         import pytz
@@ -2317,6 +2362,9 @@ def price_status():
 @app.route('/api/networth-chart-data')
 def networth_chart_data():
     """API endpoint to get net worth chart data for different years and historical time ranges"""
+    # Ensure historical data is fresh for chart display
+    ensure_recent_historical_data()
+    
     try:
         year_param = request.args.get('year', '2025')
         chart_type = request.args.get('type', 'line')  # line or bar
@@ -2805,8 +2853,20 @@ def start_background_updater():
         price_update_thread.start()
         logging.info("Background price updater started")
 
-# Start background updater when app starts
-start_background_updater()
+# Register tasks blueprint for external scheduling
+try:
+    from tasks import tasks_bp
+    app.register_blueprint(tasks_bp)
+    logging.info("Tasks blueprint registered successfully")
+except ImportError as e:
+    logging.warning(f"Could not import tasks blueprint: {e}")
+
+# Start background updater when app starts (only if not using external scheduling)
+USE_EXTERNAL_SCHEDULING = os.environ.get("USE_EXTERNAL_SCHEDULING", "false").lower() == "true"
+if not USE_EXTERNAL_SCHEDULING:
+    start_background_updater()
+else:
+    logging.info("External scheduling enabled - background thread disabled")
 
 @app.route('/edit-investment/<platform>/<int:index>')
 def edit_investment(platform, index):
