@@ -432,11 +432,6 @@ def calculate_platform_totals():
             # Add cash balance for this platform
             platform_total += data_manager.get_platform_cash(platform)
             
-            # DEBUG: Track the exact source of 25,925 crypto value
-            if platform == 'Crypto':
-                crypto_investments = [(inv.get('symbol', 'Unknown'), inv.get('holdings', 0), inv.get('current_price', 0), inv.get('holdings', 0) * inv.get('current_price', 0)) for inv in investments]
-                logging.error(f"🔍 CRYPTO CALCULATION: {crypto_investments}")
-                logging.error(f"🔍 CRYPTO TOTAL: £{platform_total:,.0f} (Target: should be ~25,640, NOT 25,925)")
             
             # Only include platforms with value
             if platform_total > 0:
