@@ -466,11 +466,11 @@ def dashboard():
                             except:
                                 pass
         
-        # Calculate current net worth using shared function
-        current_net_worth = calculate_current_net_worth()
-        
-        # Calculate platform allocations using current investment values - optimized
+        # Calculate both current net worth AND platform allocations using shared function
         platform_allocations = {}
+        current_net_worth = 0
+        
+        # SINGLE calculation source to prevent discrepancies
         for platform, investments in investments_data.items():
             if platform.endswith('_cash'):
                 continue  # Skip cash keys only
@@ -489,6 +489,7 @@ def dashboard():
             
             if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
+                current_net_worth += platform_total
         
         # Sort platform allocations by value (high to low, with cash at bottom)
         sorted_platforms = []
