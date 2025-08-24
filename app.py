@@ -2080,29 +2080,33 @@ def live_values():
     ensure_recent_prices()
     
     try:
-        # Get current net worth data
-        current_net_worth = calculate_current_net_worth()
-        
-        # Get platform allocations
+        # Use the SAME unified calculation logic as the dashboard route
         data_manager = get_data_manager()
         investments_data = data_manager.get_investments_data()
         
+        current_net_worth = 0
         platform_allocations = {}
+        
+        # Calculate exactly the same way as dashboard route (line 483-505)
         for platform, investments in investments_data.items():
             if platform.endswith('_cash'):
-                continue
+                continue  # Skip cash keys only
                 
             platform_total = 0
+            
+            # Calculate investment values (skip for Cash platform since it has no investments)
             if platform != 'Cash':
                 platform_total = sum(
                     investment.get('holdings', 0) * investment.get('current_price', 0)
                     for investment in investments
                 )
             
+            # Add cash balance (for all platforms including Cash)
             platform_total += data_manager.get_platform_cash(platform)
             
-            if platform_total > 0:
+            if platform_total > 0:  # Only include platforms with value
                 platform_allocations[platform] = platform_total
+                current_net_worth += platform_total
         
         # Get last updated time
         global last_price_update
