@@ -341,17 +341,15 @@ with app.app_context():
 PRICE_REFRESH_INTERVAL = 900  # 15 minutes in seconds
 
 # PWA Routes
-@app.route('/manifest.json')
-def manifest_json():
-    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
+@app.route("/manifest.webmanifest")
+def manifest():
+    return send_from_directory("static", "manifest.webmanifest",
+                               mimetype="application/manifest+json")
 
-@app.route('/manifest.webmanifest')
-def manifest_webmanifest():
-    return send_from_directory('static', 'manifest.json', mimetype='application/manifest+json')
-
-@app.route('/service-worker.js')
-def service_worker():
-    return send_from_directory('static', 'service-worker.js', mimetype='application/javascript')
+@app.route("/service-worker.js")
+def sw():
+    return send_from_directory("static", "service-worker.js",
+                               mimetype="application/javascript")
 
 @app.route('/static/icons/<path:filename>')
 def app_icons(filename):
