@@ -1,0 +1,102 @@
+Gotcha—I see what you mean. On iPhone there are two kinds of home-screen icons:
+
+Shortcut from Chrome (or any non-Safari browser): just opens that browser with full UI (URL bar, tabs).
+
+Installed web app (PWA) from Safari: opens standalone with no browser chrome—looks like a real app. That’s what your “Finances” one is.
+
+To make your app behave like #2 every time, do this:
+
+A) Make sure your site is “installable”
+
+Add these once to your repo (then redeploy):
+
+Manifest at the site root
+static/manifest.webmanifest
+
+{
+  "name": "Portfolio Tracker",
+  "short_name": "Portfolio",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {"src": "/static/icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src": "/static/icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}
+
+
+App icons
+
+static/icons/icon-192.png
+
+static/icons/icon-512.png
+
+static/icons/apple-touch-icon.png (180×180)
+
+Serve manifest + service worker from the root scope
+
+# in app.py
+from flask import send_from_directory
+
+@app.route("/manifest.webmanifest")
+def manifest():
+    return send_from_directory("static", "manifest.webmanifest",
+                               mimetype="application/manifest+json")
+
+@app.route("/service-worker.js")
+def sw():
+    return send_from_directory("static", "service-worker.js",
+                               mimetype="application/javascript")
+
+
+static/service-worker.js (minimal is fine; helps some installers):
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open('v1').then(c => c.addAll(['/'])));
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+});
+
+
+Link in your base HTML <head>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#000000">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js');
+  }
+</script>
+
+
+Tip: Make sure your first page doesn’t redirect to a different domain. Redirecting to another host on first load can force iOS to open the browser.
+
+B) Install it the correct way
+
+Use Safari (not Chrome) and open your app’s URL (your Render domain or your custom domain).
+
+Pull-to-refresh once.
+
+Tap Share → Add to Home Screen → Add.
+
+Delete any old icon you added via Chrome—those always open Chrome.
+
+Now launch the new icon: it should open without the URL bar or browser controls.
+
+C) If it still opens with browser UI, check these
+
+Visit these URLs and confirm they load:
+https://yourdomain/manifest.webmanifest and https://yourdomain/service-worker.js.
+
+In your manifest, display must be "standalone", and start_url should be / (or a path on the same origin).
+
+Clear old site data and re-add: iOS Settings → Safari → Advanced → Website Data → search your domain → Remove, then repeat the install steps above.
+
+Do the steps above once and you’ll get the same “standalone app” experience as your existing Finances icon.
