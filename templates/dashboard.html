@@ -1232,8 +1232,10 @@
             loadRealtimeChart('24h'); // Default line chart to 24H
         }
         
-        // Start auto-refresh for live updates
-        startDesktopAutoRefresh();
+        // Delay auto-refresh to prevent overwriting fresh server values
+        setTimeout(() => {
+            startDesktopAutoRefresh();
+        }, 5000); // Wait 5 seconds before starting auto-refresh
         
         console.log('Desktop dashboard initialized');
     });
