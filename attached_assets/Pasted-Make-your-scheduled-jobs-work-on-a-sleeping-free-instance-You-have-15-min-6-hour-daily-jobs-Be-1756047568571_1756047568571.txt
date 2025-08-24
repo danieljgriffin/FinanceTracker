@@ -1,0 +1,140 @@
+Make your scheduled jobs work on a sleeping free instance
+
+You have 15-min / 6-hour / daily jobs. Because free Render sleeps, move the scheduling off-box and trigger jobs through an endpoint.
+
+A) Add a secure task endpoint (Replit → edit code)
+
+Put this in app.py (or a tasks.py blueprint you register):
+
+import os, threading
+from flask import request, abort, jsonify
+from datetime import datetime
+
+CRON_TOKEN = os.getenv("CRON_TOKEN", "")  # set in Render env
+
+def run_15m_job():
+    with app.app_context():
+        # call your existing logic
+        # from utils.price_fetcher import PriceFetcher
+        # PriceFetcher().refresh_15m()
+        app.logger.info("15m job ran at %s", datetime.utcnow())
+
+def run_6h_job():
+    with app.app_context():
+        # PriceFetcher().refresh_6h()
+        app.logger.info("6h job ran at %s", datetime.utcnow())
+
+def run_daily_job():
+    with app.app_context():
+        # PriceFetcher().refresh_daily()
+        app.logger.info("daily job ran at %s", datetime.utcnow())
+
+@app.post("/tasks/run")
+def tasks_run():
+    if not CRON_TOKEN or request.headers.get("Authorization") != f"Bearer {CRON_TOKEN}":
+        abort(401)
+
+    job = request.args.get("t")
+    mapping = {"15m": run_15m_job, "6h": run_6h_job, "daily": run_daily_job}
+    fn = mapping.get(job)
+    if not fn:
+        abort(400, "unknown task")
+
+    threading.Thread(target=fn, daemon=True).start()
+    return jsonify(ok=True, started=job), 202
+
+
+Add CRON_TOKEN (long random) to Render → Environment.
+
+B) Schedule calls with GitHub Actions (runs even while Render sleeps)
+
+Add .github/workflows/cron.yml to the repo (you can create/edit this in Replit):
+
+name: Scheduled tasks
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 minutes (UTC)
+    - cron: "0 */6 * * *"    # every 6 hours
+    - cron: "0 03 * * *"     # daily 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  call-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 15-minute task
+        run: curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=15m"
+        env: { CRON_TOKEN: ${{ secrets.CRON_TOKEN }}, TASK_URL: ${{ secrets.TASK_URL }} }
+
+      - name: 6-hour task
+        run: curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=6h"
+        env: { CRON_TOKEN: ${{ secrets.CRON_TOKEN }}, TASK_URL: ${{ secrets.TASK_URL }} }
+
+      - name: Daily task
+        run: curl -fsS -X POST -H "Authorization: Bearer $CRON_TOKEN" "${TASK_URL}?t=daily"
+        env: { CRON_TOKEN: ${{ secrets.CRON_TOKEN }}, TASK_URL: ${{ secrets.TASK_URL }} }
+
+
+Then in GitHub → Settings → Secrets → Actions, add:
+
+TASK_URL = https://<your-app>.onrender.com/tasks/run
+
+CRON_TOKEN = same token as in Render
+
+This keeps you within free limits. Even if it pings every 15 min, you’re still under 750 free instance hours.
+
+3) Guarantee “freshness” when you open the app
+
+Even with cron, add an on-demand freshness check so charts are never stale:
+
+from datetime import datetime, timedelta
+
+MAX_AGE = timedelta(minutes=15)
+
+def get_last_update_utc():  # implement with your DB
+    # return datetime.utcnow() of last completed price update
+    ...
+
+def ensure_recent():
+    last = get_last_update_utc()
+    if not last or datetime.utcnow() - last > MAX_AGE:
+        run_15m_job()
+
+@app.route("/dashboard")
+def dashboard():
+    ensure_recent()
+    # then render as usual
+
+4) Make your periodic writes idempotent (no duplicates)
+
+In Postgres, add a unique key on your time bucket + asset id:
+
+CREATE UNIQUE INDEX IF NOT EXISTS ix_price_slots
+ON price_points (bucket_ts, asset_id);
+
+
+Then upsert (SQLAlchemy example):
+
+from sqlalchemy.dialects.postgresql import insert
+
+def upsert_price_point(session, asset_id, bucket_ts, value):
+    stmt = insert(PricePoint).values(
+        asset_id=asset_id, bucket_ts=bucket_ts, value=value
+    ).on_conflict_do_update(
+        index_elements=['bucket_ts','asset_id'],
+        set_={'value': value}
+    )
+    session.execute(stmt)
+
+
+Now if cron fires twice, you won’t double-insert.
+
+5) Keep logs useful
+
+At the top of app.py:
+
+import logging
+logging.basicConfig(level=logging.INFO)
+
+
+Log when each job starts/finishes and how many rows were updated. It’ll make Render “Logs” your best friend.
