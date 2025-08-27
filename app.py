@@ -704,7 +704,7 @@ def dashboard():
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
-        return render_template(get_template_path('dashboard.html'), 
+        response = make_response(render_template(get_template_path('dashboard.html'), 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
@@ -720,7 +720,12 @@ def dashboard():
                              next_target=None,
                              progress_info=None,
                              upcoming_targets=[],
-                             is_mobile=is_mobile_device())
+                             is_mobile=is_mobile_device()))
+        # Force fresh content even in error case
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
 
 @app.route('/mobile')
 def mobile_dashboard():
@@ -860,7 +865,8 @@ def mobile_dashboard():
             bst = pytz.timezone('Europe/London')
             last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
         
-        return render_template('mobile/dashboard.html', 
+        # Create response with no-cache headers for mobile
+        response = make_response(render_template('mobile/dashboard.html', 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -873,10 +879,16 @@ def mobile_dashboard():
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
                              chart_data=chart_data,
-                             last_updated=last_updated_bst)
+                             last_updated=last_updated_bst))
+        
+        # Force fresh content, disable all caching for mobile
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
     except Exception as e:
         logging.error(f"Error in mobile dashboard: {str(e)}")
-        return render_template('mobile/dashboard.html', 
+        response = make_response(render_template('mobile/dashboard.html', 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
@@ -888,7 +900,12 @@ def mobile_dashboard():
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
-                             chart_data={})
+                             chart_data={}))
+        # Force fresh content even in error case
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
 
 @app.route('/mobile-info')
 def mobile_info():
