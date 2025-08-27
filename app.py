@@ -2069,7 +2069,7 @@ def test_daily_collection():
 
 @app.route('/api/live-values')
 def live_values():
-    """API endpoint for live value updates"""
+    """API endpoint for live value updates with comprehensive dashboard data"""
     # Check for fresh data before serving live values
     ensure_recent_prices()
     
@@ -2082,6 +2082,133 @@ def live_values():
         platform_allocations = calculate_platform_totals()
         current_net_worth = sum(platform_allocations.values())
         
+        # Calculate month-on-month change (current net worth vs current month's 1st day)
+        mom_change = 0
+        mom_amount_change = 0
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            
+            # Get current month's 1st day data
+            month_start_data = current_year_data.get(current_month_name, {})
+            month_start_total = 0
+            
+            # Calculate month start total
+            for platform, value in month_start_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    month_start_total += value
+            
+            # Calculate overall changes
+            if month_start_total > 0:
+                mom_amount_change = current_net_worth - month_start_total
+                mom_change = (mom_amount_change / month_start_total) * 100
+            
+            # Calculate platform-specific monthly changes
+            for platform, current_value in platform_allocations.items():
+                try:
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if isinstance(month_start_platform_value, (int, float)) and month_start_platform_value > 0:
+                        change_amount = current_value - month_start_platform_value
+                        change_percent = (change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': change_amount,
+                            'percent': change_percent,
+                            'previous': month_start_platform_value
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {
+                            'amount': 0,
+                            'percent': 0,
+                            'previous': 0
+                        }
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {
+                        'amount': 0,
+                        'percent': 0,
+                        'previous': 0
+                    }
+                    
+        except Exception as e:
+            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            mom_change = 0
+            mom_amount_change = 0
+
+        # Calculate yearly net worth increase (current live portfolio vs 1st Jan current year)
+        yearly_increase = 0
+        yearly_amount_change = 0
+        try:
+            current_year = datetime.now().year
+            
+            # Get current year's 1st January data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            jan_total = 0
+            
+            # Get 1st Jan data
+            jan_data = current_year_data.get('1st Jan', {})
+            
+            # Calculate January total
+            for platform, value in jan_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    jan_total += value
+            
+            # Calculate changes
+            if jan_total > 0:
+                yearly_amount_change = current_net_worth - jan_total
+                yearly_increase = (yearly_amount_change / jan_total) * 100
+                
+        except Exception as e:
+            logging.error(f"Error calculating yearly increase: {str(e)}")
+            yearly_increase = 0
+            yearly_amount_change = 0
+        
+        # Calculate platform percentages
+        platform_percentages = {}
+        if current_net_worth > 0:
+            for platform, value in platform_allocations.items():
+                platform_percentages[platform] = (value / current_net_worth) * 100
+
+        # Get next financial target - closest to current day
+        next_target = None
+        progress_info = None
+        try:
+            today = datetime.now().date()
+            # Get all active goals and find the closest one to today (future or current)
+            active_goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
+            if active_goals:
+                # Find the closest goal to today's date
+                next_target = min(active_goals, key=lambda g: abs((g.target_date - today).days))
+                
+                # Calculate progress
+                remaining_amount = next_target.target_amount - current_net_worth
+                progress_percentage = min((current_net_worth / next_target.target_amount) * 100, 100)
+                
+                # Calculate time remaining
+                today = datetime.now().date()
+                target_date = next_target.target_date
+                days_remaining = (target_date - today).days
+                
+                progress_info = {
+                    'remaining_amount': max(0, remaining_amount),
+                    'progress_percentage': progress_percentage,
+                    'days_remaining': max(0, days_remaining),
+                    'is_achieved': current_net_worth >= next_target.target_amount,
+                    'target_amount': next_target.target_amount,
+                    'title': next_target.title
+                }
+        except Exception as e:
+            logging.error(f"Error calculating next target: {str(e)}")
+        
         # Get last updated time
         global last_price_update
         last_updated_str = None
@@ -2090,14 +2217,21 @@ def live_values():
             last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
             last_updated_str = last_updated_bst.strftime('%d/%m/%Y %H:%M')
         
-        return {
+        return jsonify({
             'current_net_worth': current_net_worth,
             'platform_allocations': platform_allocations,
+            'platform_percentages': platform_percentages,
+            'platform_monthly_changes': platform_monthly_changes,
+            'mom_change': mom_change,
+            'mom_amount_change': mom_amount_change,
+            'yearly_increase': yearly_increase,
+            'yearly_amount_change': yearly_amount_change,
+            'progress_info': progress_info,
             'last_updated': last_updated_str
-        }
+        })
     except Exception as e:
         logging.error(f"Error in live values API: {str(e)}")
-        return {'error': str(e)}, 500
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/collect-historical-data', methods=['POST'])
 def manual_collect_historical_data():

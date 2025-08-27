@@ -70,7 +70,7 @@
                 {% if platform_allocations %}
                     <div class="space-y-2">
                         {% for platform, amount in platform_allocations.items() %}
-                            <div class="py-1.5">
+                            <div class="py-1.5" data-platform="{{ platform }}">
                                 <!-- Main row with platform name and amount -->
                                 <div class="flex items-baseline justify-between">
                                     <div class="flex items-baseline">
@@ -146,25 +146,25 @@
                         <div class="space-y-3">
                             <div class="flex justify-between items-center px-1">
                                 <span class="text-gray-300 font-medium text-base">Progress</span>
-                                <span class="text-lg font-semibold text-white bg-gray-700/50 px-3 py-1 rounded-full">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
+                                <span id="progress-percent" class="text-lg font-semibold text-white bg-gray-700/50 px-3 py-1 rounded-full">{{ "{:.1f}".format(progress_info.progress_percentage) }}%</span>
                             </div>
                             
                             <div class="relative">
                                 <!-- Progress Bar Container -->
                                 <div class="w-full bg-gray-700/50 rounded-xl h-12 relative overflow-hidden">
                                     <!-- Progress Fill with enhanced styling -->
-                                    <div class="h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
+                                    <div id="progress-bar" class="h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
                                          style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb) !important;">
                                         <!-- Current Value Inside Bar -->
                                         {% if progress_info.progress_percentage > 20 %}
-                                        <span class="text-white font-semibold text-sm drop-shadow-lg privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span id="progress-current-net-worth" class="text-white font-semibold text-sm drop-shadow-lg privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                         {% endif %}
                                     </div>
                                     
                                     <!-- Current Value Outside Bar (if bar too small) -->
                                     {% if progress_info.progress_percentage <= 20 %}
                                     <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                                        <span class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
+                                        <span id="progress-current-net-worth-outside" class="text-white font-semibold text-sm bg-gray-800/80 px-2 py-1 rounded privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
                                     </div>
                                     {% endif %}
                                     
@@ -192,7 +192,7 @@
                             <div class="bg-gradient-to-br from-blue-500/15 to-blue-600/25 rounded-lg p-2 border border-blue-400/20 backdrop-blur-sm">
                                 <div class="text-center">
                                     <div class="text-blue-300 text-xs font-medium mb-1 uppercase tracking-wide">Amount Remaining</div>
-                                    <div class="text-xl font-semibold text-blue-200 privacy-sensitive">
+                                    <div id="remaining-amount" class="text-xl font-semibold text-blue-200 privacy-sensitive">
                                         £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
                                     </div>
                                 </div>
@@ -837,6 +837,47 @@
         }
     }
     
+    // Animate value changes with rolling numbers
+    function animateValue(element, fromValue, toValue, isPercentage = false, prefix = '£', suffix = '') {
+        const duration = 1200; // Animation duration in milliseconds
+        const steps = 30; // Number of animation steps
+        const stepDuration = duration / steps;
+        let currentStep = 0;
+        
+        // Add a subtle glow effect during animation
+        element.style.textShadow = '0 0 20px rgba(59, 130, 246, 0.5)';
+        element.style.transition = 'text-shadow 0.3s ease';
+        
+        const interval = setInterval(() => {
+            currentStep++;
+            
+            // Use easing function for smooth animation (ease-out)
+            const progress = currentStep / steps;
+            const easedProgress = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
+            
+            // Calculate intermediate value
+            const currentValue = fromValue + (toValue - fromValue) * easedProgress;
+            
+            // Format and display the value
+            let displayValue;
+            if (isPercentage) {
+                displayValue = `${prefix}${currentValue.toFixed(1)}${suffix}`;
+            } else {
+                displayValue = `${prefix}${currentValue.toLocaleString('en-GB', {minimumFractionDigits: prefix === '£' ? 2 : 0, maximumFractionDigits: prefix === '£' ? 2 : 0})}${suffix}`;
+            }
+            element.textContent = displayValue;
+            
+            // End animation
+            if (currentStep >= steps) {
+                clearInterval(interval);
+                // Remove glow effect after animation
+                setTimeout(() => {
+                    element.style.textShadow = 'none';
+                }, 500);
+            }
+        }, stepDuration);
+    }
+
     // Auto-refresh functionality for desktop dashboard
     function startDesktopAutoRefresh() {
         console.log('Starting desktop auto-refresh...');
@@ -849,7 +890,9 @@
                     const data = await response.json();
                     console.log('Received desktop live data:', data);
                     
-                    // Update current net worth with smooth animation
+                    let hasChanges = false;
+                    
+                    // 1. Update current net worth with smooth animation
                     const netWorthElement = document.querySelector('.privacy-sensitive');
                     if (netWorthElement && netWorthElement.textContent.includes('£')) {
                         const currentText = netWorthElement.textContent;
@@ -861,35 +904,140 @@
                         
                         if (change > 0.01) { // Only animate if there's a meaningful change
                             animateNetWorthValue(netWorthElement, currentValue, newValue);
+                            hasChanges = true;
                             console.log('✨ Animation triggered! Updated desktop net worth to:', `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`);
-                        } else {
-                            console.log('💤 No animation - change too small or identical value');
                         }
-                    } else {
-                        console.log('Could not find main net worth element to update');
                     }
                     
-                    // Update breakdown values in the sidebar
-                    const breakdownItems = document.querySelectorAll('.privacy-sensitive');
-                    const platformNames = Object.keys(data.platform_allocations);
-                    
-                    // Find platform amount elements and update them
-                    document.querySelectorAll('.privacy-sensitive').forEach(element => {
-                        // Look for elements that contain £ amounts
-                        if (element.textContent && element.textContent.includes('£') && !element.textContent.includes('%')) {
-                            platformNames.forEach(platformName => {
-                                // Check if this element corresponds to a platform
-                                const parentElement = element.closest('div');
-                                if (parentElement && parentElement.textContent.includes(platformName)) {
-                                    const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                                    if (element.textContent !== newValue) {
-                                        element.textContent = newValue;
-                                        console.log(`Updated desktop ${platformName} to:`, newValue);
+                    if (hasChanges) {
+                        // 2. Update Month-on-Month values
+                        const momElements = document.querySelectorAll('p.text-lg.font-bold');
+                        momElements.forEach(element => {
+                            if (element.textContent.includes('Month-on-Month')) {
+                                const nextSibling = element.nextElementSibling;
+                                if (nextSibling && nextSibling.textContent.includes('£')) {
+                                    const amountSign = data.mom_amount_change >= 0 ? '+' : '';
+                                    const percentSign = data.mom_change >= 0 ? '+' : '';
+                                    const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
+                                    
+                                    if (nextSibling.textContent !== newText) {
+                                        nextSibling.textContent = newText;
+                                        // Update color based on sign
+                                        nextSibling.className = nextSibling.className.replace(/text-(green|red)-600/g, '');
+                                        nextSibling.className += data.mom_change >= 0 ? ' text-green-600' : ' text-red-600';
+                                        console.log('Updated Month-on-Month values');
                                     }
                                 }
-                            });
+                            }
+                        });
+                        
+                        // 3. Update Yearly Net Worth Increase values
+                        momElements.forEach(element => {
+                            if (element.textContent.includes('Yearly Net Worth Increase')) {
+                                const nextSibling = element.nextElementSibling;
+                                if (nextSibling && nextSibling.textContent.includes('£')) {
+                                    const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
+                                    const percentSign = data.yearly_increase >= 0 ? '+' : '';
+                                    const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
+                                    
+                                    if (nextSibling.textContent !== newText) {
+                                        nextSibling.textContent = newText;
+                                        // Update color based on sign
+                                        nextSibling.className = nextSibling.className.replace(/text-(green|red|gray)-600/g, '');
+                                        if (data.yearly_increase > 0) {
+                                            nextSibling.className += ' text-green-600';
+                                        } else if (data.yearly_increase < 0) {
+                                            nextSibling.className += ' text-red-600';
+                                        } else {
+                                            nextSibling.className += ' text-gray-600';
+                                        }
+                                        console.log('Updated Yearly Net Worth Increase values');
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // 4. Update platform breakdown values and percentages
+                        document.querySelectorAll('[data-platform]').forEach(platformDiv => {
+                            const platformName = platformDiv.getAttribute('data-platform');
+                            if (data.platform_allocations[platformName] !== undefined) {
+                                // Update platform amount
+                                const amountElement = platformDiv.querySelector('.privacy-sensitive');
+                                if (amountElement) {
+                                    const newAmount = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                    if (amountElement.textContent !== newAmount) {
+                                        amountElement.textContent = newAmount;
+                                    }
+                                }
+                                
+                                // Update percentage
+                                const percentElement = platformDiv.querySelector('.text-gray-400');
+                                if (percentElement && data.platform_percentages[platformName] !== undefined) {
+                                    const newPercent = `${data.platform_percentages[platformName].toFixed(1)}% of total`;
+                                    if (percentElement.textContent !== newPercent) {
+                                        percentElement.textContent = newPercent;
+                                    }
+                                }
+                                
+                                // Update monthly change indicators
+                                if (data.platform_monthly_changes[platformName]) {
+                                    const changeData = data.platform_monthly_changes[platformName];
+                                    const changeElement = platformDiv.querySelector('.text-green-500, .text-red-500, .text-gray-400');
+                                    if (changeElement && changeData.previous > 0) {
+                                        const changeAmount = changeData.amount;
+                                        const changePercent = changeData.percent;
+                                        
+                                        let changeHtml, changeClass;
+                                        if (changeAmount > 0) {
+                                            changeHtml = `<i class="fas fa-arrow-up mr-1"></i>+£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (+${changePercent.toFixed(1)}%)`;
+                                            changeClass = 'inline-flex items-center text-green-500 text-xs font-medium';
+                                        } else if (changeAmount < 0) {
+                                            changeHtml = `<i class="fas fa-arrow-down mr-1"></i>-£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)`;
+                                            changeClass = 'inline-flex items-center text-red-500 text-xs font-medium';
+                                        } else {
+                                            changeHtml = `<i class="fas fa-minus mr-1"></i>No change`;
+                                            changeClass = 'inline-flex items-center text-gray-400 text-xs';
+                                        }
+                                        
+                                        changeElement.innerHTML = changeHtml;
+                                        changeElement.className = changeClass;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // 5. Update financial target progress
+                        if (data.progress_info) {
+                            const progressInfo = data.progress_info;
+                            
+                            // Update current net worth in progress section (check both possible locations)
+                            const progressNetWorthElement = document.querySelector('#progress-current-net-worth') || document.querySelector('#progress-current-net-worth-outside');
+                            if (progressNetWorthElement) {
+                                const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                if (progressNetWorthElement.textContent !== newValue) {
+                                    progressNetWorthElement.textContent = newValue;
+                                }
+                            }
+                            
+                            // Update progress percentage
+                            const progressBarElement = document.querySelector('#progress-bar');
+                            const progressPercentElement = document.querySelector('#progress-percent');
+                            if (progressBarElement && progressPercentElement) {
+                                const newPercent = progressInfo.progress_percentage.toFixed(1);
+                                progressBarElement.style.width = `${Math.min(progressInfo.progress_percentage, 100)}%`;
+                                progressPercentElement.textContent = `${newPercent}%`;
+                            }
+                            
+                            // Update remaining amount
+                            const remainingAmountElement = document.querySelector('#remaining-amount');
+                            if (remainingAmountElement) {
+                                const newRemaining = `£${progressInfo.remaining_amount.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                if (remainingAmountElement.textContent !== newRemaining) {
+                                    remainingAmountElement.textContent = newRemaining;
+                                }
+                            }
                         }
-                    });
+                    }
                     
                     // Refresh real-time chart if it exists
                     if (document.getElementById('realtimeChart')) {

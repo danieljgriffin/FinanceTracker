@@ -599,59 +599,182 @@
 
         // Auto-refresh functionality for seamless updates
         function startAutoRefresh() {
-            console.log('Starting auto-refresh...');
+            console.log('Starting mobile auto-refresh...');
             
-            // Update values every 10 seconds for testing (will change to 30 later)
             setInterval(async function() {
                 try {
-                    console.log('Fetching live values...');
+                    console.log('Fetching live values for mobile...');
                     const response = await fetch('/api/live-values');
                     if (response.ok) {
                         const data = await response.json();
-                        console.log('Received live data:', data);
+                        console.log('Received mobile live data:', data);
                         
-                        // Update portfolio value (only if not in privacy mode)
+                        let hasChanges = false;
+                        
+                        // 1. Update portfolio value with animation check (only if not in privacy mode)
                         const portfolioValue = document.getElementById('portfolioValue');
                         if (portfolioValue && !privacyMode) {
-                            const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                            if (portfolioValue.textContent !== newValue) {
-                                portfolioValue.textContent = newValue;
-                                console.log('Updated portfolio value to:', newValue);
+                            const currentText = portfolioValue.textContent;
+                            const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
+                            const newValue = data.current_net_worth;
+                            
+                            const change = Math.abs(currentValue - newValue);
+                            if (change > 0.01) { // Only animate if there's a meaningful change
+                                const displayValue = `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                portfolioValue.textContent = displayValue;
+                                hasChanges = true;
+                                console.log('✨ Mobile animation triggered! Updated portfolio value to:', displayValue);
                             }
                         }
                         
-                        // Update last updated time
+                        // Only update other components when main net worth changes (consistent with desktop)
+                        if (hasChanges) {
+                            // 2. Update Month-on-Month and Yearly values in stats cards
+                            const statCards = document.querySelectorAll('.bg-gray-800\\/50');
+                            statCards.forEach(card => {
+                                const titleElement = card.querySelector('.text-gray-400.text-xs.font-medium.uppercase.tracking-wide');
+                                if (titleElement) {
+                                    const valueElement = card.querySelector('.text-xl.font-semibold, .text-2xl.font-bold');
+                                    
+                                    if (titleElement.textContent.includes('Month-on-Month')) {
+                                        if (valueElement) {
+                                            const amountSign = data.mom_amount_change >= 0 ? '+' : '';
+                                            const percentSign = data.mom_change >= 0 ? '+' : '';
+                                            const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
+                                            
+                                            if (valueElement.textContent !== newText) {
+                                                valueElement.textContent = newText;
+                                                // Update color based on sign
+                                                valueElement.className = valueElement.className.replace(/text-(green|red)-400/g, '');
+                                                valueElement.className += data.mom_change >= 0 ? ' text-green-400' : ' text-red-400';
+                                                console.log('Updated mobile Month-on-Month values');
+                                            }
+                                        }
+                                    }
+                                    
+                                    if (titleElement.textContent.includes('Yearly Increase')) {
+                                        if (valueElement) {
+                                            const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
+                                            const percentSign = data.yearly_increase >= 0 ? '+' : '';
+                                            const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
+                                            
+                                            if (valueElement.textContent !== newText) {
+                                                valueElement.textContent = newText;
+                                                // Update color based on sign
+                                                valueElement.className = valueElement.className.replace(/text-(green|red|gray)-400/g, '');
+                                                if (data.yearly_increase > 0) {
+                                                    valueElement.className += ' text-green-400';
+                                                } else if (data.yearly_increase < 0) {
+                                                    valueElement.className += ' text-red-400';
+                                                } else {
+                                                    valueElement.className += ' text-gray-400';
+                                                }
+                                                console.log('Updated mobile Yearly Increase values');
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                            // 3. Update breakdown values with percentages and monthly changes
+                            const breakdownItems = document.querySelectorAll('.breakdown-item[data-platform]');
+                            breakdownItems.forEach((item) => {
+                                const platformName = item.getAttribute('data-platform');
+                                if (platformName && data.platform_allocations[platformName] !== undefined) {
+                                    
+                                    // Update platform amount
+                                    const valueElement = item.querySelector('.breakdown-value');
+                                    if (valueElement && !privacyMode) {
+                                        const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                        if (valueElement.textContent !== newValue) {
+                                            valueElement.textContent = newValue;
+                                        }
+                                    }
+                                    
+                                    // Update percentage
+                                    const percentElement = item.querySelector('.text-gray-500.text-xs');
+                                    if (percentElement && data.platform_percentages[platformName] !== undefined) {
+                                        const newPercent = `${data.platform_percentages[platformName].toFixed(1)}%`;
+                                        if (percentElement.textContent !== newPercent) {
+                                            percentElement.textContent = newPercent;
+                                        }
+                                    }
+                                    
+                                    // Update monthly change indicator if present
+                                    if (data.platform_monthly_changes[platformName]) {
+                                        const changeData = data.platform_monthly_changes[platformName];
+                                        const changeElement = item.querySelector('.text-green-500, .text-red-500, .text-gray-500');
+                                        if (changeElement && changeData.previous > 0) {
+                                            const changeAmount = changeData.amount;
+                                            const changePercent = changeData.percent;
+                                            
+                                            let changeText, changeClass;
+                                            if (changeAmount > 0) {
+                                                changeText = `▲ +£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (+${changePercent.toFixed(1)}%)`;
+                                                changeClass = 'text-green-500 text-xs font-medium';
+                                            } else if (changeAmount < 0) {
+                                                changeText = `▼ -£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)`;
+                                                changeClass = 'text-red-500 text-xs font-medium';
+                                            } else {
+                                                changeText = `━ No change`;
+                                                changeClass = 'text-gray-500 text-xs';
+                                            }
+                                            
+                                            changeElement.textContent = changeText;
+                                            changeElement.className = changeClass;
+                                        }
+                                    }
+                                }
+                            });
+
+                            // 4. Update financial target progress (if present on mobile)
+                            if (data.progress_info) {
+                                const progressInfo = data.progress_info;
+                                
+                                // Update progress elements if they exist
+                                const progressNetWorthElement = document.querySelector('#mobile-progress-current-net-worth');
+                                if (progressNetWorthElement) {
+                                    const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                    if (progressNetWorthElement.textContent !== newValue) {
+                                        progressNetWorthElement.textContent = newValue;
+                                    }
+                                }
+                                
+                                const progressBarElement = document.querySelector('#mobile-progress-bar');
+                                const progressPercentElement = document.querySelector('#mobile-progress-percent');
+                                if (progressBarElement && progressPercentElement) {
+                                    const newPercent = progressInfo.progress_percentage.toFixed(1);
+                                    progressBarElement.style.width = `${Math.min(progressInfo.progress_percentage, 100)}%`;
+                                    progressPercentElement.textContent = `${newPercent}%`;
+                                }
+                                
+                                const remainingAmountElement = document.querySelector('#mobile-remaining-amount');
+                                if (remainingAmountElement) {
+                                    const newRemaining = `£${progressInfo.remaining_amount.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                    if (remainingAmountElement.textContent !== newRemaining) {
+                                        remainingAmountElement.textContent = newRemaining;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Always update last updated time
                         const lastUpdatedElement = document.querySelector('.text-gray-400.text-xs');
                         if (lastUpdatedElement && data.last_updated) {
                             const newTime = `Last updated ${data.last_updated}`;
                             if (lastUpdatedElement.textContent !== newTime) {
                                 lastUpdatedElement.textContent = newTime;
-                                console.log('Updated last updated time to:', newTime);
+                                console.log('Updated mobile last updated time to:', newTime);
                             }
                         }
                         
-                        // Update breakdown values by platform name (not by index)
-                        const breakdownItems = document.querySelectorAll('.breakdown-item[data-platform]');
-                        breakdownItems.forEach((item) => {
-                            const platformName = item.getAttribute('data-platform');
-                            const valueElement = item.querySelector('.breakdown-value');
-                            
-                            if (platformName && data.platform_allocations[platformName] && valueElement && !privacyMode) {
-                                const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                                if (valueElement.textContent !== newValue) {
-                                    valueElement.textContent = newValue;
-                                    console.log(`Updated ${platformName} value to:`, newValue);
-                                }
-                            }
-                        });
-                        
                     } else {
-                        console.error('Failed to fetch live values:', response.status);
+                        console.error('Failed to fetch mobile live values:', response.status);
                     }
                 } catch (error) {
-                    console.error('Auto-refresh error:', error);
+                    console.error('Mobile auto-refresh error:', error);
                 }
-            }, 10000); // Update every 10 seconds for testing
+            }, 30000); // Update every 30 seconds to match desktop
         }
         
         // Auto-refresh chart data for mobile
