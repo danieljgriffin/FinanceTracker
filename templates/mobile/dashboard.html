@@ -628,50 +628,66 @@
                         }
                         
                         // 2. Always update Month-on-Month and Yearly values (coordinated updates)
-                        const statCards = document.querySelectorAll('.bg-gray-800\\/50');
-                        statCards.forEach(card => {
-                            const titleElement = card.querySelector('.text-gray-400.text-xs.font-medium.uppercase.tracking-wide');
-                            if (titleElement) {
-                                const valueElement = card.querySelector('.text-xl.font-semibold, .text-2xl.font-bold');
-                                
-                                if (titleElement.textContent.includes('Month-on-Month')) {
-                                    if (valueElement) {
+                        // Mobile structure: MONTHLY and YEARLY sections in header area
+                        const monthlyLabelElements = document.querySelectorAll('span.text-gray-400.text-xs.uppercase.tracking-wide');
+                        monthlyLabelElements.forEach(labelElement => {
+                            if (labelElement.textContent.includes('MONTHLY')) {
+                                // Find the amount span (first span in the div below)
+                                const parentDiv = labelElement.parentElement;
+                                const valueContainer = parentDiv.querySelector('div.flex.items-center.space-x-1');
+                                if (valueContainer) {
+                                    const amountElement = valueContainer.querySelector('span.font-semibold');
+                                    const percentElement = valueContainer.querySelector('span.text-xs');
+                                    
+                                    if (amountElement && percentElement) {
+                                        // Update amount
                                         const amountSign = data.mom_amount_change >= 0 ? '+' : '';
-                                        const percentSign = data.mom_change >= 0 ? '+' : '';
-                                        const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
+                                        const newAmountText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                        amountElement.textContent = newAmountText;
                                         
-                                        // Always update - force coordination
-                                        valueElement.textContent = newText;
-                                        // Update color based on sign
-                                        valueElement.className = valueElement.className.replace(/text-(green|red)-400/g, '');
-                                        valueElement.className += data.mom_change >= 0 ? ' text-green-400' : ' text-red-400';
+                                        // Update percentage
+                                        const percentSign = data.mom_change >= 0 ? '+' : '';
+                                        const newPercentText = `(${percentSign}${data.mom_change.toFixed(1)}%)`;
+                                        percentElement.textContent = newPercentText;
+                                        
+                                        // Update colors
+                                        const colorClass = data.mom_change >= 0 ? 'text-green-400' : 'text-red-400';
+                                        amountElement.className = amountElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
+                                        percentElement.className = percentElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
                                         
                                         if (hasChanges) {
-                                            console.log('Updated mobile Month-on-Month values (coordinated)');
+                                            console.log('Updated mobile Monthly values (coordinated)');
                                         }
                                     }
                                 }
-                                
-                                if (titleElement.textContent.includes('Yearly Increase')) {
-                                    if (valueElement) {
+                            }
+                            
+                            if (labelElement.textContent.includes('YEARLY')) {
+                                // Find the amount span (first span in the div below)
+                                const parentDiv = labelElement.parentElement;
+                                const valueContainer = parentDiv.querySelector('div.flex.items-center.space-x-1');
+                                if (valueContainer) {
+                                    const amountElement = valueContainer.querySelector('span.font-semibold');
+                                    const percentElement = valueContainer.querySelector('span.text-xs');
+                                    
+                                    if (amountElement && percentElement) {
+                                        // Update amount
                                         const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
-                                        const percentSign = data.yearly_increase >= 0 ? '+' : '';
-                                        const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
+                                        const newAmountText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
+                                        amountElement.textContent = newAmountText;
                                         
-                                        // Always update - force coordination
-                                        valueElement.textContent = newText;
-                                        // Update color based on sign
-                                        valueElement.className = valueElement.className.replace(/text-(green|red|gray)-400/g, '');
-                                        if (data.yearly_increase > 0) {
-                                            valueElement.className += ' text-green-400';
-                                        } else if (data.yearly_increase < 0) {
-                                            valueElement.className += ' text-red-400';
-                                        } else {
-                                            valueElement.className += ' text-gray-400';
-                                        }
+                                        // Update percentage
+                                        const percentSign = data.yearly_increase >= 0 ? '+' : '';
+                                        const newPercentText = `(${percentSign}${data.yearly_increase.toFixed(1)}%)`;
+                                        percentElement.textContent = newPercentText;
+                                        
+                                        // Update colors
+                                        const colorClass = data.yearly_increase >= 0 ? 'text-green-400' : 'text-red-400';
+                                        amountElement.className = amountElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
+                                        percentElement.className = percentElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
                                         
                                         if (hasChanges) {
-                                            console.log('Updated mobile Yearly Increase values (coordinated)');
+                                            console.log('Updated mobile Yearly values (coordinated)');
                                         }
                                     }
                                 }

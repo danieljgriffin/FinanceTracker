@@ -910,20 +910,20 @@
                     }
                     
                     // 2. Always update Month-on-Month values (coordinated with net worth changes)
-                    const momElements = document.querySelectorAll('p.text-lg.font-bold');
-                    momElements.forEach(element => {
+                    const momLabelElements = document.querySelectorAll('p.text-xs');
+                    momLabelElements.forEach(element => {
                         if (element.textContent.includes('Month-on-Month')) {
-                            const nextSibling = element.nextElementSibling;
-                            if (nextSibling) {
+                            const valueElement = element.nextElementSibling;
+                            if (valueElement && valueElement.classList.contains('font-bold')) {
                                 const amountSign = data.mom_amount_change >= 0 ? '+' : '';
                                 const percentSign = data.mom_change >= 0 ? '+' : '';
                                 const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
                                 
                                 // Always update - force coordination
-                                nextSibling.textContent = newText;
+                                valueElement.textContent = newText;
                                 // Update color based on sign
-                                nextSibling.className = nextSibling.className.replace(/text-(green|red)-600/g, '');
-                                nextSibling.className += data.mom_change >= 0 ? ' text-green-600' : ' text-red-600';
+                                valueElement.className = valueElement.className.replace(/text-(green|red)-600/g, '');
+                                valueElement.className += data.mom_change >= 0 ? ' text-green-600' : ' text-red-600';
                                 
                                 if (hasChanges) {
                                     console.log('Updated Month-on-Month values (coordinated)');
@@ -933,24 +933,24 @@
                     });
                     
                     // 3. Always update Yearly Net Worth Increase values (coordinated with net worth changes)
-                    momElements.forEach(element => {
+                    momLabelElements.forEach(element => {
                         if (element.textContent.includes('Yearly Net Worth Increase')) {
-                            const nextSibling = element.nextElementSibling;
-                            if (nextSibling) {
+                            const valueElement = element.nextElementSibling;
+                            if (valueElement && valueElement.classList.contains('font-bold')) {
                                 const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
                                 const percentSign = data.yearly_increase >= 0 ? '+' : '';
                                 const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
                                 
                                 // Always update - force coordination
-                                nextSibling.textContent = newText;
+                                valueElement.textContent = newText;
                                 // Update color based on sign
-                                nextSibling.className = nextSibling.className.replace(/text-(green|red|gray)-600/g, '');
+                                valueElement.className = valueElement.className.replace(/text-(green|red|gray)-600/g, '');
                                 if (data.yearly_increase > 0) {
-                                    nextSibling.className += ' text-green-600';
+                                    valueElement.className += ' text-green-600';
                                 } else if (data.yearly_increase < 0) {
-                                    nextSibling.className += ' text-red-600';
+                                    valueElement.className += ' text-red-600';
                                 } else {
-                                    nextSibling.className += ' text-gray-600';
+                                    valueElement.className += ' text-gray-600';
                                 }
                                 
                                 if (hasChanges) {
