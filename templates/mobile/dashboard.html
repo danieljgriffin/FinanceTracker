@@ -627,52 +627,59 @@
                             }
                         }
                         
-                        // Only update other components when main net worth changes (consistent with desktop)
+                        // 2. Always update Month-on-Month and Yearly values (coordinated updates)
+                        const statCards = document.querySelectorAll('.bg-gray-800\\/50');
+                        statCards.forEach(card => {
+                            const titleElement = card.querySelector('.text-gray-400.text-xs.font-medium.uppercase.tracking-wide');
+                            if (titleElement) {
+                                const valueElement = card.querySelector('.text-xl.font-semibold, .text-2xl.font-bold');
+                                
+                                if (titleElement.textContent.includes('Month-on-Month')) {
+                                    if (valueElement) {
+                                        const amountSign = data.mom_amount_change >= 0 ? '+' : '';
+                                        const percentSign = data.mom_change >= 0 ? '+' : '';
+                                        const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
+                                        
+                                        // Always update - force coordination
+                                        valueElement.textContent = newText;
+                                        // Update color based on sign
+                                        valueElement.className = valueElement.className.replace(/text-(green|red)-400/g, '');
+                                        valueElement.className += data.mom_change >= 0 ? ' text-green-400' : ' text-red-400';
+                                        
+                                        if (hasChanges) {
+                                            console.log('Updated mobile Month-on-Month values (coordinated)');
+                                        }
+                                    }
+                                }
+                                
+                                if (titleElement.textContent.includes('Yearly Increase')) {
+                                    if (valueElement) {
+                                        const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
+                                        const percentSign = data.yearly_increase >= 0 ? '+' : '';
+                                        const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
+                                        
+                                        // Always update - force coordination
+                                        valueElement.textContent = newText;
+                                        // Update color based on sign
+                                        valueElement.className = valueElement.className.replace(/text-(green|red|gray)-400/g, '');
+                                        if (data.yearly_increase > 0) {
+                                            valueElement.className += ' text-green-400';
+                                        } else if (data.yearly_increase < 0) {
+                                            valueElement.className += ' text-red-400';
+                                        } else {
+                                            valueElement.className += ' text-gray-400';
+                                        }
+                                        
+                                        if (hasChanges) {
+                                            console.log('Updated mobile Yearly Increase values (coordinated)');
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Only update platform components when main net worth changes
                         if (hasChanges) {
-                            // 2. Update Month-on-Month and Yearly values in stats cards
-                            const statCards = document.querySelectorAll('.bg-gray-800\\/50');
-                            statCards.forEach(card => {
-                                const titleElement = card.querySelector('.text-gray-400.text-xs.font-medium.uppercase.tracking-wide');
-                                if (titleElement) {
-                                    const valueElement = card.querySelector('.text-xl.font-semibold, .text-2xl.font-bold');
-                                    
-                                    if (titleElement.textContent.includes('Month-on-Month')) {
-                                        if (valueElement) {
-                                            const amountSign = data.mom_amount_change >= 0 ? '+' : '';
-                                            const percentSign = data.mom_change >= 0 ? '+' : '';
-                                            const newText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.mom_change.toFixed(1)}%)`;
-                                            
-                                            if (valueElement.textContent !== newText) {
-                                                valueElement.textContent = newText;
-                                                // Update color based on sign
-                                                valueElement.className = valueElement.className.replace(/text-(green|red)-400/g, '');
-                                                valueElement.className += data.mom_change >= 0 ? ' text-green-400' : ' text-red-400';
-                                                console.log('Updated mobile Month-on-Month values');
-                                            }
-                                        }
-                                    }
-                                    
-                                    if (titleElement.textContent.includes('Yearly Increase')) {
-                                        if (valueElement) {
-                                            const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
-                                            const percentSign = data.yearly_increase >= 0 ? '+' : '';
-                                            const newText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${percentSign}${data.yearly_increase.toFixed(1)}%)`;
-                                            
-                                            if (valueElement.textContent !== newText) {
-                                                valueElement.textContent = newText;
-                                                // Update color based on sign
-                                                valueElement.className = valueElement.className.replace(/text-(green|red|gray)-400/g, '');
-                                                if (data.yearly_increase > 0) {
-                                                    valueElement.className += ' text-green-400';
-                                                } else if (data.yearly_increase < 0) {
-                                                    valueElement.className += ' text-red-400';
-                                                } else {
-                                                    valueElement.className += ' text-gray-400';
-                                                }
-                                                console.log('Updated mobile Yearly Increase values');
-                                            }
-                                        }
-                                    }
                                 }
                             });
 
