@@ -401,6 +401,15 @@ def apple_touch_icon():
 @app.route('/static/icons/<path:filename>')
 def app_icons(filename):
     return send_from_directory('static/icons', filename)
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for external monitoring services to prevent app sleeping"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'app': 'investment-tracker'
+    })
 last_price_update = None
 price_update_thread = None
 
