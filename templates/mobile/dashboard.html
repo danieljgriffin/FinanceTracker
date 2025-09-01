@@ -245,7 +245,7 @@
         // Mobile Chart System - Clean Implementation
         class MobileChart {
             constructor() {
-                this.currentRange = 'max';
+                this.currentRange = '1d';
                 this.chartData = null;
                 this.isLoading = false;
                 
@@ -263,7 +263,7 @@
                 console.log('🚀 Initializing Mobile Chart System');
                 await this.loadAvailableYears(); // Load year buttons first
                 this.setupEventListeners();
-                this.loadChart('max'); // Start with MAX view
+                this.loadChart('1d'); // Start with 1D view
             }
             
             async loadAvailableYears() {
