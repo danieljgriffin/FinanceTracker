@@ -312,8 +312,14 @@
         function updateMobileChartDisplay(data, range) {
             const svg = document.getElementById('portfolioChart');
             
-            console.log('Updating mobile chart display for range:', range);
-            console.log('Chart data:', data);
+            console.log('🔍 Updating mobile chart display for range:', range);
+            console.log('📊 Chart data:', data);
+            console.log('📱 SVG element found:', !!svg);
+            
+            if (!svg) {
+                console.error('❌ SVG element not found!');
+                return;
+            }
             
             // Handle both API data format and static data format
             let lineData, yLabels, xLabels, hasCurrentValue;
@@ -388,13 +394,19 @@
                     currentPointMarkup = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>`;
                 }
                 
-                svg.innerHTML = `
+                const svgContent = `
                     <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${points}"/>
                     ${dataPoints}
                     ${currentPointMarkup}
                     ${yLabels.join('')}
                     ${xLabels.join('')}
                 `;
+                
+                console.log('🎨 Generated SVG content:', svgContent.substring(0, 200) + '...');
+                console.log('📏 Points string:', points.substring(0, 100) + '...');
+                console.log('📍 Data points count:', data.values.length);
+                
+                svg.innerHTML = svgContent;
                 
                 // Store chart data for potential interactions
                 currentRange = range;
@@ -405,7 +417,7 @@
                     hasCurrentValue: true
                 };
                 
-                console.log('Mobile SVG chart generated successfully');
+                console.log('✅ Mobile SVG chart generated successfully');
                 
                 // Store chart data for touch interactions - using exact same positioning as chart generation
                 window.mobileChartData = {
@@ -840,32 +852,29 @@
                 }
             }, 30000); // Refresh chart every 30 seconds
         }
+        
+        // Mobile-specific interactions
+        function showSettings() {
+            alert('Settings functionality coming soon!');
+        }
+
+        // Touch-friendly interactions
+        document.addEventListener('touchstart', function() {}, true);
+        
+        // Initialize mobile chart system when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Mobile dashboard loaded, starting initialization...');
+            
+            // Start auto-refresh systems
+            startAutoRefresh();
+            startChartAutoRefresh();
+            
+            // Initialize default chart (MAX view) 
+            console.log('Initializing default chart with MAX view...');
+            updateChart('MAX');
+            
+            console.log('Mobile chart system initialization complete');
+        });
     </script>
 </body>
 </html>
-
-{% block scripts %}
-<script>
-// Mobile Chart Implementation - Initialize SVG chart system
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Mobile dashboard loaded, starting initialization...');
-    
-    // Start auto-refresh systems
-    startAutoRefresh();
-    startChartAutoRefresh();
-    
-    // Initialize default chart (MAX view)
-    updateChart('MAX');
-    
-    console.log('Mobile chart system initialization complete');
-});
-
-// Mobile-specific interactions
-function showSettings() {
-    alert('Settings functionality coming soon!');
-}
-
-// Touch-friendly interactions
-document.addEventListener('touchstart', function() {}, true);
-</script>
-{% endblock %}
