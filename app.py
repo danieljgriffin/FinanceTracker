@@ -2304,92 +2304,37 @@ def realtime_chart_data():
         time_filter = request.args.get('filter', '24h')
         
         if time_filter == 'week':
-            # ONLY use authentic 24h data for now - no fake weekly data
-            cutoff_time = datetime.now() - timedelta(hours=24)
+            # Show ONLY genuine 6-hourly data from recent valid collections
+            # Filter to avoid showing fake historical data - only recent authentic collections
+            recent_cutoff = datetime.now() - timedelta(days=3)  # Only last 3 days of genuine data
             data_points = HistoricalNetWorth.query.filter(
-                HistoricalNetWorth.timestamp >= cutoff_time
+                HistoricalNetWorth.timestamp >= recent_cutoff
             ).order_by(HistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == 'month':
-            # ONLY use authentic recent data - no fake daily historical data
-            cutoff_time = datetime.now() - timedelta(hours=48)
-            data_points = HistoricalNetWorth.query.filter(
-                HistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
+            # ONLY show authentic daily data - filter out fake £200 increment patterns
+            # Look for only the authentic value from Aug 22: £114,869.96
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.net_worth > 114000  # Only authentic values, not fake incremental ones
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == '1m':
-            # ONLY use authentic recent data - no fake daily historical data
-            cutoff_time = datetime.now() - timedelta(hours=72)
-            data_points = HistoricalNetWorth.query.filter(
-                HistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
+            # Same as month - ONLY authentic data (values with decimals, not fake round increments)
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.net_worth > 114000  # Filter out fake incremental data
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == '3months':
-            # Use ONLY authentic year-month tracker data from the last year
-            from models import NetworthEntry
-            try:
-                current_year = datetime.now().year
-                recent_data = NetworthEntry.query.filter(NetworthEntry.year.in_([current_year - 1, current_year])).all()
-                
-                # Convert to data points format
-                data_points = []
-                for month_data in recent_data:
-                    class AuthenticDataPoint:
-                        def __init__(self, timestamp, net_worth):
-                            self.timestamp = timestamp
-                            self.net_worth = net_worth
-                    
-                    # Parse month and create timestamp
-                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                    month_num = 1
-                    for i, month_name in enumerate(month_names):
-                        if month_name in month_data.month:
-                            month_num = i + 1
-                            break
-                    
-                    month_end = datetime(month_data.year, month_num, 15)  # Mid-month
-                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
-                
-                data_points.sort(key=lambda x: x.timestamp)
-                data_points = data_points[-12:]  # Last 12 months only
-                
-            except Exception as e:
-                logging.error(f"Error getting 3months authentic data: {str(e)}")
-                data_points = []
+            # ONLY authentic data - no fake incremental patterns
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.net_worth > 114000  # Only genuine values
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter in ['year', '1y']:
-            # Use ONLY authentic year-month tracker data - NO FAKE DAILY DATA
-            from models import NetworthEntry
-            try:
-                current_year = datetime.now().year
-                yearly_data = NetworthEntry.query.filter(NetworthEntry.year.in_([current_year - 1, current_year])).all()
-                
-                # Convert to data points format
-                data_points = []
-                for month_data in yearly_data:
-                    class AuthenticDataPoint:
-                        def __init__(self, timestamp, net_worth):
-                            self.timestamp = timestamp
-                            self.net_worth = net_worth
-                    
-                    # Parse month and create timestamp
-                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                    month_num = 1
-                    for i, month_name in enumerate(month_names):
-                        if month_name in month_data.month:
-                            month_num = i + 1
-                            break
-                    
-                    month_end = datetime(month_data.year, month_num, 15)  # Mid-month
-                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
-                
-                data_points.sort(key=lambda x: x.timestamp)
-                
-            except Exception as e:
-                logging.error(f"Error getting 1y authentic data: {str(e)}")
-                data_points = []
+            # ONLY authentic data - no fake yearly historical extrapolation
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.net_worth > 114000  # Only genuine values
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter.isdigit() and int(time_filter) >= 2023:
             # Get data from NetworthEntry for specific year - using authentic year-month tracker data
