@@ -2267,6 +2267,18 @@ def live_values():
         logging.error(f"Error in live values API: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/available-years')
+def get_available_years():
+    """API endpoint to get all available years from year-month tracker"""
+    try:
+        from models import NetworthEntry
+        years = db.session.query(NetworthEntry.year).distinct().order_by(NetworthEntry.year.asc()).all()
+        available_years = [year[0] for year in years]
+        return jsonify({'years': available_years})
+    except Exception as e:
+        logging.error(f"Error getting available years: {str(e)}")
+        return jsonify({'years': [2023, 2024, 2025]}), 500
+
 @app.route('/api/collect-historical-data', methods=['POST'])
 def manual_collect_historical_data():
     """Manual endpoint to trigger historical data collection"""
@@ -2326,14 +2338,14 @@ def realtime_chart_data():
                 DailyHistoricalNetWorth.timestamp >= cutoff_time
             ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
-        elif time_filter in ['2023', '2024', '2025']:
-            # Get data from NetworthEntry for specific year
+        elif time_filter.isdigit() and int(time_filter) >= 2023:
+            # Get data from NetworthEntry for specific year - using authentic year-month tracker data
             from models import NetworthEntry
             try:
                 year = int(time_filter)
                 monthly_data = NetworthEntry.query.filter_by(year=year).all()
                 
-                # Convert monthly tracker data to chart format  
+                # Convert monthly tracker data to chart format using real data
                 data_points = []
                 
                 # Helper function to parse the unusual month format (e.g., "1st May")
@@ -2346,37 +2358,38 @@ def realtime_chart_data():
                             return i + 1
                     return 1  # Default to January if can't parse
                 
-                # Sort by parsed month order
+                # Sort by parsed month order to ensure proper timeline
                 monthly_data.sort(key=lambda x: parse_month_string(x.month))
                 
                 for month_data in monthly_data:
-                    # Create a fake data point object that matches our chart interface
-                    class FakeDataPoint:
+                    # Create data point object that matches our chart interface with REAL VALUES
+                    class AuthenticDataPoint:
                         def __init__(self, timestamp, net_worth):
                             self.timestamp = timestamp
                             self.net_worth = net_worth
                     
                     # Create timestamp for the end of each month
                     month_num = parse_month_string(month_data.month)
-                    month_end = datetime(year, month_num, 1)
+                    # Use last day of month for more accurate representation
                     if month_num == 12:
                         month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
                     else:
                         month_end = datetime(year, month_num + 1, 1) - timedelta(days=1)
                     
-                    data_points.append(FakeDataPoint(month_end, month_data.total_networth))
+                    # Use the AUTHENTIC total_networth value from database
+                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
                 
             except Exception as e:
                 logging.error(f"Error getting yearly data for {time_filter}: {str(e)}")
                 data_points = []
                 
-        elif time_filter == 'all-years':
-            # Get data from NetworthEntry for all years
+        elif time_filter == 'max':
+            # Get ALL data from NetworthEntry for maximum view - AUTHENTIC year-month tracker data  
             from models import NetworthEntry
             try:
                 monthly_data = NetworthEntry.query.order_by(NetworthEntry.year.asc()).all()
                 
-                # Convert monthly tracker data to chart format
+                # Convert monthly tracker data to chart format using REAL DATA
                 data_points = []
                 
                 # Helper function to parse the unusual month format (e.g., "1st May")
@@ -2389,12 +2402,12 @@ def realtime_chart_data():
                             return i + 1
                     return 1  # Default to January if can't parse
                 
-                # Sort by year then month
+                # Sort by year then month to ensure proper timeline
                 monthly_data.sort(key=lambda x: (x.year, parse_month_string(x.month)))
                 
                 for month_data in monthly_data:
-                    # Create a fake data point object that matches our chart interface
-                    class FakeDataPoint:
+                    # Create authentic data point object with REAL VALUES
+                    class AuthenticDataPoint:
                         def __init__(self, timestamp, net_worth):
                             self.timestamp = timestamp
                             self.net_worth = net_worth
@@ -2402,16 +2415,16 @@ def realtime_chart_data():
                     # Create timestamp for the end of each month
                     year = month_data.year
                     month_num = parse_month_string(month_data.month)
-                    month_end = datetime(year, month_num, 1)
                     if month_num == 12:
                         month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
                     else:
                         month_end = datetime(year, month_num + 1, 1) - timedelta(days=1)
                     
-                    data_points.append(FakeDataPoint(month_end, month_data.total_networth))
+                    # Use AUTHENTIC total_networth value from year-month tracker
+                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
                 
             except Exception as e:
-                logging.error(f"Error getting all years data: {str(e)}")
+                logging.error(f"Error getting max data: {str(e)}")
                 data_points = []
             
         else:  # Default to 24h

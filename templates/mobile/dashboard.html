@@ -149,13 +149,14 @@
             </div>
             
             <!-- Time Range Selector -->
-            <div class="flex justify-center space-x-4 mt-4 px-4">
-                <button data-range="1d" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1D</button>
-                <button data-range="1w" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1W</button>
-                <button data-range="1m" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1M</button>
-                <button data-range="3m" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">3M</button>
-                <button data-range="1y" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1Y</button>
-                <button data-range="max" class="chart-range-btn text-white text-xs font-medium px-3 py-1 rounded bg-blue-600 transition-colors">MAX</button>
+            <div id="timeRangeContainer" class="flex flex-wrap justify-center gap-2 mt-4 px-4">
+                <button data-range="1d" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1D</button>
+                <button data-range="1w" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1W</button>
+                <button data-range="1m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1M</button>
+                <button data-range="3m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">3M</button>
+                <button data-range="1y" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1Y</button>
+                <!-- Year buttons will be inserted here dynamically -->
+                <button data-range="max" class="chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors">MAX</button>
             </div>
         </div>
         
@@ -258,19 +259,51 @@
                 this.init();
             }
             
-            init() {
+            async init() {
                 console.log('🚀 Initializing Mobile Chart System');
+                await this.loadAvailableYears(); // Load year buttons first
                 this.setupEventListeners();
                 this.loadChart('max'); // Start with MAX view
             }
             
+            async loadAvailableYears() {
+                try {
+                    console.log('🔍 Loading available years for chart buttons...');
+                    const response = await fetch(`/api/available-years?_t=${Date.now()}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const years = data.years || [];
+                        
+                        // Insert year buttons before MAX button
+                        const container = document.getElementById('timeRangeContainer');
+                        const maxButton = container.querySelector('[data-range="max"]');
+                        
+                        // Remove any existing year buttons
+                        container.querySelectorAll('[data-range*="20"]').forEach(btn => btn.remove());
+                        
+                        // Add year buttons
+                        years.forEach(year => {
+                            const yearBtn = document.createElement('button');
+                            yearBtn.setAttribute('data-range', year.toString());
+                            yearBtn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
+                            yearBtn.textContent = year.toString();
+                            container.insertBefore(yearBtn, maxButton);
+                        });
+                        
+                        console.log(`✅ Added ${years.length} year buttons: ${years.join(', ')}`);
+                    }
+                } catch (error) {
+                    console.error('Error loading available years:', error);
+                }
+            }
+            
             setupEventListeners() {
-                // Range button clicks
-                document.querySelectorAll('.chart-range-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
+                // Range button clicks - use event delegation to handle dynamically added year buttons
+                document.getElementById('timeRangeContainer').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('chart-range-btn')) {
                         const range = e.target.getAttribute('data-range');
                         this.loadChart(range);
-                    });
+                    }
                 });
                 
                 // Touch interactions
@@ -286,9 +319,9 @@
                 document.querySelectorAll('.chart-range-btn').forEach(btn => {
                     const range = btn.getAttribute('data-range');
                     if (range === activeRange) {
-                        btn.className = 'chart-range-btn text-white text-xs font-medium px-3 py-1 rounded bg-blue-600 transition-colors';
+                        btn.className = 'chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors';
                     } else {
-                        btn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white';
+                        btn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
                     }
                 });
             }
@@ -300,8 +333,14 @@
                     '1m': '1m',
                     '3m': '3months',
                     '1y': 'year',
-                    'max': 'all-years'
+                    'max': 'max'
                 };
+                
+                // For year-specific filters (2023, 2024, 2025, etc.), pass them through directly
+                if (/^\d{4}$/.test(range)) {
+                    return range;
+                }
+                
                 return mapping[range] || range;
             }
             
