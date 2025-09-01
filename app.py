@@ -2299,11 +2299,11 @@ def realtime_chart_data():
             ).order_by(WeeklyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == 'month':
-            # Get monthly data from the last 30 days
+            # Desktop "Month" should show daily data like mobile "1M" - use daily data for last 30 days
             cutoff_time = datetime.now() - timedelta(days=30)
-            data_points = MonthlyHistoricalNetWorth.query.filter(
-                MonthlyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(MonthlyHistoricalNetWorth.timestamp.asc()).all()
+            data_points = DailyHistoricalNetWorth.query.filter(
+                DailyHistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == '1m':
             # Get daily data from the last 30 days - using end of day captures
@@ -2457,8 +2457,8 @@ def realtime_chart_data():
                     # For 1 month data, show date (e.g., "22/08")
                     time_label = bst_time.strftime('%d/%m')
                 elif time_filter == 'month':
-                    # For monthly data, show date and time (e.g., "22/08 12:00")
-                    time_label = bst_time.strftime('%d/%m %H:%M')
+                    # For desktop monthly data (now using daily data), show date (e.g., "22/08")
+                    time_label = bst_time.strftime('%d/%m')
                 elif time_filter in ['3months', 'year']:
                     # For 3 months/year data, show date (e.g., "22/08")
                     time_label = bst_time.strftime('%d/%m')
