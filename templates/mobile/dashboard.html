@@ -846,83 +846,18 @@
 
 {% block scripts %}
 <script>
-// Mobile Chart Implementation
+// Mobile Chart Implementation - Initialize SVG chart system
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile-optimized chart
-    const mobileCtx = document.getElementById('mobileNetWorthChart').getContext('2d');
+    console.log('Mobile dashboard loaded, starting initialization...');
     
-    // Simplified chart for mobile
-    fetch('/api/chart-data')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('mobileChartLoading').style.display = 'none';
-            
-            new Chart(mobileCtx, {
-                type: 'line',
-                data: {
-                    labels: data.labels.slice(-12), // Last 12 months only
-                    datasets: [{
-                        label: 'Net Worth',
-                        data: data.values.slice(-12),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: '#3b82f6',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        intersect: false,
-                        mode: 'none'
-                    },
-
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            enabled: false
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                                maxTicksLimit: 6
-                            }
-                        },
-                        y: {
-                            display: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                                callback: function(value) {
-                                    return '£' + (value / 1000).toFixed(0) + 'k';
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => {
-            console.error('Error loading mobile chart:', error);
-            document.getElementById('mobileChartLoading').innerHTML = 
-                '<p class="text-red-400 text-sm">Error loading chart</p>';
-        });
+    // Start auto-refresh systems
+    startAutoRefresh();
+    startChartAutoRefresh();
+    
+    // Initialize default chart (MAX view)
+    updateChart('MAX');
+    
+    console.log('Mobile chart system initialization complete');
 });
 
 // Mobile-specific interactions
