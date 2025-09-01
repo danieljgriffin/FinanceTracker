@@ -675,7 +675,7 @@
             chartLoadingElement.style.display = 'block';
         }
         
-        fetch(`/api/realtime-chart-data?filter=${filter}`)
+        fetch(`/api/realtime-chart-data?filter=${filter}&_t=${Date.now()}`)
             .then(response => response.json())
             .then(data => {
                 console.log('Real-time chart data:', data);

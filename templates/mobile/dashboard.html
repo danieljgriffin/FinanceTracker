@@ -289,7 +289,7 @@
                 apiFilter = range; // 2023, 2024, 2025
             }
             
-            const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}`;
+            const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}&_t=${Date.now()}`;
             console.log('Fetching mobile chart data from:', apiUrl, 'for range:', range);
             
             fetch(apiUrl)

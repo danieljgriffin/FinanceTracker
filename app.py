@@ -2469,12 +2469,20 @@ def realtime_chart_data():
                 labels.append(time_label)
                 values.append(float(point.net_worth))
         
-        return jsonify({
+        # Create response with cache-busting headers
+        response = make_response(jsonify({
             'labels': labels,
             'values': values,
             'count': len(data_points),
             'filter': time_filter
-        })
+        }))
+        
+        # Force fresh chart data, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        response.headers['Vary'] = 'Accept'
+        return response
         
     except Exception as e:
         logging.error(f"Error getting real-time chart data: {str(e)}")
