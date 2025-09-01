@@ -885,7 +885,7 @@
         setInterval(async function() {
             try {
                 console.log('Fetching live values for desktop...');
-                const response = await fetch('/api/live-values');
+                const response = await fetch(`/api/live-values?_t=${Date.now()}`);
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Received desktop live data:', data);

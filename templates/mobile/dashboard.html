@@ -604,7 +604,7 @@
             setInterval(async function() {
                 try {
                     console.log('Fetching live values for mobile...');
-                    const response = await fetch('/api/live-values');
+                    const response = await fetch(`/api/live-values?_t=${Date.now()}`);
                     if (response.ok) {
                         const data = await response.json();
                         console.log('Received mobile live data:', data);

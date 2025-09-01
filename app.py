@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, send_from_directory, make_response
 from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
 from utils.device_detector import get_template_path, is_mobile_device
@@ -2243,7 +2243,8 @@ def live_values():
             last_updated_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(bst)
             last_updated_str = last_updated_bst.strftime('%d/%m/%Y %H:%M')
         
-        return jsonify({
+        # Create response with cache-busting headers for live API data
+        response = make_response(jsonify({
             'current_net_worth': current_net_worth,
             'platform_allocations': platform_allocations,
             'platform_percentages': platform_percentages,
@@ -2254,7 +2255,14 @@ def live_values():
             'yearly_amount_change': yearly_amount_change,
             'progress_info': progress_info,
             'last_updated': last_updated_str
-        })
+        }))
+        
+        # Force fresh API data, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        response.headers['Vary'] = 'Accept'
+        return response
     except Exception as e:
         logging.error(f"Error in live values API: {str(e)}")
         return jsonify({'error': str(e)}), 500
