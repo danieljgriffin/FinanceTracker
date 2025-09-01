@@ -125,39 +125,37 @@
             </div>
         </div>
         
-        <!-- Full Width Chart -->
+        <!-- Mobile Chart Section -->
         <div class="mb-6">
-            <div id="chartContainer" class="h-64 w-full relative">
-                <svg viewBox="0 0 400 256" class="w-full h-full" id="portfolioChart">
-                    <!-- Chart elements will be dynamically updated -->
+            <div id="mobileChartContainer" class="h-64 w-full relative bg-gray-900 rounded-lg">
+                <!-- Chart loading state -->
+                <div id="chartLoading" class="absolute inset-0 flex items-center justify-center">
+                    <div class="text-gray-400 text-sm">Loading chart...</div>
+                </div>
+                
+                <!-- SVG Chart -->
+                <svg id="mobileChart" viewBox="0 0 400 256" class="w-full h-full opacity-0 transition-opacity duration-300">
+                    <!-- Chart content will be generated here -->
                 </svg>
                 
-                <!-- Interactive overlay for touch/hover - aligned with chart data points -->
-                <div id="chartOverlay" class="absolute inset-0 bg-transparent" 
-                     ontouchstart="handleChartTouch(event)" 
-                     ontouchmove="handleChartTouch(event)"
-                     ontouchend="hideTooltip()"></div>
+                <!-- Touch interaction overlay -->
+                <div id="touchOverlay" class="absolute inset-0 bg-transparent pointer-events-auto"></div>
                 
-                <!-- Touch indicator removed - just tooltip now -->
-                
-                <!-- Mobile value tooltip -->
-                <div id="mobileTooltip" class="absolute pointer-events-none opacity-0 transition-opacity duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20">
-                    <div id="mobileTooltipValue" class="font-semibold"></div>
-                    <div id="mobileTooltipDate" class="text-gray-300 text-xs mt-1"></div>
+                <!-- Value tooltip -->
+                <div id="chartTooltip" class="absolute pointer-events-none opacity-0 transition-all duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20 z-10">
+                    <div id="tooltipValue" class="font-semibold text-blue-400"></div>
+                    <div id="tooltipDate" class="text-gray-300 text-xs mt-1"></div>
                 </div>
             </div>
             
-            <!-- Time Range Options -->
-            <div class="flex justify-center space-x-4 mt-3 px-4 text-xs">
-                <span class="text-white font-semibold cursor-pointer" onclick="updateChart('1d')">1D</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1w')">1W</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1m')">1M</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('3m')">3M</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('1y')">1Y</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2023')">2023</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2024')">2024</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('2025')">2025</span>
-                <span class="text-gray-400 cursor-pointer hover:text-white transition-colors" onclick="updateChart('MAX')" id="activeRange">MAX</span>
+            <!-- Time Range Selector -->
+            <div class="flex justify-center space-x-4 mt-4 px-4">
+                <button data-range="1d" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1D</button>
+                <button data-range="1w" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1W</button>
+                <button data-range="1m" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1M</button>
+                <button data-range="3m" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">3M</button>
+                <button data-range="1y" class="chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white">1Y</button>
+                <button data-range="max" class="chart-range-btn text-white text-xs font-medium px-3 py-1 rounded bg-blue-600 transition-colors">MAX</button>
             </div>
         </div>
         
@@ -243,638 +241,318 @@
     </div>
     
     <script>
-        // Use real chart data from server
-        const chartData = {{ chart_data | tojson | safe }};
-
-        let currentRange = 'MAX';
-        let currentChartData = null;
-        let isInteracting = false;
-
-        function updateChart(range) {
-            console.log('Mobile updateChart called with range:', range, 'current:', currentRange);
-            if (range === currentRange) return;
-            
-            // Update active range styling first
-            document.querySelectorAll('[onclick^="updateChart"]').forEach(el => {
-                el.className = 'text-gray-400 cursor-pointer hover:text-white transition-colors';
-            });
-            
-            // Find and highlight the selected range
-            const allRangeElements = document.querySelectorAll('[onclick^="updateChart"]');
-            allRangeElements.forEach(el => {
-                const onclick = el.getAttribute('onclick');
-                const elRange = onclick.match(/updateChart\('(.+?)'\)/)?.[1];
-                if (elRange === range) {
-                    el.className = 'text-white font-semibold cursor-pointer';
-                }
-            });
-            
-            currentRange = range;
-            
-            // Map mobile filters to API filters
-            let apiFilter;
-            if (range.toLowerCase() === 'max') {
-                apiFilter = 'all-years';
-            } else if (range === '1d') {
-                apiFilter = '24h';
-            } else if (range === '1w') {
-                apiFilter = 'week';
-            } else if (range === '1m') {
-                apiFilter = '1m';
-            } else if (range === '3m') {
-                apiFilter = '3months';
-            } else if (range === '1y') {
-                apiFilter = 'year';
-            } else {
-                apiFilter = range; // 2023, 2024, 2025
+        // Mobile Chart System - Clean Implementation
+        class MobileChart {
+            constructor() {
+                this.currentRange = 'max';
+                this.chartData = null;
+                this.isLoading = false;
+                
+                // Chart dimensions
+                this.width = 400;
+                this.height = 256;
+                this.padding = { top: 20, right: 50, bottom: 40, left: 20 };
+                this.plotWidth = this.width - this.padding.left - this.padding.right;
+                this.plotHeight = this.height - this.padding.top - this.padding.bottom;
+                
+                this.init();
             }
             
-            const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}&_t=${Date.now()}`;
-            console.log('Fetching mobile chart data from:', apiUrl, 'for range:', range);
+            init() {
+                console.log('🚀 Initializing Mobile Chart System');
+                this.setupEventListeners();
+                this.loadChart('max'); // Start with MAX view
+            }
             
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Mobile chart data received:', data);
-                    updateMobileChartDisplay(data, range);
-                })
-                .catch(error => {
-                    console.error('Error fetching mobile chart data:', error);
-                    // Fallback to static data
-                    const svg = document.getElementById('portfolioChart');
-                    const staticData = chartData[range];
-                    if (staticData) {
-                        updateMobileChartDisplay(staticData, range);
+            setupEventListeners() {
+                // Range button clicks
+                document.querySelectorAll('.chart-range-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const range = e.target.getAttribute('data-range');
+                        this.loadChart(range);
+                    });
+                });
+                
+                // Touch interactions
+                const overlay = document.getElementById('touchOverlay');
+                if (overlay) {
+                    overlay.addEventListener('touchstart', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchmove', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchend', this.hideTooltip.bind(this));
+                }
+            }
+            
+            updateRangeButtons(activeRange) {
+                document.querySelectorAll('.chart-range-btn').forEach(btn => {
+                    const range = btn.getAttribute('data-range');
+                    if (range === activeRange) {
+                        btn.className = 'chart-range-btn text-white text-xs font-medium px-3 py-1 rounded bg-blue-600 transition-colors';
+                    } else {
+                        btn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-3 py-1 rounded transition-colors hover:text-white';
                     }
                 });
-        }
-        
-        function updateMobileChartDisplay(data, range) {
-            const svg = document.getElementById('portfolioChart');
-            
-            console.log('🔍 Updating mobile chart display for range:', range);
-            console.log('📊 Chart data:', data);
-            console.log('📱 SVG element found:', !!svg);
-            
-            if (!svg) {
-                console.error('❌ SVG element not found!');
-                return;
             }
             
-            // Handle both API data format and static data format
-            let lineData, yLabels, xLabels, hasCurrentValue;
+            mapRangeToAPI(range) {
+                const mapping = {
+                    '1d': '24h',
+                    '1w': 'week',
+                    '1m': '1m',
+                    '3m': '3months',
+                    '1y': 'year',
+                    'max': 'all-years'
+                };
+                return mapping[range] || range;
+            }
             
-            if (data.labels && data.values) {
-                // API format - convert to SVG chart format
-                console.log('Converting API data to SVG chart format');
-                console.log('Data labels:', data.labels);
-                console.log('Data values:', data.values);
+            async loadChart(range) {
+                if (this.currentRange === range && this.chartData) return;
                 
-                // Generate SVG chart elements from API data (balanced padding for labels)
-                const chartWidth = 380;
-                const chartHeight = 200;
-                const padding = 20;
-                const rightPadding = 35; // Balanced space for right-side labels
-                const plotWidth = chartWidth - padding - rightPadding;
-                const plotHeight = chartHeight - padding * 2;
+                console.log(`📈 Loading chart for range: ${range}`);
+                this.isLoading = true;
+                this.currentRange = range;
+                this.updateRangeButtons(range);
+                this.showLoading();
                 
-                // Find min and max values for scaling
+                try {
+                    const apiFilter = this.mapRangeToAPI(range);
+                    const response = await fetch(`/api/realtime-chart-data?filter=${apiFilter}&_t=${Date.now()}`);
+                    const data = await response.json();
+                    
+                    console.log(`✅ Received data for ${range}:`, data);
+                    this.chartData = data;
+                    this.renderChart(data);
+                    
+                } catch (error) {
+                    console.error('❌ Error loading chart:', error);
+                    this.showError('Error loading chart data');
+                } finally {
+                    this.isLoading = false;
+                    this.hideLoading();
+                }
+            }
+            
+            renderChart(data) {
+                const svg = document.getElementById('mobileChart');
+                if (!svg || !data.labels || !data.values) {
+                    console.error('❌ Missing SVG element or invalid data');
+                    return;
+                }
+                
+                console.log(`🎨 Rendering chart with ${data.values.length} data points`);
+                
+                // Calculate data bounds
                 const minValue = Math.min(...data.values);
                 const maxValue = Math.max(...data.values);
-                const valueRange = maxValue - minValue;
+                const valueRange = maxValue - minValue || 1; // Prevent division by zero
                 
-                // Generate chart points
+                // Generate chart line points
                 const points = data.values.map((value, index) => {
-                    const x = padding + (index / (data.values.length - 1)) * plotWidth;
-                    const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
+                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
                     return `${x},${y}`;
                 }).join(' ');
                 
                 // Generate data point circles
                 const dataPoints = data.values.map((value, index) => {
-                    const x = padding + (index / (data.values.length - 1)) * plotWidth;
-                    const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
-                    return `<circle cx="${x}" cy="${y}" r="3" fill="#00d4ff" stroke="#1a1a1a" stroke-width="1"/>`;
+                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `<circle cx="${x}" cy="${y}" r="3" fill="#3b82f6" stroke="#000" stroke-width="1"/>`;
                 }).join('');
                 
-                // Generate Y-axis labels (properly positioned on right side)
+                // Generate Y-axis labels
                 const yLabels = [];
                 for (let i = 0; i <= 4; i++) {
                     const value = minValue + (valueRange * i / 4);
-                    const y = padding + plotHeight - (i / 4) * plotHeight;
-                    yLabels.push(`<text x="370" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="start">£${(value / 1000).toFixed(0)}k</text>`);
+                    const y = this.padding.top + this.plotHeight - (i / 4) * this.plotHeight;
+                    yLabels.push(`<text x="${this.width - 10}" y="${y + 4}" font-size="11" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(0)}k</text>`);
                 }
                 
-                // Generate X-axis labels - show all months for yearly data, otherwise smart spacing
+                // Generate X-axis labels with smart spacing
                 const xLabels = [];
-                if (range === '2023' || range === '2024' || range === '2025') {
-                    // Show all months for yearly views
-                    for (let i = 0; i < data.labels.length; i++) {
-                        const x = padding + (i / (data.labels.length - 1)) * plotWidth;
-                        // Extract month from label (e.g., "Jan 25" -> "Jan")
-                        const monthLabel = data.labels[i].split(' ')[0];
-                        xLabels.push(`<text x="${x}" y="240" font-size="9" fill="#6b7280" text-anchor="middle">${monthLabel}</text>`);
-                    }
-                } else {
-                    // Smart spacing for other views
-                    const labelStep = Math.ceil(data.labels.length / 6); // Show ~6 labels max
-                    for (let i = 0; i < data.labels.length; i += labelStep) {
-                        const x = padding + (i / (data.labels.length - 1)) * plotWidth;
-                        xLabels.push(`<text x="${x}" y="240" font-size="10" fill="#6b7280" text-anchor="middle">${data.labels[i]}</text>`);
-                    }
+                const labelStep = Math.max(1, Math.ceil(data.labels.length / 6));
+                for (let i = 0; i < data.labels.length; i += labelStep) {
+                    const x = this.padding.left + (i / (data.labels.length - 1)) * this.plotWidth;
+                    xLabels.push(`<text x="${x}" y="${this.height - 10}" font-size="10" fill="#6b7280" text-anchor="middle">${data.labels[i]}</text>`);
                 }
                 
-                // Mark current value point only for live/current data (not historical years)
-                let currentPointMarkup = '';
-                if (range !== '2023' && range !== '2024') {
-                    // Only show "current" indicator for live data ranges
-                    const lastIndex = data.values.length - 1;
-                    const lastX = padding + (lastIndex / (data.values.length - 1)) * plotWidth;
-                    const lastY = padding + plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * plotHeight;
-                    currentPointMarkup = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>`;
-                }
+                // Current value indicator
+                const lastIndex = data.values.length - 1;
+                const lastX = this.padding.left + (lastIndex / (data.values.length - 1)) * this.plotWidth;
+                const lastY = this.padding.top + this.plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * this.plotHeight;
+                const currentPoint = `<circle cx="${lastX}" cy="${lastY}" r="5" fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>`;
                 
-                const svgContent = `
-                    <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${points}"/>
+                // Render complete chart
+                svg.innerHTML = `
+                    <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${points}"/>
                     ${dataPoints}
-                    ${currentPointMarkup}
+                    ${currentPoint}
                     ${yLabels.join('')}
                     ${xLabels.join('')}
                 `;
                 
-                console.log('🎨 Generated SVG content:', svgContent.substring(0, 200) + '...');
-                console.log('📏 Points string:', points.substring(0, 100) + '...');
-                console.log('📍 Data points count:', data.values.length);
+                // Store data for touch interactions
+                this.storeInteractionData(data, minValue, maxValue, valueRange);
                 
-                svg.innerHTML = svgContent;
-                
-                // Store chart data for potential interactions
-                currentRange = range;
-                currentChartData = {
-                    values: data.values,
-                    labels: data.labels,
-                    points: points,
-                    hasCurrentValue: true
-                };
-                
-                console.log('✅ Mobile SVG chart generated successfully');
-                
-                // Store chart data for touch interactions - using exact same positioning as chart generation
-                window.mobileChartData = {
+                // Show chart with animation
+                svg.style.opacity = '1';
+                console.log('✅ Chart rendered successfully');
+            }
+            
+            storeInteractionData(data, minValue, maxValue, valueRange) {
+                this.interactionData = {
                     values: data.values,
                     labels: data.labels,
                     dataPoints: data.values.map((value, index) => {
-                        // Use identical positioning logic as chart generation
-                        const x = padding + (index / (data.values.length - 1)) * plotWidth;
-                        const y = padding + plotHeight - ((value - minValue) / valueRange) * plotHeight;
+                        const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                        const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
                         return { x, y, value, label: data.labels[index] };
                     }),
-                    minValue: minValue,
-                    maxValue: maxValue,
-                    valueRange: valueRange,
-                    padding: padding,
-                    plotWidth: plotWidth,
-                    plotHeight: plotHeight
+                    minValue,
+                    maxValue,
+                    valueRange
                 };
+            }
+            
+            handleTouch(event) {
+                if (!this.interactionData) return;
                 
-                return;
-            } else if (data.line) {
-                // Static format - use directly
-                lineData = data.line;
-                yLabels = data.yLabels;
-                xLabels = data.xLabels;
-                hasCurrentValue = data.hasCurrentValue;
-            } else {
-                console.warn('No chart data for range:', range);
-                svg.innerHTML = '<text x="200" y="120" text-anchor="middle" fill="#666" font-size="14">No data available</text>';
-                return;
-            }
-            
-            // Update chart  
-            const chartHasCurrentValue = hasCurrentValue || false;
-            const linePoints = lineData.split(' ');
-            const lastPoint = linePoints[linePoints.length - 1];
-            
-            // Create dots for each data point
-            const dataPoints = linePoints.map(point => {
-                const [x, y] = point.split(',');
-                return `<circle cx="${x}" cy="${y}" r="3" fill="#00d4ff" stroke="#1a1a1a" stroke-width="1"/>`;
-            }).join('');
-            
-            // Mark current value point differently if it exists
-            const currentPointMarkup = chartHasCurrentValue && lastPoint ? 
-                `<circle cx="${lastPoint.split(',')[0]}" cy="${lastPoint.split(',')[1]}" r="5" fill="#00d4ff" stroke="#ffffff" stroke-width="2"/>` : '';
-            
-            svg.innerHTML = `
-                <polyline fill="none" stroke="#00d4ff" stroke-width="2" points="${lineData}"/>
-                ${dataPoints}
-                ${currentPointMarkup}
-                ${yLabels.map(label => 
-                    `<text x="385" y="${label.y}" font-size="11" fill="#9ca3af" text-anchor="end">${label.text}</text>`
-                ).join('')}
-                ${xLabels.map(label => 
-                    `<text x="${label.x}" y="240" font-size="10" fill="${label.text.includes('*') ? '#00d4ff' : '#6b7280'}" text-anchor="middle">${label.text}</text>`
-                ).join('')}
-            `;
-            
-            currentRange = range;
-            currentChartData = {
-                line: lineData,
-                yLabels: yLabels,
-                xLabels: xLabels,
-                hasCurrentValue: chartHasCurrentValue
-            };
-            
-            // Store actual data points for precise hover detection
-            const points = lineData.split(' ').map((point, index) => {
-                const [x, y] = point.split(',').map(Number);
-                return {
-                    x: x,
-                    y: y,
-                    label: xLabels[index]?.text || '',
-                    index: index
-                };
-            });
-            currentChartData.dataPoints = points;
-            
-            // setupChartInteraction(); // Disabled - no hover interactions
-        }
-
-        // Mobile touch interaction functions
-        function handleChartTouch(event) {
-            if (!window.mobileChartData) return;
-            
-            event.preventDefault();
-            const touch = event.touches[0] || event.changedTouches[0];
-            if (!touch) return;
-            
-            const chartContainer = document.querySelector('.relative');
-            const rect = chartContainer.getBoundingClientRect();
-            const touchX = touch.clientX - rect.left;
-            const touchY = touch.clientY - rect.top;
-            
-            // Find closest data point based primarily on horizontal position (x-axis)
-            let closestPoint = null;
-            let minXDistance = Infinity;
-            
-            window.mobileChartData.dataPoints.forEach(point => {
-                const xDistance = Math.abs(touchX - point.x);
-                if (xDistance < minXDistance && xDistance < 50) { // 50px horizontal tolerance
-                    minXDistance = xDistance;
-                    closestPoint = point;
+                event.preventDefault();
+                const touch = event.touches[0] || event.changedTouches[0];
+                if (!touch) return;
+                
+                const rect = document.getElementById('mobileChartContainer').getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+                
+                // Find closest data point
+                let closestPoint = null;
+                let minDistance = Infinity;
+                
+                this.interactionData.dataPoints.forEach(point => {
+                    const distance = Math.abs(touchX - point.x * (rect.width / this.width));
+                    if (distance < minDistance && distance < 30) {
+                        minDistance = distance;
+                        closestPoint = point;
+                    }
+                });
+                
+                if (closestPoint) {
+                    this.showTooltip(closestPoint, touchX, touchY);
                 }
-            });
+            }
             
-            if (closestPoint) {
-                showMobileTooltip(closestPoint, touchX, touchY);
-            } else {
-                hideTooltip();
+            showTooltip(point, x, y) {
+                const tooltip = document.getElementById('chartTooltip');
+                const valueEl = document.getElementById('tooltipValue');
+                const dateEl = document.getElementById('tooltipDate');
+                
+                if (tooltip && valueEl && dateEl) {
+                    valueEl.textContent = `£${point.value.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    dateEl.textContent = point.label;
+                    
+                    tooltip.style.left = `${Math.max(10, Math.min(x - 50, window.innerWidth - 110))}px`;
+                    tooltip.style.top = `${Math.max(10, y - 60)}px`;
+                    tooltip.style.opacity = '1';
+                }
+            }
+            
+            hideTooltip() {
+                const tooltip = document.getElementById('chartTooltip');
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                }
+            }
+            
+            showLoading() {
+                const loading = document.getElementById('chartLoading');
+                const chart = document.getElementById('mobileChart');
+                if (loading) loading.style.display = 'flex';
+                if (chart) chart.style.opacity = '0';
+            }
+            
+            hideLoading() {
+                const loading = document.getElementById('chartLoading');
+                if (loading) loading.style.display = 'none';
+            }
+            
+            showError(message) {
+                const svg = document.getElementById('mobileChart');
+                if (svg) {
+                    svg.innerHTML = `<text x="200" y="128" text-anchor="middle" fill="#ef4444" font-size="14">${message}</text>`;
+                    svg.style.opacity = '1';
+                }
             }
         }
         
-        function showMobileTooltip(point, touchX, touchY) {
-            const tooltip = document.getElementById('mobileTooltip');
-            const valueEl = document.getElementById('mobileTooltipValue');
-            const dateEl = document.getElementById('mobileTooltipDate');
-            
-            // Update tooltip content
-            valueEl.textContent = `£${point.value.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            dateEl.textContent = point.label;
-            
-            // Position tooltip above the data point
-            let tooltipX = point.x - 50; // Center on data point x
-            let tooltipY = point.y - 80; // Position well above data point
-            
-            // Keep tooltip within bounds
-            if (tooltipX < 10) tooltipX = 10;
-            if (tooltipX > 280) tooltipX = 280;
-            if (tooltipY < 10) tooltipY = point.y + 30; // Move below data point if too high
-            
-            tooltip.style.left = tooltipX + 'px';
-            tooltip.style.top = tooltipY + 'px';
-            tooltip.style.opacity = '1';
-            
-            // Auto-hide after 3 seconds
-            clearTimeout(window.tooltipHideTimer);
-            window.tooltipHideTimer = setTimeout(hideTooltip, 3000);
-        }
-        
-        function hideTooltip() {
-            const tooltip = document.getElementById('mobileTooltip');
-            
-            tooltip.style.opacity = '0';
-            
-            clearTimeout(window.tooltipHideTimer);
-        }
-
-        // Initialize chart on page load with MAX view
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Chart data:', chartData);
-            
-            // Force 1D view to be active on load (like desktop)
-            currentRange = '';
-            updateChart('1d');
-            
-            // Touch behaviors disabled - no chart interactions
-            
-            // Start auto-refresh for live updates (portfolio values)
-            startAutoRefresh();
-            
-            // Auto-refresh chart data every 30 seconds for real-time updates
-            startChartAutoRefresh();
-        });
-
-        // Privacy toggle functionality
+        // Privacy mode compatibility
         let privacyMode = false;
-
+        
         function togglePrivacy() {
             privacyMode = !privacyMode;
             const icon = document.getElementById('privacyIcon');
             const portfolioValue = document.getElementById('portfolioValue');
-            const chartContainer = document.getElementById('chartContainer');
+            const chartContainer = document.getElementById('mobileChartContainer');
             const breakdownValues = document.querySelectorAll('.breakdown-value');
 
             if (privacyMode) {
-                // Enable privacy mode
                 icon.className = 'fas fa-eye-slash text-blue-400 text-lg';
                 portfolioValue.classList.add('privacy-blur');
                 chartContainer.classList.add('privacy-blur');
                 breakdownValues.forEach(el => el.classList.add('privacy-blur'));
             } else {
-                // Disable privacy mode
                 icon.className = 'fas fa-eye text-gray-400 text-lg';
                 portfolioValue.classList.remove('privacy-blur');
                 chartContainer.classList.remove('privacy-blur');
                 breakdownValues.forEach(el => el.classList.remove('privacy-blur'));
             }
         }
-
-        // Auto-refresh functionality for seamless updates
-        function startAutoRefresh() {
-            console.log('Starting mobile auto-refresh...');
+        
+        // Initialize chart system on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Mobile Dashboard Initializing...');
             
+            // Initialize chart system
+            window.mobileChart = new MobileChart();
+            
+            // Start auto-refresh for live updates
+            startAutoRefresh();
+            
+            console.log('✅ Mobile Dashboard Ready');
+        });
+        
+        // Auto-refresh system for live updates
+        function startAutoRefresh() {
             setInterval(async function() {
                 try {
-                    console.log('Fetching live values for mobile...');
                     const response = await fetch(`/api/live-values?_t=${Date.now()}`);
                     if (response.ok) {
                         const data = await response.json();
-                        console.log('Received mobile live data:', data);
                         
-                        let hasChanges = false;
-                        
-                        // 1. Update portfolio value with animation check (only if not in privacy mode)
+                        // Update portfolio value
                         const portfolioValue = document.getElementById('portfolioValue');
                         if (portfolioValue && !privacyMode) {
-                            const currentText = portfolioValue.textContent;
-                            const currentValue = parseFloat(currentText.replace(/[£,]/g, ''));
+                            const currentValue = parseFloat(portfolioValue.textContent.replace(/[£,]/g, ''));
                             const newValue = data.current_net_worth;
-                            
                             const change = Math.abs(currentValue - newValue);
-                            if (change > 0.01) { // Only animate if there's a meaningful change
-                                const displayValue = `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                                portfolioValue.textContent = displayValue;
-                                hasChanges = true;
-                                console.log('✨ Mobile animation triggered! Updated portfolio value to:', displayValue);
-                            }
-                        }
-                        
-                        // 2. Always update Month-on-Month and Yearly values (coordinated updates)
-                        // Mobile structure: MONTHLY and YEARLY sections in header area
-                        const monthlyLabelElements = document.querySelectorAll('span.text-gray-400.text-xs.uppercase.tracking-wide');
-                        monthlyLabelElements.forEach(labelElement => {
-                            if (labelElement.textContent.includes('MONTHLY')) {
-                                // Find the amount span (first span in the div below)
-                                const parentDiv = labelElement.parentElement;
-                                const valueContainer = parentDiv.querySelector('div.flex.items-center.space-x-1');
-                                if (valueContainer) {
-                                    const amountElement = valueContainer.querySelector('span.font-semibold');
-                                    const percentElement = valueContainer.querySelector('span.text-xs');
-                                    
-                                    if (amountElement && percentElement) {
-                                        // Update amount
-                                        const amountSign = data.mom_amount_change >= 0 ? '+' : '';
-                                        const newAmountText = `${amountSign}£${Math.abs(data.mom_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-                                        amountElement.textContent = newAmountText;
-                                        
-                                        // Update percentage
-                                        const percentSign = data.mom_change >= 0 ? '+' : '';
-                                        const newPercentText = `(${percentSign}${data.mom_change.toFixed(1)}%)`;
-                                        percentElement.textContent = newPercentText;
-                                        
-                                        // Update colors
-                                        const colorClass = data.mom_change >= 0 ? 'text-green-400' : 'text-red-400';
-                                        amountElement.className = amountElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
-                                        percentElement.className = percentElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
-                                        
-                                        if (hasChanges) {
-                                            console.log('Updated mobile Monthly values (coordinated)');
-                                        }
-                                    }
-                                }
-                            }
                             
-                            if (labelElement.textContent.includes('YEARLY')) {
-                                // Find the amount span (first span in the div below)
-                                const parentDiv = labelElement.parentElement;
-                                const valueContainer = parentDiv.querySelector('div.flex.items-center.space-x-1');
-                                if (valueContainer) {
-                                    const amountElement = valueContainer.querySelector('span.font-semibold');
-                                    const percentElement = valueContainer.querySelector('span.text-xs');
-                                    
-                                    if (amountElement && percentElement) {
-                                        // Update amount
-                                        const amountSign = data.yearly_amount_change >= 0 ? '+' : '';
-                                        const newAmountText = `${amountSign}£${Math.abs(data.yearly_amount_change).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-                                        amountElement.textContent = newAmountText;
-                                        
-                                        // Update percentage
-                                        const percentSign = data.yearly_increase >= 0 ? '+' : '';
-                                        const newPercentText = `(${percentSign}${data.yearly_increase.toFixed(1)}%)`;
-                                        percentElement.textContent = newPercentText;
-                                        
-                                        // Update colors
-                                        const colorClass = data.yearly_increase >= 0 ? 'text-green-400' : 'text-red-400';
-                                        amountElement.className = amountElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
-                                        percentElement.className = percentElement.className.replace(/text-(green|red)-400/g, '') + ' ' + colorClass;
-                                        
-                                        if (hasChanges) {
-                                            console.log('Updated mobile Yearly values (coordinated)');
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                        
-                        // Only update platform components when main net worth changes
-                        if (hasChanges) {
-                                }
-                            });
-
-                            // 3. Update breakdown values with percentages and monthly changes
-                            const breakdownItems = document.querySelectorAll('.breakdown-item[data-platform]');
-                            breakdownItems.forEach((item) => {
-                                const platformName = item.getAttribute('data-platform');
-                                if (platformName && data.platform_allocations[platformName] !== undefined) {
-                                    
-                                    // Update platform amount
-                                    const valueElement = item.querySelector('.breakdown-value');
-                                    if (valueElement && !privacyMode) {
-                                        const newValue = `£${data.platform_allocations[platformName].toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                                        if (valueElement.textContent !== newValue) {
-                                            valueElement.textContent = newValue;
-                                        }
-                                    }
-                                    
-                                    // Update percentage
-                                    const percentElement = item.querySelector('.text-gray-500.text-xs');
-                                    if (percentElement && data.platform_percentages[platformName] !== undefined) {
-                                        const newPercent = `${data.platform_percentages[platformName].toFixed(1)}%`;
-                                        if (percentElement.textContent !== newPercent) {
-                                            percentElement.textContent = newPercent;
-                                        }
-                                    }
-                                    
-                                    // Update monthly change indicator if present
-                                    if (data.platform_monthly_changes[platformName]) {
-                                        const changeData = data.platform_monthly_changes[platformName];
-                                        const changeElement = item.querySelector('.text-green-500, .text-red-500, .text-gray-500');
-                                        if (changeElement && changeData.previous > 0) {
-                                            const changeAmount = changeData.amount;
-                                            const changePercent = changeData.percent;
-                                            
-                                            let changeText, changeClass;
-                                            if (changeAmount > 0) {
-                                                changeText = `▲ +£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (+${changePercent.toFixed(1)}%)`;
-                                                changeClass = 'text-green-500 text-xs font-medium';
-                                            } else if (changeAmount < 0) {
-                                                changeText = `▼ -£${Math.abs(changeAmount).toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})} (${changePercent.toFixed(1)}%)`;
-                                                changeClass = 'text-red-500 text-xs font-medium';
-                                            } else {
-                                                changeText = `━ No change`;
-                                                changeClass = 'text-gray-500 text-xs';
-                                            }
-                                            
-                                            changeElement.textContent = changeText;
-                                            changeElement.className = changeClass;
-                                        }
-                                    }
-                                }
-                            });
-
-                            // 4. Update financial target progress (if present on mobile)
-                            if (data.progress_info) {
-                                const progressInfo = data.progress_info;
-                                
-                                // Update progress elements if they exist
-                                const progressNetWorthElement = document.querySelector('#mobile-progress-current-net-worth');
-                                if (progressNetWorthElement) {
-                                    const newValue = `£${data.current_net_worth.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-                                    if (progressNetWorthElement.textContent !== newValue) {
-                                        progressNetWorthElement.textContent = newValue;
-                                    }
-                                }
-                                
-                                const progressBarElement = document.querySelector('#mobile-progress-bar');
-                                const progressPercentElement = document.querySelector('#mobile-progress-percent');
-                                if (progressBarElement && progressPercentElement) {
-                                    const newPercent = progressInfo.progress_percentage.toFixed(1);
-                                    progressBarElement.style.width = `${Math.min(progressInfo.progress_percentage, 100)}%`;
-                                    progressPercentElement.textContent = `${newPercent}%`;
-                                }
-                                
-                                const remainingAmountElement = document.querySelector('#mobile-remaining-amount');
-                                if (remainingAmountElement) {
-                                    const newRemaining = `£${progressInfo.remaining_amount.toLocaleString('en-GB', {minimumFractionDigits: 0, maximumFractionDigits: 0})}`;
-                                    if (remainingAmountElement.textContent !== newRemaining) {
-                                        remainingAmountElement.textContent = newRemaining;
-                                    }
+                            if (change > 0.01) {
+                                portfolioValue.textContent = `£${newValue.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                // Refresh chart with new data
+                                if (window.mobileChart) {
+                                    window.mobileChart.loadChart(window.mobileChart.currentRange);
                                 }
                             }
                         }
-                        
-                        // Always update last updated time
-                        const lastUpdatedElement = document.querySelector('.text-gray-400.text-xs');
-                        if (lastUpdatedElement && data.last_updated) {
-                            const newTime = `Last updated ${data.last_updated}`;
-                            if (lastUpdatedElement.textContent !== newTime) {
-                                lastUpdatedElement.textContent = newTime;
-                                console.log('Updated mobile last updated time to:', newTime);
-                            }
-                        }
-                        
-                    } else {
-                        console.error('Failed to fetch mobile live values:', response.status);
                     }
                 } catch (error) {
-                    console.error('Mobile auto-refresh error:', error);
+                    console.error('Auto-refresh error:', error);
                 }
-            }, 30000); // Update every 30 seconds to match desktop
+            }, 30000);
         }
-        
-        // Auto-refresh chart data for mobile
-        function startChartAutoRefresh() {
-            console.log('Starting mobile chart auto-refresh...');
-            
-            setInterval(function() {
-                if (currentRange) {
-                    console.log('Auto-refreshing mobile chart data for range:', currentRange);
-                    
-                    // Map mobile filters to API filters for auto-refresh
-                    let apiFilter;
-                    if (currentRange.toLowerCase() === 'max') {
-                        apiFilter = 'all-years';
-                    } else if (currentRange === '1d') {
-                        apiFilter = '24h';
-                    } else if (currentRange === '1w') {
-                        apiFilter = 'week';
-                    } else if (currentRange === '1m') {
-                        apiFilter = '1m';
-                    } else if (currentRange === '3m') {
-                        apiFilter = '3months';
-                    } else if (currentRange === '1y') {
-                        apiFilter = 'year';
-                    } else {
-                        apiFilter = currentRange; // 2023, 2024, 2025
-                    }
-                    
-                    const apiUrl = `/api/realtime-chart-data?filter=${apiFilter}`;
-                        
-                    fetch(apiUrl)
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Auto-refresh: Mobile chart data received for', currentRange);
-                            updateMobileChartDisplay(data, currentRange);
-                        })
-                        .catch(error => {
-                            console.error('Auto-refresh: Error fetching mobile chart data:', error);
-                        });
-                }
-            }, 30000); // Refresh chart every 30 seconds
-        }
-        
-        // Mobile-specific interactions
-        function showSettings() {
-            alert('Settings functionality coming soon!');
-        }
-
-        // Touch-friendly interactions
-        document.addEventListener('touchstart', function() {}, true);
-        
-        // Initialize mobile chart system when DOM is ready
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Mobile dashboard loaded, starting initialization...');
-            
-            // Start auto-refresh systems
-            startAutoRefresh();
-            startChartAutoRefresh();
-            
-            // Initialize default chart (MAX view) 
-            console.log('Initializing default chart with MAX view...');
-            updateChart('MAX');
-            
-            console.log('Mobile chart system initialization complete');
-        });
     </script>
 </body>
 </html>
+            
+            setInterval(async function() {
+                try {
