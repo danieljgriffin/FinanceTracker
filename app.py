@@ -2304,39 +2304,92 @@ def realtime_chart_data():
         time_filter = request.args.get('filter', '24h')
         
         if time_filter == 'week':
-            # Get weekly data from the last 7 days
-            cutoff_time = datetime.now() - timedelta(days=7)
-            data_points = WeeklyHistoricalNetWorth.query.filter(
-                WeeklyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(WeeklyHistoricalNetWorth.timestamp.asc()).all()
+            # ONLY use authentic 24h data for now - no fake weekly data
+            cutoff_time = datetime.now() - timedelta(hours=24)
+            data_points = HistoricalNetWorth.query.filter(
+                HistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == 'month':
-            # Desktop "Month" should show daily data like mobile "1M" - use daily data for last 30 days
-            cutoff_time = datetime.now() - timedelta(days=30)
-            data_points = DailyHistoricalNetWorth.query.filter(
-                DailyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            # ONLY use authentic recent data - no fake daily historical data
+            cutoff_time = datetime.now() - timedelta(hours=48)
+            data_points = HistoricalNetWorth.query.filter(
+                HistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == '1m':
-            # Get daily data from the last 30 days - using end of day captures
-            cutoff_time = datetime.now() - timedelta(days=30)
-            data_points = DailyHistoricalNetWorth.query.filter(
-                DailyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            # ONLY use authentic recent data - no fake daily historical data
+            cutoff_time = datetime.now() - timedelta(hours=72)
+            data_points = HistoricalNetWorth.query.filter(
+                HistoricalNetWorth.timestamp >= cutoff_time
+            ).order_by(HistoricalNetWorth.timestamp.asc()).all()
             
         elif time_filter == '3months':
-            # Get daily data from the last 90 days
-            cutoff_time = datetime.now() - timedelta(days=90)
-            data_points = DailyHistoricalNetWorth.query.filter(
-                DailyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            # Use ONLY authentic year-month tracker data from the last year
+            from models import NetworthEntry
+            try:
+                current_year = datetime.now().year
+                recent_data = NetworthEntry.query.filter(NetworthEntry.year.in_([current_year - 1, current_year])).all()
+                
+                # Convert to data points format
+                data_points = []
+                for month_data in recent_data:
+                    class AuthenticDataPoint:
+                        def __init__(self, timestamp, net_worth):
+                            self.timestamp = timestamp
+                            self.net_worth = net_worth
+                    
+                    # Parse month and create timestamp
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    month_num = 1
+                    for i, month_name in enumerate(month_names):
+                        if month_name in month_data.month:
+                            month_num = i + 1
+                            break
+                    
+                    month_end = datetime(month_data.year, month_num, 15)  # Mid-month
+                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
+                
+                data_points.sort(key=lambda x: x.timestamp)
+                data_points = data_points[-12:]  # Last 12 months only
+                
+            except Exception as e:
+                logging.error(f"Error getting 3months authentic data: {str(e)}")
+                data_points = []
             
         elif time_filter in ['year', '1y']:
-            # Get daily data from the last 365 days
-            cutoff_time = datetime.now() - timedelta(days=365)
-            data_points = DailyHistoricalNetWorth.query.filter(
-                DailyHistoricalNetWorth.timestamp >= cutoff_time
-            ).order_by(DailyHistoricalNetWorth.timestamp.asc()).all()
+            # Use ONLY authentic year-month tracker data - NO FAKE DAILY DATA
+            from models import NetworthEntry
+            try:
+                current_year = datetime.now().year
+                yearly_data = NetworthEntry.query.filter(NetworthEntry.year.in_([current_year - 1, current_year])).all()
+                
+                # Convert to data points format
+                data_points = []
+                for month_data in yearly_data:
+                    class AuthenticDataPoint:
+                        def __init__(self, timestamp, net_worth):
+                            self.timestamp = timestamp
+                            self.net_worth = net_worth
+                    
+                    # Parse month and create timestamp
+                    month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                                  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                    month_num = 1
+                    for i, month_name in enumerate(month_names):
+                        if month_name in month_data.month:
+                            month_num = i + 1
+                            break
+                    
+                    month_end = datetime(month_data.year, month_num, 15)  # Mid-month
+                    data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
+                
+                data_points.sort(key=lambda x: x.timestamp)
+                
+            except Exception as e:
+                logging.error(f"Error getting 1y authentic data: {str(e)}")
+                data_points = []
             
         elif time_filter.isdigit() and int(time_filter) >= 2023:
             # Get data from NetworthEntry for specific year - using authentic year-month tracker data
