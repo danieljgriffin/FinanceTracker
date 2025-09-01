@@ -2381,7 +2381,7 @@ def realtime_chart_data():
                 logging.error(f"Error getting yearly data for {time_filter}: {str(e)}")
                 data_points = []
                 
-        elif time_filter == 'max':
+        elif time_filter in ['max', 'all']:
             # Get ALL data from NetworthEntry for maximum view - AUTHENTIC year-month tracker data  
             from models import NetworthEntry
             try:
@@ -2422,7 +2422,7 @@ def realtime_chart_data():
                     data_points.append(AuthenticDataPoint(month_end, month_data.total_networth))
                 
             except Exception as e:
-                logging.error(f"Error getting max data: {str(e)}")
+                logging.error(f"Error getting max/all data: {str(e)}")
                 data_points = []
             
         else:  # Default to 24h
@@ -2473,9 +2473,12 @@ def realtime_chart_data():
                 elif time_filter in ['3months', 'year']:
                     # For 3 months/year data, show date (e.g., "22/08")
                     time_label = bst_time.strftime('%d/%m')
-                elif time_filter in ['2023', '2024', '2025', 'max'] or time_filter.isdigit():
+                elif time_filter in ['2023', '2024', '2025', 'max', 'all'] or time_filter.isdigit():
                     # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
                     time_label = bst_time.strftime('%b %y')
+                else:
+                    # Default fallback for any unhandled time_filter values
+                    time_label = bst_time.strftime('%d/%m %H:%M')
                 
                 labels.append(time_label)
                 values.append(float(point.net_worth))
