@@ -2381,7 +2381,7 @@ def realtime_chart_data():
                 logging.error(f"Error getting yearly data for {time_filter}: {str(e)}")
                 data_points = []
                 
-        elif time_filter in ['max', 'all']:
+        elif time_filter in ['max', 'all', 'all-years']:
             # Get ALL data from NetworthEntry for maximum view - AUTHENTIC year-month tracker data  
             from models import NetworthEntry
             try:
@@ -2461,7 +2461,10 @@ def realtime_chart_data():
                 # Convert to BST for display
                 bst_time = point.timestamp.astimezone(uk_tz)
                 
-                if time_filter == 'week':
+                if time_filter in ['all-years', 'max', 'all', '2023', '2024', '2025'] or time_filter.isdigit():
+                    # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
+                    time_label = bst_time.strftime('%b %y')
+                elif time_filter == 'week':
                     # For weekly data, show day and time (e.g., "Mon 12:00")
                     time_label = bst_time.strftime('%a %H:%M')
                 elif time_filter == '1m':
@@ -2473,9 +2476,6 @@ def realtime_chart_data():
                 elif time_filter in ['3months', 'year']:
                     # For 3 months/year data, show date (e.g., "22/08")
                     time_label = bst_time.strftime('%d/%m')
-                elif time_filter in ['2023', '2024', '2025', 'max', 'all'] or time_filter.isdigit():
-                    # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
-                    time_label = bst_time.strftime('%b %y')
                 else:
                     # Default fallback for any unhandled time_filter values
                     time_label = bst_time.strftime('%d/%m %H:%M')
