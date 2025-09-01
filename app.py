@@ -2475,7 +2475,7 @@ def realtime_chart_data():
                 elif time_filter in ['3months', 'year']:
                     # For 3 months/year data, show date (e.g., "22/08")
                     time_label = bst_time.strftime('%d/%m')
-                elif time_filter in ['2023', '2024', '2025', 'all-years']:
+                elif time_filter in ['2023', '2024', '2025', 'max'] or time_filter.isdigit():
                     # For yearly data from monthly tracker, show month/year (e.g., "Jan 23")
                     time_label = bst_time.strftime('%b %y')
                 
