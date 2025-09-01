@@ -975,8 +975,8 @@
                                     }
                                 }
                                 
-                                // Update percentage
-                                const percentElement = platformDiv.querySelector('.text-gray-400');
+                                // Update percentage (be more specific to avoid overwriting price change elements)
+                                const percentElement = platformDiv.querySelector('.ml-5 .text-gray-400');
                                 if (percentElement && data.platform_percentages[platformName] !== undefined) {
                                     const newPercent = `${data.platform_percentages[platformName].toFixed(1)}% of total`;
                                     if (percentElement.textContent !== newPercent) {
