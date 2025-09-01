@@ -83,7 +83,7 @@
                                 <!-- Secondary row with percentage and change -->
                                 <div class="flex justify-between mt-0.5">
                                     <div class="ml-5">
-                                        <p class="text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
+                                        <p class="platform-percentage text-xs text-gray-400">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of total</p>
                                     </div>
                                     <div class="text-right">
                                         {% set change_data = platform_monthly_changes.get(platform, {}) %}
@@ -975,8 +975,8 @@
                                     }
                                 }
                                 
-                                // Update percentage (be more specific to avoid overwriting price change elements)
-                                const percentElement = platformDiv.querySelector('.ml-5 .text-gray-400');
+                                // Update percentage (use unique class to avoid any conflicts)
+                                const percentElement = platformDiv.querySelector('.platform-percentage');
                                 if (percentElement && data.platform_percentages[platformName] !== undefined) {
                                     const newPercent = `${data.platform_percentages[platformName].toFixed(1)}% of total`;
                                     if (percentElement.textContent !== newPercent) {
@@ -984,10 +984,10 @@
                                     }
                                 }
                                 
-                                // Update monthly change indicators
+                                // Update monthly change indicators (exclude percentage elements by targeting only right side)
                                 if (data.platform_monthly_changes[platformName]) {
                                     const changeData = data.platform_monthly_changes[platformName];
-                                    const changeElement = platformDiv.querySelector('.text-green-500, .text-red-500, .text-gray-400');
+                                    const changeElement = platformDiv.querySelector('.text-right .text-green-500, .text-right .text-red-500, .text-right .inline-flex');
                                     if (changeElement && changeData.previous > 0) {
                                         const changeAmount = changeData.amount;
                                         const changePercent = changeData.percent;
