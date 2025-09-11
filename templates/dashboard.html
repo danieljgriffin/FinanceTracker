@@ -22,6 +22,13 @@
         </div>
     </div>
 
+    <!-- Platform Connection Quick Access Button -->
+    <div class="mb-4 text-right">
+        <button onclick="openPlatformModal()" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+            <i class="fas fa-link mr-2"></i>Connect Accounts
+        </button>
+    </div>
+
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4 sm:mb-6">
         <!-- Current Net Worth -->
@@ -1439,6 +1446,258 @@
         </form>
     </div>
 </div>
+
+<!-- Platform Connection Modal -->
+{% include 'platform_connection_modal.html' %}
+
+<!-- Platform Connection JavaScript -->
+<script>
+// Platform Connection Modal Functions
+function openPlatformModal() {
+    document.getElementById('platformConnectionModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePlatformModal() {
+    document.getElementById('platformConnectionModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function connectPlatform(platformType) {
+    if (platformType === 'trading212') {
+        document.getElementById('trading212Modal').classList.remove('hidden');
+    } else {
+        showComingSoonMessage(platformType);
+    }
+}
+
+function closeTradingModal() {
+    document.getElementById('trading212Modal').classList.add('hidden');
+}
+
+function showManualPlatformOptions() {
+    closePlatformModal();
+    document.getElementById('manualPlatformModal').classList.remove('hidden');
+}
+
+function closeManualPlatformModal() {
+    document.getElementById('manualPlatformModal').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showComingSoonMessage(platform) {
+    const platformNames = {
+        'ajbell': 'AJ Bell',
+        'coinbase': 'Coinbase',
+        'open_banking': 'Open Banking'
+    };
+    
+    const status = document.getElementById('connectionStatus');
+    if (status) {
+        status.innerHTML = `
+            <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle text-blue-400 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-blue-400">${platformNames[platform]} Integration</h4>
+                        <p class="text-sm text-gray-300 mt-1">Coming soon! We're working on secure ${platformNames[platform]} integration.</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        status.classList.remove('hidden');
+    }
+}
+
+function testTradingConnection() {
+    const apiKey = document.getElementById('trading212ApiKey').value.trim();
+    const testBtn = document.getElementById('testConnectionBtn');
+    const status = document.getElementById('connectionStatus');
+    
+    if (!apiKey) {
+        showConnectionError('Please enter your Trading 212 API key.');
+        return;
+    }
+    
+    // Disable button and show loading
+    testBtn.disabled = true;
+    testBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+    
+    // Test the connection
+    fetch('/api/test_connection', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            platform_type: 'trading212',
+            credentials: {
+                api_key: apiKey
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showConnectionSuccess(data);
+        } else {
+            showConnectionError(data.error || 'Connection failed');
+        }
+    })
+    .catch(error => {
+        showConnectionError('Network error: ' + error.message);
+    })
+    .finally(() => {
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<i class="fas fa-plug mr-2"></i>Test Connection';
+    });
+}
+
+function showConnectionSuccess(data) {
+    const status = document.getElementById('connectionStatus');
+    status.innerHTML = `
+        <div class="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-green-400">Connection Successful!</h4>
+                        <p class="text-sm text-gray-300 mt-1">
+                            Account Balance: £${data.account_info?.total?.toLocaleString() || 'Unknown'}
+                        </p>
+                    </div>
+                </div>
+                <button onclick="saveTradingConnection()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-save mr-2"></i>Save & Sync
+                </button>
+            </div>
+        </div>
+    `;
+    status.classList.remove('hidden');
+}
+
+function showConnectionError(error) {
+    const status = document.getElementById('connectionStatus');
+    status.innerHTML = `
+        <div class="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-3"></i>
+                <div>
+                    <h4 class="font-semibold text-red-400">Connection Failed</h4>
+                    <p class="text-sm text-gray-300 mt-1">${error}</p>
+                </div>
+            </div>
+        </div>
+    `;
+    status.classList.remove('hidden');
+}
+
+function saveTradingConnection() {
+    const apiKey = document.getElementById('trading212ApiKey').value.trim();
+    
+    fetch('/api/save_platform_connection', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            platform_type: 'trading212',
+            credentials: {
+                api_key: apiKey
+            }
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modals and refresh dashboard
+            closeTradingModal();
+            closePlatformModal();
+            location.reload(); // Refresh to show new data
+        } else {
+            showConnectionError(data.error || 'Failed to save connection');
+        }
+    })
+    .catch(error => {
+        showConnectionError('Network error: ' + error.message);
+    });
+}
+
+function addManualPlatform(platformName) {
+    fetch('/api/add_manual_platform', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            platform_name: platformName,
+            platform_type: 'manual'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeManualPlatformModal();
+            closePlatformModal();
+            // Show success message
+            showNotification(`${platformName} platform added successfully!`, 'success');
+        } else {
+            showNotification(data.error || 'Failed to add platform', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Network error: ' + error.message, 'error');
+    });
+}
+
+function addCustomPlatform() {
+    const customName = document.getElementById('customPlatformName').value.trim();
+    if (!customName) {
+        showNotification('Please enter a platform name', 'error');
+        return;
+    }
+    
+    addManualPlatform(customName);
+    document.getElementById('customPlatformName').value = '';
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 transform ${
+        type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center text-white">
+            <i class="fas ${type === 'success' ? 'fa-check' : type === 'error' ? 'fa-times' : 'fa-info'} mr-2"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modals = ['platformConnectionModal', 'trading212Modal', 'manualPlatformModal'];
+    
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal && event.target === modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+    });
+});
+</script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

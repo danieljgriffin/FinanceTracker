@@ -4,6 +4,8 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
 from utils.device_detector import get_template_path, is_mobile_device
+from utils.platform_connector import platform_connector
+from utils.intelligent_price_router import price_router
 from datetime import datetime, timedelta
 import pytz
 import json
@@ -16,7 +18,9 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+app.secret_key = os.environ.get("SESSION_SECRET")
+if not app.secret_key:
+    raise ValueError("SESSION_SECRET environment variable is required for secure session management")
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Database configuration
@@ -373,6 +377,8 @@ def generate_y_labels(min_val, max_val):
 with app.app_context():
     # Import models after app context is established
     from models import Investment, PlatformCash, NetworthEntry, Expense, MonthlyCommitment, IncomeData, MonthlyBreakdown
+    # Import API platform models to ensure their tables are created
+    from utils.api_platform_models import Platform, APIHolding, BankBalance, PriceCache, SyncLog
     db.create_all()
     
     # Initialize defaults for database
@@ -1555,6 +1561,18 @@ def add_investment():
                     price = price_fetcher.get_price(original_symbol)
                     symbol = original_symbol
                 
+                # If legacy price fetcher failed, try intelligent price router
+                if not price:
+                    try:
+                        result = price_router.get_price(symbol)
+                        if 'price' in result:
+                            price = result['price']
+                            logging.info(f"Intelligent router found price for {symbol}: £{price}")
+                        else:
+                            logging.warning(f"Intelligent router failed for {symbol}: {result.get('error', 'Unknown error')}")
+                    except Exception as e:
+                        logging.error(f"Error with intelligent router for {symbol}: {str(e)}")
+                
                 if price:
                     # Update the newly added investment with the current price
                     try:
@@ -1618,6 +1636,25 @@ def update_all_prices():
         # Batch fetch prices for efficiency
         logging.info(f"Batch updating prices for {len(symbols_to_update)} investments")
         updated_prices = price_fetcher.get_multiple_prices(symbols_to_update)
+        
+        # Use intelligent price router for failed symbols
+        failed_symbols = []
+        for symbol in symbols_to_update:
+            if symbol not in updated_prices:
+                failed_symbols.append(symbol)
+        
+        if failed_symbols:
+            logging.info(f"Using intelligent price router for {len(failed_symbols)} failed symbols")
+            for symbol in failed_symbols:
+                try:
+                    result = price_router.get_price(symbol)
+                    if 'price' in result:
+                        updated_prices[symbol] = result['price']
+                        logging.info(f"Intelligent router found price for {symbol}: £{result['price']}")
+                    else:
+                        logging.warning(f"Intelligent router failed for {symbol}: {result.get('error', 'Unknown error')}")
+                except Exception as e:
+                    logging.error(f"Error with intelligent router for {symbol}: {str(e)}")
         
         # Update database with fetched prices
         updated_count = 0
@@ -3946,6 +3983,198 @@ def complete_goal(goal_id):
         })
     except Exception as e:
         logging.error(f"Error completing goal: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Platform Connection API Routes
+@app.route('/api/test_connection', methods=['POST'])
+def test_connection():
+    """Test API connection to platform"""
+    try:
+        data = request.get_json()
+        platform_type = data.get('platform_type')
+        credentials = data.get('credentials', {})
+        
+        if not platform_type:
+            return jsonify({'success': False, 'error': 'Platform type required'}), 400
+        
+        # Test the connection using platform connector
+        result = platform_connector.test_connection(platform_type, credentials)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        logging.error(f"Error testing platform connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save_platform_connection', methods=['POST'])
+def save_platform_connection():
+    """Save platform connection and sync initial data"""
+    try:
+        from utils.api_platform_models import Platform, db
+        
+        data = request.get_json()
+        platform_type = data.get('platform_type')
+        credentials = data.get('credentials', {})
+        
+        if not platform_type:
+            return jsonify({'success': False, 'error': 'Platform type required'}), 400
+        
+        # Test connection first
+        test_result = platform_connector.test_connection(platform_type, credentials)
+        if not test_result['success']:
+            return jsonify({'success': False, 'error': 'Connection test failed'}), 400
+        
+        # Check if platform already exists
+        existing_platform = Platform.query.filter_by(
+            name=platform_type.title().replace('_', ' '),
+            platform_type=platform_type
+        ).first()
+        
+        if existing_platform:
+            # Update existing platform
+            platform = existing_platform
+            platform.set_credentials(credentials)
+            platform.sync_status = 'active'
+            platform.error_message = None
+        else:
+            # Create new platform
+            platform = Platform(
+                name=platform_type.title().replace('_', ' '),
+                platform_type=platform_type,
+                api_type='rest_api',
+                sync_status='active'
+            )
+            platform.set_credentials(credentials)
+            db.session.add(platform)
+        
+        platform.last_sync = datetime.utcnow()
+        db.session.commit()
+        
+        # Start initial data sync in background
+        from threading import Thread
+        def sync_platform_data():
+            try:
+                sync_result = platform_connector.sync_platform_data(platform_type, credentials)
+                if sync_result['success']:
+                    # Update platform with successful sync
+                    platform.sync_status = 'active'
+                    platform.error_message = None
+                else:
+                    platform.sync_status = 'error'
+                    platform.error_message = sync_result.get('error', 'Unknown sync error')
+                db.session.commit()
+            except Exception as e:
+                platform.sync_status = 'error'
+                platform.error_message = str(e)
+                db.session.commit()
+                logging.error(f"Background sync failed: {e}")
+        
+        Thread(target=sync_platform_data, daemon=True).start()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{platform_type.title()} connected successfully',
+            'platform_id': platform.id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error saving platform connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/add_manual_platform', methods=['POST'])
+def add_manual_platform():
+    """Add manual platform for tracking"""
+    try:
+        from utils.api_platform_models import Platform, db
+        
+        data = request.get_json()
+        platform_name = data.get('platform_name')
+        platform_type = data.get('platform_type', 'manual')
+        
+        if not platform_name:
+            return jsonify({'success': False, 'error': 'Platform name required'}), 400
+        
+        # Check if platform already exists
+        existing_platform = Platform.query.filter_by(
+            name=platform_name,
+            platform_type='manual'
+        ).first()
+        
+        if existing_platform:
+            return jsonify({'success': False, 'error': 'Platform already exists'}), 400
+        
+        # Create new manual platform
+        platform = Platform(
+            name=platform_name,
+            platform_type='manual',
+            api_type='manual',
+            sync_status='manual'
+        )
+        
+        db.session.add(platform)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{platform_name} added successfully',
+            'platform_id': platform.id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error adding manual platform: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/platforms', methods=['GET'])
+def get_platforms():
+    """Get list of connected platforms"""
+    try:
+        from utils.api_platform_models import Platform
+        
+        platforms = Platform.query.all()
+        return jsonify({
+            'success': True,
+            'platforms': [platform.to_dict() for platform in platforms]
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching platforms: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sync_platform/<int:platform_id>', methods=['POST'])
+def sync_platform(platform_id):
+    """Manually trigger platform sync"""
+    try:
+        from utils.api_platform_models import Platform
+        
+        platform = Platform.query.get_or_404(platform_id)
+        
+        if platform.api_type == 'manual':
+            return jsonify({'success': False, 'error': 'Manual platforms cannot be synced'}), 400
+        
+        credentials = platform.get_credentials()
+        if not credentials:
+            return jsonify({'success': False, 'error': 'No credentials found'}), 400
+        
+        # Sync data
+        sync_result = platform_connector.sync_platform_data(platform.platform_type, credentials)
+        
+        if sync_result['success']:
+            platform.last_sync = datetime.utcnow()
+            platform.sync_status = 'active'
+            platform.error_message = None
+            db.session.commit()
+        else:
+            platform.sync_status = 'error'
+            platform.error_message = sync_result.get('error', 'Sync failed')
+            db.session.commit()
+        
+        return jsonify(sync_result)
+        
+    except Exception as e:
+        logging.error(f"Error syncing platform: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':

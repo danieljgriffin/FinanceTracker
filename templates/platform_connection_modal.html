@@ -1,0 +1,314 @@
+<!-- Platform Connection Modal -->
+<div id="platformConnectionModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">Connect Your Accounts</h2>
+                    <button onclick="closePlatformModal()" class="text-gray-400 hover:text-white p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Connection Categories -->
+                <div class="space-y-8">
+                    <!-- Investment Platforms -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                            <i class="fas fa-chart-line mr-3"></i>
+                            Investment Platforms
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Trading 212 -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-blue-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-teal-600 flex items-center justify-center mr-3">
+                                            <i class="fas fa-chart-bar text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">Trading 212</h4>
+                                            <p class="text-xs text-gray-400">Instant portfolio sync</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="connectPlatform('trading212')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-link mr-2"></i>Connect
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-check mr-2 text-green-500"></i>
+                                    Real-time holdings, live prices, transaction history
+                                </div>
+                            </div>
+
+                            <!-- AJ Bell -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-blue-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-orange-600 flex items-center justify-center mr-3">
+                                            <i class="fas fa-university text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">AJ Bell</h4>
+                                            <p class="text-xs text-gray-400">ISA & SIPP tracking</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="connectPlatform('ajbell')" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-clock mr-2"></i>Coming Soon
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-shield-alt mr-2 text-blue-500"></i>
+                                    OAuth2 secure connection, ISA allowance tracking
+                                </div>
+                            </div>
+
+                            <!-- Coinbase -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-blue-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center mr-3">
+                                            <i class="fab fa-bitcoin text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">Coinbase</h4>
+                                            <p class="text-xs text-gray-400">Crypto portfolio sync</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="connectPlatform('coinbase')" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-clock mr-2"></i>Coming Soon
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-coins mr-2 text-purple-500"></i>
+                                    Advanced Trade API, real-time crypto prices
+                                </div>
+                            </div>
+
+                            <!-- Manual Entry -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-green-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
+                                            <i class="fas fa-edit text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">Add Manual Platform</h4>
+                                            <p class="text-xs text-gray-400">DeGiro, Freetrade, etc.</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="showManualPlatformOptions()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>Add
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-hand-paper mr-2 text-yellow-500"></i>
+                                    Manual updates required, supports any platform
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bank Accounts -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                            <i class="fas fa-university mr-3"></i>
+                            Bank Accounts
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Open Banking - Major Banks -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-blue-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
+                                            <i class="fas fa-landmark text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">UK Banks</h4>
+                                            <p class="text-xs text-gray-400">Barclays, HSBC, Lloyds, NatWest</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="connectPlatform('open_banking')" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-clock mr-2"></i>Coming Soon
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-shield-alt mr-2 text-green-500"></i>
+                                    Real-time balances, FCA regulated, bank-grade security
+                                </div>
+                            </div>
+
+                            <!-- Manual Bank Entry -->
+                            <div class="platform-card bg-slate-700/50 rounded-xl p-4 border border-gray-600/30 hover:border-green-500/50 transition-colors">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center mr-3">
+                                            <i class="fas fa-wallet text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-white">Add Manual Account</h4>
+                                            <p class="text-xs text-gray-400">Any bank, savings, credit card</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="showManualBankOptions()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors">
+                                        <i class="fas fa-plus mr-2"></i>Add
+                                    </button>
+                                </div>
+                                <div class="mt-3 flex items-center text-xs text-gray-400">
+                                    <i class="fas fa-hand-paper mr-2 text-yellow-500"></i>
+                                    Manual balance updates, works with any institution
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Connection Status Section (shown when platforms are connected) -->
+                <div id="connectedPlatformsSection" class="mt-8 hidden">
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                        <i class="fas fa-link mr-3"></i>
+                        Connected Accounts
+                    </h3>
+                    <div id="connectedPlatformsList" class="space-y-3">
+                        <!-- Connected platforms will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Trading 212 Connection Sub-Modal -->
+<div id="trading212Modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-2xl max-w-2xl w-full">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white flex items-center">
+                        <div class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center mr-3">
+                            <i class="fas fa-chart-bar text-white text-sm"></i>
+                        </div>
+                        Connect Trading 212
+                    </h3>
+                    <button onclick="closeTradingModal()" class="text-gray-400 hover:text-white p-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Instructions -->
+                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-400 mb-2">Setup Instructions:</h4>
+                        <ol class="text-sm text-gray-300 space-y-1">
+                            <li>1️⃣ Open Trading 212 app or website</li>
+                            <li>2️⃣ Go to Settings → API (Beta)</li>
+                            <li>3️⃣ Generate new API key</li>
+                            <li>4️⃣ Copy and paste it below</li>
+                        </ol>
+                    </div>
+
+                    <!-- API Key Input -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">
+                            <i class="fas fa-key mr-2"></i>API Key
+                        </label>
+                        <input type="password" id="trading212ApiKey" 
+                               class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Paste your Trading 212 API key here...">
+                        <p class="text-xs text-gray-500 mt-2">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            Your API key is encrypted and stored securely. We never share your credentials.
+                        </p>
+                    </div>
+
+                    <!-- Test Connection Button -->
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeTradingModal()" class="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button onclick="testTradingConnection()" id="testConnectionBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                            <i class="fas fa-plug mr-2"></i>Test Connection
+                        </button>
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div id="connectionStatus" class="hidden">
+                        <!-- Status messages will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Manual Platform Selection Modal -->
+<div id="manualPlatformModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-2xl max-w-3xl w-full">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold text-white">Add Manual Platform</h3>
+                    <button onclick="closeManualPlatformModal()" class="text-gray-400 hover:text-white p-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Platform Categories -->
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">💼 Investment Platforms</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="addManualPlatform('DeGiro')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">DeGiro</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                            <button onclick="addManualPlatform('Hargreaves Lansdown')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">Hargreaves Lansdown</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                            <button onclick="addManualPlatform('InvestEngine')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">InvestEngine</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                            <button onclick="addManualPlatform('Freetrade')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">Freetrade</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">🏢 Workplace Accounts</h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <button onclick="addManualPlatform('Company Pension')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">Company Pension</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                            <button onclick="addManualPlatform('Share Save Scheme')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">Share Save Scheme</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                            <button onclick="addManualPlatform('Employee Shares (GSK)')" class="flex items-center justify-between p-3 bg-gray-700/50 hover:bg-gray-600/50 rounded-lg transition-colors">
+                                <span class="text-white">Employee Shares</span>
+                                <i class="fas fa-plus text-gray-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-white mb-4">➕ Custom Platform</h4>
+                        <div class="flex space-x-3">
+                            <input type="text" id="customPlatformName" 
+                                   class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Enter platform name...">
+                            <button onclick="addCustomPlatform()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i>Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

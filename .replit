@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16", "python3"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["openssl", "postgresql", "imagemagick"]
+packages = ["cargo", "imagemagick", "libiconv", "libxcrypt", "openssl", "pkg-config", "postgresql", "rustc"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -32,6 +32,10 @@ waitForPort = 5000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 43177
+externalPort = 3000
 
 [agent]
 integrations = ["flask_stripe==1.0.0", "python_log_in_with_replit==1.0.0", "python_database==1.0.0", "web_scraper==1.0.0"]
