@@ -114,7 +114,7 @@ class PlatformConnector:
         if not api_key:
             return {'success': False, 'error': 'API key required'}
         
-        headers = {'Authorization': api_key}
+        headers = {'Authorization': f'Bearer {api_key}'}
         
         try:
             # Test with account info endpoint (lighter than portfolio)
@@ -161,7 +161,7 @@ class PlatformConnector:
     def _sync_trading212_data(self, credentials: Dict) -> Dict:
         """Sync holdings data from Trading 212"""
         api_key = credentials.get('api_key')
-        headers = {'Authorization': api_key}
+        headers = {'Authorization': f'Bearer {api_key}'}
         
         try:
             # Get portfolio data with retry logic

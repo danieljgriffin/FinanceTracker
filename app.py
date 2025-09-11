@@ -4057,14 +4057,15 @@ def save_platform_connection():
         platform.last_sync = datetime.utcnow()
         db.session.commit()
         
-        # Start initial data sync in background with rate limiting delay
+        # Start initial data sync in background with improved rate limiting
         from threading import Thread
         import time
         def sync_platform_data():
             try:
-                # Add delay to avoid Trading 212 rate limiting after test call
+                # Add longer delay for Trading 212 beta API rate limiting
                 if platform_type == 'trading212':
-                    time.sleep(5)  # Increased to 5 seconds for Trading 212's aggressive rate limiting
+                    time.sleep(10)  # Extended delay for Trading 212's aggressive beta rate limiting
+                    logging.info(f"Starting Trading 212 sync after rate limit delay")
                 
                 sync_result = platform_connector.sync_platform_data(platform_type, credentials)
                 if sync_result['success']:
