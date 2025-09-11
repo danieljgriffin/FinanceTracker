@@ -477,6 +477,208 @@ PLATFORM_COLORS = {
     'Cash': '#059669'  # Green
 }
 
+def calculate_dashboard_analytics(data_manager, networth_data, investments_data):
+    """Calculate comprehensive dashboard analytics for command center"""
+    try:
+        analytics = {}
+        
+        # Calculate 12-month net worth trend data
+        analytics['twelve_month_trend'] = calculate_twelve_month_trend(data_manager)
+        
+        # Calculate top movers (biggest gainers/losers)
+        analytics['top_movers'] = calculate_top_movers(investments_data)
+        
+        # Calculate total cash across all platforms
+        analytics['total_cash'] = calculate_total_cash_summary(data_manager)
+        
+        # Calculate daily P/L (if we have yesterday's data)
+        analytics['daily_pl'] = calculate_daily_pl(data_manager)
+        
+        # Generate alerts for dashboard
+        analytics['alerts'] = generate_dashboard_alerts(data_manager, investments_data)
+        
+        return analytics
+    except Exception as e:
+        logging.error(f"Error calculating dashboard analytics: {str(e)}")
+        return {
+            'twelve_month_trend': [],
+            'top_movers': {'gainers': [], 'losers': []},
+            'total_cash': 0,
+            'daily_pl': {'amount': 0, 'percent': 0},
+            'alerts': []
+        }
+
+def calculate_twelve_month_trend(data_manager):
+    """Calculate 12-month net worth trend for chart with robust data fetching"""
+    try:
+        trend_data = []
+        current_date = datetime.now()
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        
+        # Cache yearly data to avoid multiple calls
+        yearly_data_cache = {}
+        
+        # Get data for the last 12 months
+        for i in range(12, 0, -1):
+            target_date = current_date - timedelta(days=30 * i)
+            year = target_date.year
+            month_name_base = month_names[target_date.month - 1]
+            
+            # Get historical data for this year (with caching)
+            if year not in yearly_data_cache:
+                yearly_data_cache[year] = data_manager.get_networth_data(year)
+            year_data = yearly_data_cache[year]
+            
+            # Try multiple date formats (robust fallback like existing code)
+            month_data = {}
+            for day_prefix in ['1st', '31st', '30th', '29th', '28th']:
+                month_key = f"{day_prefix} {month_name_base}"
+                if month_key in year_data:
+                    month_data = year_data[month_key]
+                    break
+            
+            # Calculate total net worth for this month
+            total_networth = 0
+            for platform, value in month_data.items():
+                if isinstance(value, (int, float)):
+                    total_networth += value
+            
+            if total_networth > 0:
+                trend_data.append({
+                    'month': month_name_base,
+                    'year': year,
+                    'value': total_networth,
+                    'date': target_date.strftime('%Y-%m')
+                })
+        
+        # Add current month with live data
+        current_networth = calculate_current_net_worth()
+        if current_networth > 0:
+            trend_data.append({
+                'month': month_names[current_date.month - 1],
+                'year': current_date.year,
+                'value': current_networth,
+                'date': current_date.strftime('%Y-%m'),
+                'is_current': True
+            })
+        
+        return trend_data
+    except Exception as e:
+        logging.error(f"Error calculating 12-month trend: {str(e)}")
+        return []
+
+def calculate_top_movers(investments_data):
+    """Calculate biggest gainers and losers by value and percentage"""
+    try:
+        movers = []
+        
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash') or platform == 'Cash':
+                continue
+                
+            if isinstance(investments, list):
+                for investment in investments:
+                    holdings = investment.get('holdings', 0)
+                    current_price = investment.get('current_price', 0)
+                    current_value = holdings * current_price
+                    
+                    # Calculate daily change if we have purchase price or previous price
+                    daily_change_amount = 0
+                    daily_change_percent = 0
+                    
+                    # For now, use a simple calculation - in future we could track daily prices
+                    purchase_price = investment.get('purchase_price', current_price)
+                    if purchase_price > 0 and purchase_price != current_price:
+                        total_change_amount = (current_price - purchase_price) * holdings
+                        total_change_percent = ((current_price - purchase_price) / purchase_price) * 100
+                        
+                        movers.append({
+                            'symbol': investment.get('symbol', investment.get('name', 'Unknown')),
+                            'name': investment.get('name', investment.get('symbol', 'Unknown')),
+                            'platform': platform,
+                            'current_value': current_value,
+                            'change_amount': total_change_amount,
+                            'change_percent': total_change_percent,
+                            'holdings': holdings,
+                            'current_price': current_price
+                        })
+        
+        # Sort by absolute change amount
+        movers.sort(key=lambda x: abs(x['change_amount']), reverse=True)
+        
+        # Get top 5 gainers and losers
+        gainers = [m for m in movers if m['change_amount'] > 0][:5]
+        losers = [m for m in movers if m['change_amount'] < 0][:5]
+        
+        return {'gainers': gainers, 'losers': losers}
+    except Exception as e:
+        logging.error(f"Error calculating top movers: {str(e)}")
+        return {'gainers': [], 'losers': []}
+
+def calculate_total_cash_summary(data_manager):
+    """Calculate total cash across all platforms"""
+    try:
+        total_cash = 0
+        platform_cash = {}
+        
+        investments_data = data_manager.get_investments_data()
+        for platform in investments_data.keys():
+            if not platform.endswith('_cash'):
+                cash_amount = data_manager.get_platform_cash(platform)
+                if cash_amount > 0:
+                    platform_cash[platform] = cash_amount
+                    total_cash += cash_amount
+        
+        return {
+            'total': total_cash,
+            'by_platform': platform_cash
+        }
+    except Exception as e:
+        logging.error(f"Error calculating cash summary: {str(e)}")
+        return {'total': 0, 'by_platform': {}}
+
+def calculate_daily_pl(data_manager):
+    """Calculate daily profit/loss"""
+    try:
+        # For now, return zero - in future we could track daily snapshots
+        return {'amount': 0, 'percent': 0}
+    except Exception as e:
+        logging.error(f"Error calculating daily P/L: {str(e)}")
+        return {'amount': 0, 'percent': 0}
+
+def generate_dashboard_alerts(data_manager, investments_data):
+    """Generate alerts for stale data, issues, etc."""
+    try:
+        alerts = []
+        
+        # Check for stale price data
+        global last_price_update
+        if last_price_update:
+            hours_since_update = (datetime.now() - last_price_update).total_seconds() / 3600
+            if hours_since_update > 6:  # Alert if prices are more than 6 hours old
+                alerts.append({
+                    'type': 'warning',
+                    'message': f'Price data is {int(hours_since_update)} hours old',
+                    'action': 'refresh_prices'
+                })
+        
+        # Check for zero-value investments (potential data issues)
+        for platform, investments in investments_data.items():
+            if isinstance(investments, list):
+                for investment in investments:
+                    if investment.get('current_price', 0) <= 0:
+                        alerts.append({
+                            'type': 'error',
+                            'message': f'No price data for {investment.get("symbol", "investment")} on {platform}',
+                            'action': 'check_investment'
+                        })
+        
+        return alerts[:5]  # Limit to 5 most important alerts
+    except Exception as e:
+        logging.error(f"Error generating alerts: {str(e)}")
+        return []
+
 @app.route('/')
 def dashboard():
     """Main dashboard showing current net worth and allocations"""
@@ -501,6 +703,9 @@ def dashboard():
         data_manager = get_data_manager()
         networth_data = get_data_manager().get_networth_data()
         investments_data = get_data_manager().get_investments_data()
+        
+        # Calculate dashboard analytics
+        dashboard_analytics = calculate_dashboard_analytics(data_manager, networth_data, investments_data)
         
         # Get last price update time
         global last_price_update
@@ -694,6 +899,7 @@ def dashboard():
                              platform_percentages=platform_percentages,
                              platform_monthly_changes=platform_monthly_changes,
                              mom_change=mom_change,
+                             dashboard_analytics=dashboard_analytics,
                              mom_amount_change=mom_amount_change,
                              yearly_increase=yearly_increase,
                              yearly_amount_change=yearly_amount_change,
@@ -720,6 +926,7 @@ def dashboard():
                              platform_percentages={},
                              platform_monthly_changes={},
                              mom_change=0,
+                             dashboard_analytics={'twelve_month_trend': [], 'top_movers': {'gainers': [], 'losers': []}, 'total_cash': {'total': 0, 'by_platform': {}}, 'daily_pl': {'amount': 0, 'percent': 0}, 'alerts': []},
                              mom_amount_change=0,
                              yearly_increase=0,
                              yearly_amount_change=0,
