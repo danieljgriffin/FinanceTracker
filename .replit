@@ -37,5 +37,9 @@ externalPort = 80
 localPort = 36503
 externalPort = 3000
 
+[[ports]]
+localPort = 41239
+externalPort = 3001
+
 [agent]
 integrations = ["flask_stripe==1.0.0", "python_log_in_with_replit==1.0.0", "python_database==1.0.0", "web_scraper==1.0.0"]
