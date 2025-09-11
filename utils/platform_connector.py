@@ -134,8 +134,26 @@ class PlatformConnector:
                         'total': data.get('total', 0)
                     }
                 }
+            elif response.status_code == 429:
+                return {
+                    'success': False, 
+                    'error': 'Trading 212 rate limit reached. Please wait a moment and try again.',
+                    'error_code': 429
+                }
+            elif response.status_code == 401:
+                return {
+                    'success': False, 
+                    'error': 'Invalid API key. Please check your Trading 212 API key and try again.',
+                    'error_code': 401
+                }
+            elif response.status_code == 403:
+                return {
+                    'success': False, 
+                    'error': 'API key does not have required permissions. Please ensure all permissions are enabled in Trading 212.',
+                    'error_code': 403
+                }
             else:
-                return {'success': False, 'error': f'API returned status {response.status_code}'}
+                return {'success': False, 'error': f'Trading 212 API error (status {response.status_code})'}
                 
         except requests.RequestException as e:
             return {'success': False, 'error': f'Connection failed: {str(e)}'}
@@ -146,40 +164,80 @@ class PlatformConnector:
         headers = {'Authorization': api_key}
         
         try:
-            # Get portfolio data
-            response = requests.get(
-                'https://live.trading212.com/api/v0/equity/portfolio',
-                headers=headers,
-                timeout=15
-            )
+            # Get portfolio data with retry logic
+            max_retries = 3
+            retry_delay = 1  # Start with 1 second
             
-            if response.status_code != 200:
-                return {'success': False, 'error': f'API returned status {response.status_code}'}
+            for attempt in range(max_retries):
+                try:
+                    response = requests.get(
+                        'https://live.trading212.com/api/v0/equity/portfolio',
+                        headers=headers,
+                        timeout=15
+                    )
+                    
+                    if response.status_code == 200:
+                        break
+                    elif response.status_code == 429:
+                        if attempt < max_retries - 1:
+                            logger.warning(f'Trading 212 rate limit hit, retrying in {retry_delay}s (attempt {attempt + 1}/{max_retries})')
+                            import time
+                            time.sleep(retry_delay)
+                            retry_delay *= 2  # Exponential backoff
+                            continue
+                        else:
+                            return {
+                                'success': False, 
+                                'error': 'Trading 212 rate limit reached. Please try again in a few minutes.',
+                                'error_code': 429
+                            }
+                    elif response.status_code == 401:
+                        return {
+                            'success': False, 
+                            'error': 'Invalid API key. Please check your Trading 212 API key.',
+                            'error_code': 401
+                        }
+                    elif response.status_code == 403:
+                        return {
+                            'success': False, 
+                            'error': 'API key missing required permissions. Please enable all permissions in Trading 212 settings.',
+                            'error_code': 403
+                        }
+                    else:
+                        return {'success': False, 'error': f'Trading 212 API error (status {response.status_code})'}
+                        
+                except requests.RequestException as e:
+                    if attempt < max_retries - 1:
+                        logger.warning(f'Request failed, retrying in {retry_delay}s: {str(e)}')
+                        import time
+                        time.sleep(retry_delay)
+                        retry_delay *= 2
+                        continue
+                    else:
+                        return {'success': False, 'error': f'Connection failed after {max_retries} attempts: {str(e)}'}
             
             portfolio_data = response.json()
             holdings = []
             
-            # Process open positions
+            # Process open positions - use Trading 212's current prices to avoid external API calls
             for position in portfolio_data.get('open', {}).get('items', []):
-                # Get live price using our intelligent router
                 symbol = position.get('code', '')
-                price_data = price_router.get_price(symbol)
+                
+                # Use Trading 212's own price data to avoid rate limiting external APIs
+                current_price = position.get('currentPrice', 0)
+                quantity = position.get('quantity', 0)
                 
                 holding = {
                     'symbol': symbol,
                     'name': symbol,  # Trading 212 API doesn't provide full names
-                    'quantity': position.get('quantity', 0),
+                    'quantity': quantity,
                     'average_price': position.get('averagePrice', 0),
                     'total_invested': position.get('investment', 0),
-                    'current_price': price_data.get('price', position.get('currentPrice', 0)),
-                    'current_value': None,  # Will calculate
+                    'current_price': current_price,
+                    'current_value': current_price * quantity if current_price and quantity else 0,
                     'unrealized_pnl': position.get('ppl', 0),
                     'currency': 'GBP'
                 }
-                
-                # Calculate current value if we have price data
-                if holding['current_price'] and holding['quantity']:
-                    holding['current_value'] = holding['current_price'] * holding['quantity']
                 
                 holdings.append(holding)
             
@@ -191,6 +249,7 @@ class PlatformConnector:
             }
             
         except Exception as e:
+            logger.error(f'Trading 212 sync failed: {str(e)}')
             return {'success': False, 'error': str(e)}
     
     def _test_ajbell_connection(self, credentials: Dict) -> Dict:

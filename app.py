@@ -12,6 +12,10 @@ import json
 import threading
 import time
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 # Tasks blueprint will be imported later to avoid circular imports
 
 # Configure logging
