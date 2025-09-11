@@ -24,7 +24,7 @@
 
     <!-- Platform Connection Quick Access Button -->
     <div class="mb-4 text-right">
-        <button onclick="openPlatformModal()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl border border-steel-500 transition-all duration-300">
+        <button onclick="openPlatformModal()" class="px-6 py-2 text-white font-medium rounded-xl border border-steel-500 transition-all duration-300" style="background-color: #BB86FC;" onmouseover="this.style.backgroundColor='#A374E6'" onmouseout="this.style.backgroundColor='#BB86FC'">
             <i class="fas fa-link mr-2"></i>Connect Accounts
         </button>
     </div>
@@ -161,7 +161,7 @@
                                 <div class="w-full bg-gray-700/50 rounded-xl h-12 relative overflow-hidden">
                                     <!-- Progress Fill with enhanced styling -->
                                     <div id="progress-bar" class="h-full rounded-xl flex items-center justify-center transition-all duration-1000 shadow-lg" 
-                                         style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #60a5fa, #3b82f6, #2563eb) !important;">
+                                         style="width: {{ progress_info.progress_percentage }}%; background: linear-gradient(135deg, #BB86FC, #A374E6, #8B5FD9) !important;">
                                         <!-- Current Value Inside Bar -->
                                         {% if progress_info.progress_percentage > 20 %}
                                         <span id="progress-current-net-worth" class="text-white font-semibold text-sm drop-shadow-lg privacy-sensitive">£{{ "{:,.0f}".format(current_net_worth) }}</span>
@@ -266,7 +266,7 @@
                         <i class="fas fa-bullseye text-gray-500 text-4xl lg:text-5xl mb-4"></i>
                         <h3 class="text-lg font-semibold text-gray-300 mb-2">No Active Financial Targets</h3>
                         <p class="text-gray-400 mb-4">Set your first financial goal to track your progress</p>
-                        <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 text-white rounded-lg border border-steel-500 transition-colors" style="background-color: #BB86FC;" onmouseover="this.style.backgroundColor='#A374E6'" onmouseout="this.style.backgroundColor='#BB86FC'">
                             <i class="fas fa-plus mr-2"></i>Create Your First Goal
                         </a>
                     </div>
