@@ -1485,6 +1485,49 @@ function closeManualPlatformModal() {
     document.body.style.overflow = 'auto';
 }
 
+function showBankConnectionModal(bankProvider) {
+    // Show connection info and redirect to OAuth
+    const bankNames = {
+        'hsbc': 'HSBC',
+        'monzo': 'Monzo',
+        'starling': 'Starling Bank',
+        'lloyds': 'Lloyds Banking Group'
+    };
+    
+    const bankName = bankNames[bankProvider] || bankProvider;
+    
+    if (confirm(`Connect to ${bankName} for real-time account balances?\n\nYou'll be redirected to ${bankName}'s secure login to authorize access.`)) {
+        // Start OAuth flow for the selected bank
+        startBankOAuthFlow(bankProvider);
+    }
+}
+
+function startBankOAuthFlow(bankProvider) {
+    fetch('/api/start_bank_oauth', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            provider: bankProvider
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.auth_url) {
+            // Redirect to bank's OAuth page
+            window.open(data.auth_url, '_blank', 'width=500,height=700');
+            closePlatformModal();
+            showNotification(`Redirecting to ${bankProvider.toUpperCase()} for authorization...`, 'info');
+        } else {
+            showNotification(data.error || 'Failed to start bank connection', 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('Network error: ' + error.message, 'error');
+    });
+}
+
 function showComingSoonMessage(platform) {
     const platformNames = {
         'ajbell': 'AJ Bell',

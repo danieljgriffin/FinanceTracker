@@ -50,7 +50,7 @@ class PlatformConnector:
                 'name': 'Open Banking (UK)',
                 'type': 'banking',
                 'auth_method': 'oauth2',
-                'providers': ['barclays', 'hsbc', 'lloyds', 'natwest'],
+                'providers': ['hsbc', 'monzo', 'starling', 'lloyds', 'natwest', 'barclays'],
                 'features': ['account_balances', 'transactions', 'realtime_balances']
             }
         }
@@ -271,16 +271,24 @@ class PlatformConnector:
         return {'success': False, 'error': 'Coinbase sync not yet implemented'}
     
     def _test_open_banking_connection(self, credentials: Dict) -> Dict:
-        """Test Barclays Open Banking connection"""
+        """Test Open Banking connection for multiple UK banks"""
         try:
-            provider = credentials.get('provider', 'barclays')
+            provider = credentials.get('provider', 'hsbc')
             access_token = credentials.get('access_token')
             
             if not access_token:
                 return {'success': False, 'error': 'Access token required for Open Banking'}
             
-            # Test connection with Barclays Open Banking API
-            if provider.lower() == 'barclays':
+            # Test connection with different bank APIs
+            if provider.lower() == 'hsbc':
+                return self._test_hsbc_connection(access_token)
+            elif provider.lower() == 'monzo':
+                return self._test_monzo_connection(access_token)
+            elif provider.lower() == 'starling':
+                return self._test_starling_connection(access_token)
+            elif provider.lower() == 'lloyds':
+                return self._test_lloyds_connection(access_token)
+            elif provider.lower() == 'barclays':
                 return self._test_barclays_connection(access_token)
             else:
                 return {'success': False, 'error': f'Provider {provider} not yet supported'}
@@ -290,16 +298,24 @@ class PlatformConnector:
             return {'success': False, 'error': str(e)}
     
     def _sync_banking_data(self, credentials: Dict) -> Dict:
-        """Sync Barclays Open Banking data"""
+        """Sync Open Banking data from multiple UK banks"""
         try:
-            provider = credentials.get('provider', 'barclays')
+            provider = credentials.get('provider', 'hsbc')
             access_token = credentials.get('access_token')
             
             if not access_token:
                 return {'success': False, 'error': 'Access token required for Open Banking sync'}
             
-            # Sync data from Barclays Open Banking API
-            if provider.lower() == 'barclays':
+            # Sync data from different bank APIs
+            if provider.lower() == 'hsbc':
+                return self._sync_hsbc_accounts(access_token)
+            elif provider.lower() == 'monzo':
+                return self._sync_monzo_accounts(access_token)
+            elif provider.lower() == 'starling':
+                return self._sync_starling_accounts(access_token)
+            elif provider.lower() == 'lloyds':
+                return self._sync_lloyds_accounts(access_token)
+            elif provider.lower() == 'barclays':
                 return self._sync_barclays_accounts(access_token)
             else:
                 return {'success': False, 'error': f'Provider {provider} sync not yet supported'}
@@ -344,11 +360,400 @@ class PlatformConnector:
             logger.error(f'Barclays connection test failed: {str(e)}')
             return {'success': False, 'error': str(e)}
     
+    def _test_hsbc_connection(self, access_token: str) -> Dict:
+        """Test HSBC Open Banking API connection"""
+        try:
+            import requests
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Test with HSBC accounts endpoint
+            response = requests.get(
+                'https://api.hsbc.com/open-banking/v3.1/aisp/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                return {
+                    'success': True, 
+                    'accounts_found': len(accounts.get('Data', {}).get('Account', [])),
+                    'message': 'Connected successfully to HSBC Open Banking'
+                }
+            elif response.status_code == 401:
+                return {'success': False, 'error': 'Invalid access token - please re-authenticate'}
+            elif response.status_code == 403:
+                return {'success': False, 'error': 'Access denied - check account permissions'}
+            else:
+                return {'success': False, 'error': f'API error: {response.status_code}'}
+                
+        except Exception as e:
+            logger.error(f'HSBC connection test failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _test_monzo_connection(self, access_token: str) -> Dict:
+        """Test Monzo API connection"""
+        try:
+            import requests
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test with Monzo accounts endpoint
+            response = requests.get(
+                'https://api.monzo.com/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                return {
+                    'success': True, 
+                    'accounts_found': len(accounts.get('accounts', [])),
+                    'message': 'Connected successfully to Monzo API'
+                }
+            elif response.status_code == 401:
+                return {'success': False, 'error': 'Invalid access token - please re-authenticate'}
+            else:
+                return {'success': False, 'error': f'API error: {response.status_code}'}
+                
+        except Exception as e:
+            logger.error(f'Monzo connection test failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _test_starling_connection(self, access_token: str) -> Dict:
+        """Test Starling Bank API connection"""
+        try:
+            import requests
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Test with Starling accounts endpoint
+            response = requests.get(
+                'https://api.starlingbank.com/api/v2/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                return {
+                    'success': True, 
+                    'accounts_found': len(accounts.get('accounts', [])),
+                    'message': 'Connected successfully to Starling Bank API'
+                }
+            elif response.status_code == 401:
+                return {'success': False, 'error': 'Invalid access token - please re-authenticate'}
+            else:
+                return {'success': False, 'error': f'API error: {response.status_code}'}
+                
+        except Exception as e:
+            logger.error(f'Starling connection test failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _test_lloyds_connection(self, access_token: str) -> Dict:
+        """Test Lloyds Banking Group API connection"""
+        try:
+            import requests
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Test with Lloyds accounts endpoint
+            response = requests.get(
+                'https://api.lloydsbanking.com/open-banking/v3.1/aisp/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                accounts = response.json()
+                return {
+                    'success': True, 
+                    'accounts_found': len(accounts.get('Data', {}).get('Account', [])),
+                    'message': 'Connected successfully to Lloyds Banking Group'
+                }
+            elif response.status_code == 401:
+                return {'success': False, 'error': 'Invalid access token - please re-authenticate'}
+            else:
+                return {'success': False, 'error': f'API error: {response.status_code}'}
+                
+        except Exception as e:
+            logger.error(f'Lloyds connection test failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_hsbc_accounts(self, access_token: str) -> Dict:
+        """Sync account balances from HSBC Open Banking API"""
+        try:
+            import requests
+            from datetime import datetime
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Get all accounts
+            accounts_response = requests.get(
+                'https://api.hsbc.com/open-banking/v3.1/aisp/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if accounts_response.status_code != 200:
+                return {'success': False, 'error': f'Failed to fetch accounts: {accounts_response.status_code}'}
+            
+            accounts_data = accounts_response.json()
+            accounts = accounts_data.get('Data', {}).get('Account', [])
+            total_balance = 0
+            account_count = 0
+            
+            # Process each account
+            for account in accounts:
+                account_id = account.get('AccountId')
+                account_type = account.get('AccountType')
+                nickname = account.get('Nickname', f'{account_type} Account')
+                
+                # Get balance for this account
+                balance_response = requests.get(
+                    f'https://api.hsbc.com/open-banking/v3.1/aisp/accounts/{account_id}/balances',
+                    headers=headers,
+                    timeout=10
+                )
+                
+                if balance_response.status_code == 200:
+                    balance_data = balance_response.json()
+                    balances = balance_data.get('Data', {}).get('Balance', [])
+                    
+                    # Find the current balance
+                    current_balance = 0
+                    for balance in balances:
+                        if balance.get('Type') == 'InterimAvailable':
+                            amount = balance.get('Amount', {})
+                            current_balance = float(amount.get('Amount', 0))
+                            break
+                    
+                    total_balance += current_balance
+                    account_count += 1
+                    logger.info(f'HSBC account {nickname}: £{current_balance:.2f}')
+            
+            return {
+                'success': True,
+                'total_balance': total_balance,
+                'account_count': account_count,
+                'message': f'Successfully synced {account_count} HSBC accounts'
+            }
+            
+        except Exception as e:
+            logger.error(f'HSBC sync failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_monzo_accounts(self, access_token: str) -> Dict:
+        """Sync account balances from Monzo API"""
+        try:
+            import requests
+            from datetime import datetime
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Get all accounts
+            accounts_response = requests.get(
+                'https://api.monzo.com/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if accounts_response.status_code != 200:
+                return {'success': False, 'error': f'Failed to fetch accounts: {accounts_response.status_code}'}
+            
+            accounts_data = accounts_response.json()
+            accounts = accounts_data.get('accounts', [])
+            total_balance = 0
+            account_count = 0
+            
+            # Process each account
+            for account in accounts:
+                account_id = account.get('id')
+                account_type = account.get('type')
+                description = account.get('description', f'{account_type} Account')
+                
+                # Get balance for this account
+                balance_response = requests.get(
+                    f'https://api.monzo.com/balance?account_id={account_id}',
+                    headers=headers,
+                    timeout=10
+                )
+                
+                if balance_response.status_code == 200:
+                    balance_data = balance_response.json()
+                    # Monzo balance is in pence, convert to pounds
+                    current_balance = balance_data.get('balance', 0) / 100
+                    
+                    total_balance += current_balance
+                    account_count += 1
+                    logger.info(f'Monzo account {description}: £{current_balance:.2f}')
+            
+            return {
+                'success': True,
+                'total_balance': total_balance,
+                'account_count': account_count,
+                'message': f'Successfully synced {account_count} Monzo accounts'
+            }
+            
+        except Exception as e:
+            logger.error(f'Monzo sync failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_starling_accounts(self, access_token: str) -> Dict:
+        """Sync account balances from Starling Bank API"""
+        try:
+            import requests
+            from datetime import datetime
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json'
+            }
+            
+            # Get all accounts
+            accounts_response = requests.get(
+                'https://api.starlingbank.com/api/v2/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if accounts_response.status_code != 200:
+                return {'success': False, 'error': f'Failed to fetch accounts: {accounts_response.status_code}'}
+            
+            accounts_data = accounts_response.json()
+            accounts = accounts_data.get('accounts', [])
+            total_balance = 0
+            account_count = 0
+            
+            # Process each account
+            for account in accounts:
+                account_uid = account.get('accountUid')
+                default_category = account.get('defaultCategory')
+                account_type = account.get('accountType')
+                name = account.get('name', f'{account_type} Account')
+                
+                # Get balance for this account
+                balance_response = requests.get(
+                    f'https://api.starlingbank.com/api/v2/accounts/{account_uid}/balance',
+                    headers=headers,
+                    timeout=10
+                )
+                
+                if balance_response.status_code == 200:
+                    balance_data = balance_response.json()
+                    # Starling balance is in minor units (pence), convert to pounds
+                    cleared_balance = balance_data.get('clearedBalance', {}).get('minorUnits', 0)
+                    current_balance = cleared_balance / 100
+                    
+                    total_balance += current_balance
+                    account_count += 1
+                    logger.info(f'Starling account {name}: £{current_balance:.2f}')
+            
+            return {
+                'success': True,
+                'total_balance': total_balance,
+                'account_count': account_count,
+                'message': f'Successfully synced {account_count} Starling accounts'
+            }
+            
+        except Exception as e:
+            logger.error(f'Starling sync failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
+    def _sync_lloyds_accounts(self, access_token: str) -> Dict:
+        """Sync account balances from Lloyds Banking Group API"""
+        try:
+            import requests
+            from datetime import datetime
+            
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+            
+            # Get all accounts
+            accounts_response = requests.get(
+                'https://api.lloydsbanking.com/open-banking/v3.1/aisp/accounts',
+                headers=headers,
+                timeout=10
+            )
+            
+            if accounts_response.status_code != 200:
+                return {'success': False, 'error': f'Failed to fetch accounts: {accounts_response.status_code}'}
+            
+            accounts_data = accounts_response.json()
+            accounts = accounts_data.get('Data', {}).get('Account', [])
+            total_balance = 0
+            account_count = 0
+            
+            # Process each account
+            for account in accounts:
+                account_id = account.get('AccountId')
+                account_type = account.get('AccountType')
+                nickname = account.get('Nickname', f'{account_type} Account')
+                
+                # Get balance for this account
+                balance_response = requests.get(
+                    f'https://api.lloydsbanking.com/open-banking/v3.1/aisp/accounts/{account_id}/balances',
+                    headers=headers,
+                    timeout=10
+                )
+                
+                if balance_response.status_code == 200:
+                    balance_data = balance_response.json()
+                    balances = balance_data.get('Data', {}).get('Balance', [])
+                    
+                    # Find the current balance
+                    current_balance = 0
+                    for balance in balances:
+                        if balance.get('Type') == 'InterimAvailable':
+                            amount = balance.get('Amount', {})
+                            current_balance = float(amount.get('Amount', 0))
+                            break
+                    
+                    total_balance += current_balance
+                    account_count += 1
+                    logger.info(f'Lloyds account {nickname}: £{current_balance:.2f}')
+            
+            return {
+                'success': True,
+                'total_balance': total_balance,
+                'account_count': account_count,
+                'message': f'Successfully synced {account_count} Lloyds accounts'
+            }
+            
+        except Exception as e:
+            logger.error(f'Lloyds sync failed: {str(e)}')
+            return {'success': False, 'error': str(e)}
+    
     def _sync_barclays_accounts(self, access_token: str) -> Dict:
         """Sync account balances from Barclays Open Banking API"""
         try:
             import requests
-            from utils.api_platform_models import BankBalance, db
             from datetime import datetime
             
             headers = {
