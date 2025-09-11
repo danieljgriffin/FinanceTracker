@@ -24,7 +24,7 @@
 
     <!-- Platform Connection Quick Access Button -->
     <div class="mb-4 text-right">
-        <button onclick="openPlatformModal()" class="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105">
+        <button onclick="openPlatformModal()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl border border-steel-500 transition-all duration-300">
             <i class="fas fa-link mr-2"></i>Connect Accounts
         </button>
     </div>
@@ -32,7 +32,7 @@
     <!-- Top Stats Row -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-4 sm:mb-6">
         <!-- Current Net Worth -->
-        <div class="card p-3 sm:p-4 lg:p-6">
+        <div class="bg-slate-800 border border-steel-500 rounded-xl p-3 sm:p-4 lg:p-6">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Current Net Worth</p>
@@ -42,11 +42,11 @@
         </div>
 
         <!-- Month-on-Month Change -->
-        <div class="card p-3 sm:p-4 lg:p-6">
+        <div class="bg-slate-800 border border-steel-500 rounded-xl p-3 sm:p-4 lg:p-6">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Month-on-Month</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-1">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if mom_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} mt-1">
                         {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %} ({{ "{:+.1f}".format(mom_change) }}%)
                     </p>
                 </div>
@@ -54,11 +54,11 @@
         </div>
 
         <!-- Yearly Net Worth Increase -->
-        <div class="card p-3 sm:p-4 lg:p-6">
+        <div class="bg-slate-800 border border-steel-500 rounded-xl p-3 sm:p-4 lg:p-6">
             <div class="flex items-center justify-between">
                 <div class="flex-1 min-w-0">
                     <p class="text-xs sm:text-sm font-medium text-gray-300 mb-1 sm:mb-2">Yearly Net Worth Increase</p>
-                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-600{% elif yearly_increase < 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1">
+                    <p class="text-lg sm:text-xl lg:text-2xl font-bold {% if yearly_increase > 0 %}text-green-400{% elif yearly_increase < 0 %}text-red-400{% else %}text-gray-400{% endif %} mt-1">
                         {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% elif yearly_increase < 0 %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% else %}£{{ "{:,.0f}".format(yearly_amount_change) }}{% endif %} ({{ "{:+.1f}".format(yearly_increase) }}%)
                     </p>
                 </div>
@@ -69,8 +69,8 @@
     <!-- Main Layout: Sidebar + Right Column -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" style="background: transparent !important;">
         <!-- Net Worth Breakdown (Left Third) -->
-        <div class="card lg:col-span-1" style="background: rgba(255, 255, 255, 0.05) !important;">
-            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-600/30">
+        <div class="bg-slate-800 border border-steel-500 rounded-xl lg:col-span-1">
+            <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-steel-500">
                 <h2 class="text-lg sm:text-xl font-semibold text-white">Net Worth Breakdown</h2>
             </div>
             <div class="p-3 sm:p-4 lg:p-6">
