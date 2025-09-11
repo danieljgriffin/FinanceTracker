@@ -4057,10 +4057,15 @@ def save_platform_connection():
         platform.last_sync = datetime.utcnow()
         db.session.commit()
         
-        # Start initial data sync in background
+        # Start initial data sync in background with rate limiting delay
         from threading import Thread
+        import time
         def sync_platform_data():
             try:
+                # Add delay to avoid Trading 212 rate limiting after test call
+                if platform_type == 'trading212':
+                    time.sleep(2)  # 2 second delay for Trading 212 rate limiting
+                
                 sync_result = platform_connector.sync_platform_data(platform_type, credentials)
                 if sync_result['success']:
                     # Update platform with successful sync
