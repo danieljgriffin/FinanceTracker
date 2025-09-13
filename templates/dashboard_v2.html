@@ -31,49 +31,35 @@
     <!-- Pure Black Background -->
     <div class="fixed inset-0 bg-black"></div>
 
-    <!-- Left Sidebar Navigation (Same as other pages) -->
-    <div class="fixed left-0 top-0 h-full w-72 bg-slate-800 border-r border-steel-500 z-50">
-        <div class="p-6">
-            <!-- Desktop Header -->
-            <div class="flex items-center mb-12">
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center mr-4" style="background-color: #BB86FC;">
-                    <i class="fas fa-chart-line text-white text-xl"></i>
-                </div>
-                <span class="text-xl font-bold text-white">Portfolio Tracker</span>
-            </div>
-            
-            <!-- Navigation Links -->
-            <nav class="space-y-2">
-                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-tachometer-alt mr-4 text-lg"></i>
-                    Dashboard
+    <!-- Left Sidebar Navigation - Icon Only -->
+    <div class="fixed left-0 top-0 h-full w-20 bg-slate-800/50 backdrop-blur-sm border-r border-slate-700/30 z-50">
+        <div class="p-4 pt-8">
+            <!-- Navigation Links - Icons Only -->
+            <nav class="space-y-4">
+                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'dashboard' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-tachometer-alt"></i>
                 </a>
-                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-calendar-alt mr-4 text-lg"></i>
-                    Year / Month Tracker
+                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-calendar-alt"></i>
                 </a>
-                <a href="{{ url_for('goals') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'goals' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'goals' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-bullseye mr-4 text-lg"></i>
-                    Goals
+                <a href="{{ url_for('goals') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'goals' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'goals' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-bullseye"></i>
                 </a>
-                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'monthly_breakdown' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-chart-pie mr-4 text-lg"></i>
-                    Monthly Breakdown
+                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'monthly_breakdown' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-chart-pie"></i>
                 </a>
-                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'investment_manager' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'investment_manager' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-briefcase mr-4 text-lg"></i>
-                    Investment Manager
+                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'investment_manager' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'investment_manager' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-briefcase"></i>
                 </a>
-                <a href="{{ url_for('dashboard_v2') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard_v2' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard_v2' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
-                    <i class="fas fa-home mr-4 text-lg"></i>
-                    Dashboard v2
+                <a href="{{ url_for('dashboard_v2') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'dashboard_v2' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard_v2' %}style="background-color: rgba(187, 134, 252, 0.3); box-shadow: 0 0 20px rgba(187, 134, 252, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'; this.style.boxShadow='0 0 10px rgba(187, 134, 252, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-home"></i>
                 </a>
             </nav>
         </div>
     </div>
 
     <!-- Main Content Area -->
-    <div class="ml-72 min-h-screen bg-black relative">
+    <div class="ml-20 min-h-screen bg-black relative">
         <!-- Top Header Section - Clean Floating Design -->
         <div class="p-8 pt-12">
             <!-- Net Worth Display Section -->
