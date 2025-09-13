@@ -60,10 +60,24 @@
 
     <!-- Main Content Area -->
     <div class="ml-20 min-h-screen bg-black relative">
-        <!-- Top Header Section - Clean Floating Design -->
-        <div class="p-8 pt-12">
+        <div class="p-8 pt-8">
+            <!-- Net Worth Breakdown Section - Top of Screen -->
+            <div class="ml-4 mr-4 mb-12">
+                <div class="text-white">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
+                        <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
+                    <!-- Platform Grid Container -->
+                    <div id="platformBreakdown" class="grid grid-cols-3 gap-4">
+                        <!-- Platform cards will be loaded here -->
+                    </div>
+                </div>
+            </div>
+            
             <!-- Net Worth Display Section -->
-            <div class="flex items-start space-x-24 ml-4 mr-4">
+            <div class="flex items-start space-x-24 ml-4 mr-4 mb-12">
                 <!-- Left Side - Main Net Worth -->
                 <div>
                     <!-- Big Net Worth Number (no bold) -->
@@ -99,35 +113,18 @@
                 </div>
             </div>
             
-            <!-- Chart and Net Worth Breakdown Section -->
-            <div class="flex space-x-8 mt-16 ml-4 mr-4">
-                <!-- Line Chart Section (50% width) -->
-                <div class="w-1/2">
-                    <div class="relative">
-                        <!-- Chart Title -->
-                        <h2 class="text-2xl font-medium text-white mb-4">Net Worth Performance</h2>
-                        <!-- Filter Controls -->
-                        <div id="chartControls" class="flex justify-start space-x-2 mb-6">
-                            <!-- Controls will be added by JavaScript -->
-                        </div>
-                        <!-- Chart Container -->
-                        <div class="relative h-96">
-                            <canvas id="networthChart" class="w-full h-full"></canvas>
-                        </div>
+            <!-- Chart Section -->
+            <div class="ml-4 mr-4">
+                <div class="relative">
+                    <!-- Chart Title -->
+                    <h2 class="text-2xl font-medium text-white mb-4">Net Worth Performance</h2>
+                    <!-- Filter Controls -->
+                    <div id="chartControls" class="flex justify-start space-x-2 mb-6">
+                        <!-- Controls will be added by JavaScript -->
                     </div>
-                </div>
-                
-                <!-- Net Worth Breakdown Section (50% width) -->
-                <div class="w-1/2">
-                    <div class="text-white">
-                        <div class="flex justify-between items-center mb-6">
-                            <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
-                            <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
-                        </div>
-                        <!-- Platform Grid Container -->
-                        <div id="platformBreakdown" class="grid grid-cols-3 gap-4">
-                            <!-- Platform cards will be loaded here -->
-                        </div>
+                    <!-- Chart Container -->
+                    <div class="relative h-96">
+                        <canvas id="networthChart" class="w-full h-full"></canvas>
                     </div>
                 </div>
             </div>
