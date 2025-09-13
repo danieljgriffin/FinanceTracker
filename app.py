@@ -468,7 +468,7 @@ def calculate_current_net_worth():
 
 # Investment platform color scheme
 PLATFORM_COLORS = {
-    'Degiro': '#1e3a8a',  # Dark Blue
+    'Degiro': '#0891b2',  # Teal Blue
     'Trading212 ISA': '#0d9488',  # Teal
     'EQ (GSK shares)': '#dc2626',  # Red
     'InvestEngine ISA': '#ea580c',  # Orange
