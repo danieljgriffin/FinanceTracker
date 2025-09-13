@@ -60,54 +60,57 @@
 
     <!-- Main Content Area -->
     <div class="ml-20 min-h-screen bg-black relative">
-        <div class="p-8 pt-8">
-            <!-- Net Worth Breakdown Section - Top of Screen -->
-            <div class="ml-4 mr-4 mb-12">
-                <div class="text-white">
-                    <div class="flex justify-between items-center mb-2">
-                        <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
-                        <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
-                    </div>
-                    <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
-                    <!-- Platform Grid Container -->
-                    <div id="platformBreakdown" class="grid grid-cols-3 gap-4">
-                        <!-- Platform cards will be loaded here -->
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Net Worth Display Section -->
-            <div class="flex items-start space-x-24 ml-4 mr-4 mb-12">
-                <!-- Left Side - Main Net Worth -->
-                <div>
-                    <!-- Big Net Worth Number (no bold) -->
-                    <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
-                        £{{ "{:,.0f}".format(current_net_worth) }}
-                    </div>
-                    <!-- Subtitle with last updated -->
-                    <div class="flex items-center space-x-4 text-gray-400">
-                        <span class="text-lg">Current Net Worth</span>
-                        <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
-                    </div>
-                </div>
-                
-                <!-- Right Side - Performance Metrics (horizontal layout) -->
-                <div class="flex space-x-12 text-right">
-                    <!-- This Month -->
+        <div class="p-8 pt-12">
+            <!-- Top Section: Net Worth Display + Net Worth Breakdown -->
+            <div class="flex items-start space-x-8 ml-4 mr-4 mb-16">
+                <!-- Left Side - Net Worth Display -->
+                <div class="flex items-start space-x-24">
+                    <!-- Main Net Worth -->
                     <div>
-                        <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
-                        <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
-                            {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
-                            <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                        <!-- Big Net Worth Number (no bold) -->
+                        <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                            £{{ "{:,.0f}".format(current_net_worth) }}
+                        </div>
+                        <!-- Subtitle with last updated -->
+                        <div class="flex items-center space-x-4 text-gray-400">
+                            <span class="text-lg">Current Net Worth</span>
+                            <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
                         </div>
                     </div>
                     
-                    <!-- This Year -->
-                    <div>
-                        <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
-                        <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
-                            {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
-                            <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                    <!-- Performance Metrics (horizontal layout) -->
+                    <div class="flex space-x-12 text-right">
+                        <!-- This Month -->
+                        <div>
+                            <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
+                            <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                                <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- This Year -->
+                        <div>
+                            <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
+                            <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                                <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Net Worth Breakdown -->
+                <div class="flex-1">
+                    <div class="text-white">
+                        <div class="flex justify-between items-center mb-2">
+                            <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
+                            <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
+                        <!-- Platform Grid Container -->
+                        <div id="platformBreakdown" class="grid grid-cols-3 gap-4">
+                            <!-- Platform cards will be loaded here -->
                         </div>
                     </div>
                 </div>
