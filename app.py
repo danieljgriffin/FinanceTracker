@@ -975,7 +975,7 @@ def dashboard_v2():
         platform_allocations = calculate_platform_totals()
         current_net_worth = sum(platform_allocations.values())
         
-        # Calculate month-on-month change (current net worth vs current month's 1st day)
+        # Calculate month-on-month change (current net worth vs most recent historical data)
         mom_change = 0
         mom_amount_change = 0
         try:
@@ -990,9 +990,18 @@ def dashboard_v2():
             # Get current year's data
             current_year_data = get_data_manager().get_networth_data(current_year)
             
-            # Get current month's 1st day data
+            # Try to get current month's 1st day data, fallback to most recent
             month_start_data = current_year_data.get(current_month_name, {})
             month_start_total = 0
+            
+            # If no data for current month, use most recent available month
+            if not month_start_data:
+                # Try previous months in reverse order
+                for i in range(current_month - 2, -1, -1):  # Start from previous month
+                    fallback_month_name = f"1st {month_names[i]}"
+                    month_start_data = current_year_data.get(fallback_month_name, {})
+                    if month_start_data:
+                        break
             
             # Calculate month start total
             for platform, value in month_start_data.items():
@@ -1005,7 +1014,7 @@ def dashboard_v2():
                 mom_change = (mom_amount_change / month_start_total) * 100
             
         except Exception as e:
-            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            logging.error(f"Error calculating month-on-month change in dashboard_v2: {str(e)}")
             mom_change = 0
             mom_amount_change = 0
         
