@@ -944,6 +944,67 @@ def dashboard():
         response.headers['Expires'] = '0'
         return response
 
+@app.route('/api/dashboard-chart-data')
+def dashboard_chart_data():
+    """API endpoint for dashboard chart data with time period filtering"""
+    try:
+        period = request.args.get('period', '1Y')  # Default to 1 year
+        
+        # Get all historical data
+        from models import NetworthEntry
+        entries = NetworthEntry.query.filter(NetworthEntry.year >= 2023).order_by(NetworthEntry.year, NetworthEntry.created_at).all()
+        
+        # Convert to chart format
+        chart_data = []
+        for entry in entries:
+            # Parse month string to get approximate date
+            month_parts = entry.month.split(' ')
+            if len(month_parts) >= 2:
+                month_name = month_parts[1]
+                month_map = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+                            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
+                
+                if month_name in month_map:
+                    # Create date (use 1st for beginning of month, 31st for end of month)
+                    is_month_end = '31st' in entry.month or '30th' in entry.month or '28th' in entry.month or '29th' in entry.month
+                    day = 28 if is_month_end else 1  # Use 28 to avoid month overflow issues
+                    
+                    try:
+                        date_obj = datetime(entry.year, month_map[month_name], day)
+                        chart_data.append({
+                            'date': date_obj.isoformat(),
+                            'value': entry.total_networth,
+                            'label': f"{month_name} {entry.year}"
+                        })
+                    except ValueError:
+                        continue
+        
+        # Filter by period
+        now = datetime.now()
+        if period != 'Max':
+            if period == '24H':
+                cutoff = now - timedelta(days=1)
+            elif period == '1W':
+                cutoff = now - timedelta(weeks=1)
+            elif period == '1M':
+                cutoff = now - timedelta(days=30)
+            elif period == '3M':
+                cutoff = now - timedelta(days=90)
+            elif period == '6M':
+                cutoff = now - timedelta(days=180)
+            elif period == '1Y':
+                cutoff = now - timedelta(days=365)
+            else:
+                cutoff = now - timedelta(days=365)  # Default to 1Y
+            
+            chart_data = [d for d in chart_data if datetime.fromisoformat(d['date']) >= cutoff]
+        
+        return jsonify(chart_data)
+    
+    except Exception as e:
+        logging.error(f"Error getting chart data: {str(e)}")
+        return jsonify([])
+
 @app.route('/dashboard-v2')
 def dashboard_v2():
     """Clean black theme dashboard showing essential net worth metrics"""

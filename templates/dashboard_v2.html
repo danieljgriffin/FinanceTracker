@@ -9,6 +9,7 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <!-- Custom Tailwind Config -->
@@ -111,7 +112,191 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Chart and Net Worth Breakdown Section -->
+            <div class="flex space-x-8 mt-16 max-w-7xl mx-auto">
+                <!-- Line Chart Section (2/3 width) -->
+                <div class="flex-1" style="flex: 2;">
+                    <div class="relative">
+                        <!-- Chart Container -->
+                        <div class="relative h-96">
+                            <canvas id="networthChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Net Worth Breakdown Section (1/3 width) -->
+                <div class="flex-1" style="flex: 1;">
+                    <div class="text-white">
+                        <h2 class="text-2xl font-medium mb-6">Net Worth Breakdown</h2>
+                        <!-- Content will be added later -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script>
+    let chartInstance = null;
+    let currentPeriod = '1Y';
+    
+    // Initialize chart
+    function initChart() {
+        const ctx = document.getElementById('networthChart').getContext('2d');
+        
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Net Worth',
+                    data: [],
+                    borderColor: '#BB86FC',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return null;
+                        }
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, 'rgba(187, 134, 252, 0.3)');
+                        gradient.addColorStop(1, 'rgba(187, 134, 252, 0)');
+                        return gradient;
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#BB86FC',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Portfolio Performance',
+                        color: '#ffffff',
+                        font: {
+                            size: 18,
+                            weight: 'normal'
+                        },
+                        align: 'start',
+                        position: 'top'
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            callback: function(value) {
+                                return '£' + (value / 1000).toFixed(0) + 'k';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                onHover: (event, activeElements) => {
+                    document.getElementById('networthChart').style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                }
+            }
+        });
+        
+        // Add time period buttons
+        addTimeControls();
+        
+        // Load initial data
+        loadChartData(currentPeriod);
+    }
+    
+    // Add time period control buttons
+    function addTimeControls() {
+        const chartContainer = document.getElementById('networthChart').parentElement;
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'absolute top-4 right-4 flex space-x-2';
+        
+        const periods = ['24H', '1W', '1M', '3M', '6M', '1Y', 'Max'];
+        periods.forEach(period => {
+            const btn = document.createElement('button');
+            btn.textContent = period;
+            btn.className = `px-3 py-1 text-sm rounded transition-colors ${
+                period === currentPeriod 
+                    ? 'bg-purple-500 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-purple-500/20'
+            }`;
+            btn.onclick = () => switchPeriod(period);
+            controlsDiv.appendChild(btn);
+        });
+        
+        chartContainer.appendChild(controlsDiv);
+    }
+    
+    // Switch time period
+    function switchPeriod(period) {
+        currentPeriod = period;
+        
+        // Update button states
+        const buttons = document.querySelectorAll('#networthChart').parentElement.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if (btn.textContent === period) {
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors bg-purple-500 text-white';
+            } else {
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors text-gray-400 hover:text-white hover:bg-purple-500/20';
+            }
+        });
+        
+        // Load new data
+        loadChartData(period);
+    }
+    
+    // Load chart data
+    async function loadChartData(period) {
+        try {
+            const response = await fetch(`/api/dashboard-chart-data?period=${period}`);
+            const data = await response.json();
+            
+            if (chartInstance && data.length > 0) {
+                chartInstance.data.labels = data.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                });
+                chartInstance.data.datasets[0].data = data.map(d => d.value);
+                chartInstance.update('active');
+            }
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart();
+    });
+    </script>
 </body>
 </html>
