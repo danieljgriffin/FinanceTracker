@@ -69,9 +69,15 @@
                     <div class="flex items-start space-x-24 mb-12">
                         <!-- Main Net Worth -->
                         <div>
-                            <!-- Big Net Worth Number (no bold) -->
-                            <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
-                                £{{ "{:,.0f}".format(current_net_worth) }}
+                            <!-- Big Net Worth Number with Privacy Button -->
+                            <div class="flex items-center space-x-4">
+                                <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                                    £{{ "{:,.0f}".format(current_net_worth) }}
+                                </div>
+                                <!-- Privacy Toggle Button -->
+                                <button id="privacyToggle" class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/40 transition-all duration-200 ml-2" style="backdrop-filter: blur(8px);" title="Toggle Privacy Mode">
+                                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
+                                </button>
                             </div>
                             <!-- Subtitle with last updated -->
                             <div class="flex items-center space-x-4 text-gray-400">
@@ -225,12 +231,47 @@
         </div>
     </div>
     
+    <style>
+        /* Privacy mode styling */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-sensitive {
+            transition: filter 0.3s ease;
+        }
+    </style>
+    
     <script>
     let chartInstance = null;
     let currentPeriod = '24H';
+    let privacyMode = false;
     
     // Platform colors from backend
     const platformColors = {{ platform_colors|tojson }};
+    
+    // Privacy mode functionality
+    function togglePrivacy() {
+        privacyMode = !privacyMode;
+        const sensitiveElements = document.querySelectorAll('.privacy-sensitive');
+        const privacyIcon = document.getElementById('privacyIcon');
+        
+        sensitiveElements.forEach(element => {
+            if (privacyMode) {
+                element.classList.add('privacy-blur');
+            } else {
+                element.classList.remove('privacy-blur');
+            }
+        });
+        
+        // Update button icon
+        if (privacyMode) {
+            privacyIcon.className = 'fas fa-eye-slash text-blue-400 text-lg';
+        } else {
+            privacyIcon.className = 'fas fa-eye text-gray-400 text-lg';
+        }
+    }
     
     // Initialize chart
     function initChart() {
@@ -497,6 +538,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         initChart();
         loadPlatformBreakdown();
+        
+        // Add privacy toggle event listener
+        document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
     });
     </script>
 </body>
