@@ -91,7 +91,7 @@
                             <!-- This Month -->
                             <div>
                                 <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
-                                <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
                                     {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
                                     <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
                                 </div>
@@ -100,7 +100,7 @@
                             <!-- This Year -->
                             <div>
                                 <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
-                                <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
                                     {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
                                     <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
                                 </div>
