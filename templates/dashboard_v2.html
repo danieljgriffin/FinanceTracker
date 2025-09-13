@@ -118,9 +118,12 @@
                 <!-- Line Chart Section (2/3 width) -->
                 <div class="flex-1" style="flex: 2;">
                     <div class="relative">
-                        <!-- Time Period Controls -->
-                        <div id="chartControls" class="flex justify-end space-x-2 mb-4">
-                            <!-- Controls will be added by JavaScript -->
+                        <!-- Header with title and controls on same line -->
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-medium text-white">Net Worth Performance</h2>
+                            <div id="chartControls" class="flex space-x-2">
+                                <!-- Controls will be added by JavaScript -->
+                            </div>
                         </div>
                         <!-- Chart Container -->
                         <div class="relative h-96">
@@ -181,17 +184,6 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Net Worth Performance',
-                        color: '#ffffff',
-                        font: {
-                            size: 18,
-                            weight: 'normal'
-                        },
-                        align: 'start',
-                        position: 'top'
-                    },
                     legend: {
                         display: false
                     }
