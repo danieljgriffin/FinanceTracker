@@ -1268,15 +1268,80 @@ def dashboard_v2():
             logging.error(f"Error calculating yearly increase: {str(e)}")
             yearly_increase = 0
             yearly_amount_change = 0
+
+        # Sort platform allocations by value (high to low, with cash at bottom)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            sorted_platforms.append((platform, value))
+        
+        # Always add cash at the bottom if it exists
+        if cash_value > 0:
+            sorted_platforms.append(('Cash', cash_value))
+        
+        # Rebuild platform_allocations in sorted order
+        platform_allocations = dict(sorted_platforms)
+        
+        # Calculate percentage allocations
+        total_allocation = sum(platform_allocations.values())
+        platform_percentages = {}
+        if total_allocation > 0:
+            for platform, amount in platform_allocations.items():
+                platform_percentages[platform] = (amount / total_allocation) * 100
+
+        # Get next financial target - closest to current day
+        next_target = None
+        progress_info = None
+        upcoming_targets = []
+        try:
+            from models import Goal
+            today = datetime.now().date()
+            # Get all active goals and find the closest one to today (future or current)
+            active_goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
+            if active_goals:
+                # Find the closest goal to today's date
+                next_target = min(active_goals, key=lambda g: abs((g.target_date - today).days))
+                
+                # Get upcoming targets (next 2-3 after the current target)
+                current_target_index = active_goals.index(next_target)
+                upcoming_targets = active_goals[current_target_index + 1:current_target_index + 4]  # Next 3 targets
+                
+                # Calculate progress
+                remaining_amount = next_target.target_amount - current_net_worth
+                progress_percentage = min((current_net_worth / next_target.target_amount) * 100, 100)
+                
+                # Calculate time remaining
+                today = datetime.now().date()
+                target_date = next_target.target_date
+                days_remaining = (target_date - today).days
+                
+                progress_info = {
+                    'remaining_amount': max(0, remaining_amount),
+                    'progress_percentage': progress_percentage,
+                    'days_remaining': max(0, days_remaining),
+                    'is_achieved': current_net_worth >= next_target.target_amount
+                }
+        except Exception as e:
+            logging.error(f"Error calculating next target: {str(e)}")
         
         # Create response with no-cache headers
         response = make_response(render_template('dashboard_v2.html', 
                              current_net_worth=current_net_worth,
+                             platform_allocations=platform_allocations,
+                             platform_percentages=platform_percentages,
                              mom_change=mom_change,
                              mom_amount_change=mom_amount_change,
                              yearly_increase=yearly_increase,
                              yearly_amount_change=yearly_amount_change,
-                             last_price_update=last_price_update))
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
+                             last_price_update=last_price_update,
+                             next_target=next_target,
+                             progress_info=progress_info,
+                             upcoming_targets=upcoming_targets))
         
         # Force fresh content, disable all caching
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
@@ -1289,11 +1354,19 @@ def dashboard_v2():
         # Return error fallback
         response = make_response(render_template('dashboard_v2.html', 
                              current_net_worth=0,
+                             platform_allocations={},
+                             platform_percentages={},
                              mom_change=0,
                              mom_amount_change=0,
                              yearly_increase=0,
                              yearly_amount_change=0,
-                             last_price_update=None))
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
+                             last_price_update=None,
+                             next_target=None,
+                             progress_info=None,
+                             upcoming_targets=[]))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache' 
         response.headers['Expires'] = '0'
