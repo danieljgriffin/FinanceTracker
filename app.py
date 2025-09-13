@@ -893,7 +893,7 @@ def dashboard():
             logging.error(f"Error calculating next target: {str(e)}")
         
         # Create response with no-cache headers to prevent browser cache issues
-        response = make_response(render_template(get_template_path('dashboard.html'), 
+        response = make_response(render_template(get_template_path('dashboard_v2.html'), 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -920,7 +920,7 @@ def dashboard():
     except Exception as e:
         logging.error(f"Error in dashboard: {str(e)}")
         flash(f'Error loading dashboard: {str(e)}', 'error')
-        response = make_response(render_template(get_template_path('dashboard.html'), 
+        response = make_response(render_template(get_template_path('dashboard_v2.html'), 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
