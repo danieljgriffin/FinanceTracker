@@ -79,8 +79,8 @@
             <div class="flex items-center justify-between">
                 <!-- Left Side - Main Net Worth -->
                 <div>
-                    <!-- Big Net Worth Number -->
-                    <div class="text-6xl font-bold text-white mb-2 privacy-sensitive">
+                    <!-- Big Net Worth Number (no bold) -->
+                    <div class="text-6xl text-white mb-2 privacy-sensitive">
                         £{{ "{:,.0f}".format(current_net_worth) }}
                     </div>
                     <!-- Subtitle with last updated -->
@@ -90,23 +90,23 @@
                     </div>
                 </div>
                 
-                <!-- Right Side - Performance Metrics -->
-                <div class="space-y-4 text-right">
+                <!-- Right Side - Performance Metrics (horizontal layout) -->
+                <div class="flex space-x-12 text-right">
                     <!-- This Month -->
                     <div>
-                        <div class="text-sm text-gray-400 mb-1">This Month</div>
-                        <div class="text-2xl font-semibold {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
+                        <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
                             {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
-                            <span class="text-lg ml-2">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                            <span class="ml-1">({{ "{:+.1f}".format(mom_change) }}%)</span>
                         </div>
                     </div>
                     
                     <!-- This Year -->
                     <div>
-                        <div class="text-sm text-gray-400 mb-1">This Year</div>
-                        <div class="text-2xl font-semibold {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                        <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
+                        <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
                             {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
-                            <span class="text-lg ml-2">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                            <span class="ml-1">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
                         </div>
                     </div>
                 </div>
