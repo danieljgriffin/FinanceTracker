@@ -238,6 +238,12 @@
             transition: filter 0.3s ease;
         }
         
+        /* Extra heavy blur for the main net worth number */
+        .privacy-blur-heavy {
+            filter: blur(15px);
+            transition: filter 0.3s ease;
+        }
+        
         .privacy-sensitive {
             transition: filter 0.3s ease;
         }
@@ -262,9 +268,15 @@
         
         sensitiveElements.forEach(element => {
             if (privacyMode) {
-                element.classList.add('privacy-blur');
+                // Check if this is the main net worth number (6xl text)
+                if (element.classList.contains('text-6xl')) {
+                    element.classList.add('privacy-blur-heavy');
+                } else {
+                    element.classList.add('privacy-blur');
+                }
             } else {
                 element.classList.remove('privacy-blur');
+                element.classList.remove('privacy-blur-heavy');
             }
         });
         
