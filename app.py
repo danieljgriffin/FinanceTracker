@@ -944,6 +944,105 @@ def dashboard():
         response.headers['Expires'] = '0'
         return response
 
+@app.route('/api/platform-breakdown')
+def api_platform_breakdown():
+    """API endpoint for platform breakdown data"""
+    try:
+        # Force database session refresh
+        from app import db
+        db.session.expire_all()
+        
+        # Get platform data
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
+        
+        # Calculate monthly changes for each platform (same logic as dashboard)
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Get current year's data for monthly comparison
+            data_manager = get_data_manager()
+            networth_data = data_manager.get_networth_data(current_year)
+            
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            month_start_data = networth_data.get(current_month_name, {})
+            
+            for platform, current_value in platform_allocations.items():
+                try:
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if isinstance(month_start_platform_value, (int, float)) and month_start_platform_value > 0:
+                        change_amount = current_value - month_start_platform_value
+                        change_percent = (change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': change_amount,
+                            'percent': change_percent,
+                            'previous': month_start_platform_value
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {
+                            'amount': 0,
+                            'percent': 0,
+                            'previous': 0
+                        }
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {
+                        'amount': 0,
+                        'percent': 0,
+                        'previous': 0
+                    }
+        except Exception as e:
+            logging.error(f"Error calculating platform monthly changes: {str(e)}")
+            platform_monthly_changes = {}
+        
+        # Sort platforms by value (highest to lowest)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            change_data = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0})
+            sorted_platforms.append({
+                'name': platform,
+                'value': value,
+                'percentage': (value / current_net_worth) * 100 if current_net_worth > 0 else 0,
+                'change_amount': change_data['amount'],
+                'change_percent': change_data['percent']
+            })
+        
+        # Add cash at the end if it exists
+        if cash_value > 0:
+            change_data = platform_monthly_changes.get('Cash', {'amount': 0, 'percent': 0})
+            sorted_platforms.append({
+                'name': 'Cash',
+                'value': cash_value,
+                'percentage': (cash_value / current_net_worth) * 100 if current_net_worth > 0 else 0,
+                'change_amount': change_data['amount'],
+                'change_percent': change_data['percent']
+            })
+        
+        response = make_response(jsonify({
+            'platforms': sorted_platforms,
+            'total_net_worth': current_net_worth
+        }))
+        
+        # Force fresh API data, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error in platform breakdown API: {str(e)}")
+        return jsonify({'error': 'Failed to load platform breakdown data'}), 500
+
 @app.route('/api/dashboard-chart-data')
 def dashboard_chart_data():
     """API endpoint for dashboard chart data with time period filtering"""
