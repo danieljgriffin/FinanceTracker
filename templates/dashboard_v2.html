@@ -251,6 +251,9 @@
     // Platform colors from backend
     const platformColors = {{ platform_colors|tojson }};
     
+    // Store original chart callback functions
+    let originalYTickCallback = null;
+    
     // Privacy mode functionality
     function togglePrivacy() {
         privacyMode = !privacyMode;
@@ -264,6 +267,27 @@
                 element.classList.remove('privacy-blur');
             }
         });
+        
+        // Handle chart Y-axis labels
+        if (chartInstance && chartInstance.options && chartInstance.options.scales && chartInstance.options.scales.y) {
+            if (privacyMode) {
+                // Store original callback if not already stored
+                if (!originalYTickCallback) {
+                    originalYTickCallback = chartInstance.options.scales.y.ticks.callback;
+                }
+                // Replace with privacy callback
+                chartInstance.options.scales.y.ticks.callback = function(value) {
+                    return '£***';
+                };
+            } else {
+                // Restore original callback
+                if (originalYTickCallback) {
+                    chartInstance.options.scales.y.ticks.callback = originalYTickCallback;
+                }
+            }
+            // Update the chart to reflect changes
+            chartInstance.update('none');
+        }
         
         // Update button icon
         if (privacyMode) {
@@ -423,16 +447,26 @@
         chartInstance.options.scales.y.max = alignedMax;
         chartInstance.options.scales.y.ticks.stepSize = stepSize;
         
-        // Update tick formatting based on period and step size
-        chartInstance.options.scales.y.ticks.callback = function(value) {
-            if (stepSize < 1000) {
-                // For small steps, show more precision
-                return '£' + (value / 1000).toFixed(2) + 'k';
-            } else {
-                // For large steps, keep simple format
-                return '£' + (value / 1000).toFixed(0) + 'k';
-            }
-        };
+        // Update tick formatting based on period and step size, respecting privacy mode
+        if (privacyMode) {
+            // In privacy mode, keep showing £*** 
+            chartInstance.options.scales.y.ticks.callback = function(value) {
+                return '£***';
+            };
+        } else {
+            // Normal formatting
+            chartInstance.options.scales.y.ticks.callback = function(value) {
+                if (stepSize < 1000) {
+                    // For small steps, show more precision
+                    return '£' + (value / 1000).toFixed(2) + 'k';
+                } else {
+                    // For large steps, keep simple format
+                    return '£' + (value / 1000).toFixed(0) + 'k';
+                }
+            };
+            // Store as the new original callback for privacy toggle
+            originalYTickCallback = chartInstance.options.scales.y.ticks.callback;
+        }
     }
     
     // Load chart data
