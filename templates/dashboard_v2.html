@@ -189,12 +189,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Next Goal Preview -->
+                            <!-- Upcoming Goals -->
                             {% if upcoming_targets and upcoming_targets|length > 0 %}
                             <div class="mt-6 pt-4 border-t border-gray-800">
-                                <div class="text-sm text-gray-400 mb-2">Next Goal:</div>
-                                <div class="text-white font-medium text-sm">
-                                    £{{ "{:,.0f}".format(upcoming_targets[0].target_amount) }} by {{ upcoming_targets[0].target_date.strftime('%b %Y') }}
+                                <div class="text-sm text-gray-400 mb-3">Upcoming Goals:</div>
+                                <div class="space-y-2">
+                                    {% for goal in upcoming_targets[:4] %}
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-gray-300 text-sm">{{ goal.target_date.strftime('%b %Y') }}</div>
+                                        <div class="text-white font-medium text-sm privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                            £{{ "{:,.0f}".format(goal.target_amount) }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             {% endif %}
