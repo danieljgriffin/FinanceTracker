@@ -468,13 +468,13 @@ def calculate_current_net_worth():
 
 # Investment platform color scheme
 PLATFORM_COLORS = {
-    'Degiro': '#0891b2',  # Teal Blue
-    'Trading212 ISA': '#0d9488',  # Teal
+    'Degiro': '#1d4ed8',  # Strong Blue
+    'Trading212 ISA': '#0d9488',  # Teal Blue
     'EQ (GSK shares)': '#dc2626',  # Red
-    'InvestEngine ISA': '#ea580c',  # Orange
-    'Crypto': '#7c3aed',  # Purple
-    'HL Stocks & Shares LISA': '#0ea5e9',  # Baby Blue
-    'Cash': '#059669'  # Green
+    'InvestEngine ISA': '#f97316',  # Orange
+    'Crypto': '#8b5cf6',  # Purple
+    'HL Stocks & Shares LISA': '#60a5fa',  # Light Blue
+    'Cash': '#10b981'  # Green
 }
 
 def calculate_dashboard_analytics(data_manager, networth_data, investments_data):
