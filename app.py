@@ -975,7 +975,7 @@ def dashboard_v2():
         platform_allocations = calculate_platform_totals()
         current_net_worth = sum(platform_allocations.values())
         
-        # Calculate month-on-month change using historical_net_worth table for accurate Sept 1st data
+        # Calculate month-on-month change using networth_entries for current month's 1st day data
         mom_change = 0
         mom_amount_change = 0
         try:
@@ -983,51 +983,48 @@ def dashboard_v2():
             current_year = current_date.year
             current_month = current_date.month
             
-            # Try to get September 1st data from historical_net_worth table first
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data from networth_entries
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            
+            # Try to get current month's 1st day data first
+            month_start_data = current_year_data.get(current_month_name, {})
             month_start_baseline = 0
             
-            if current_month == 9:  # September - use historical_net_worth table
-                from models import HistoricalNetWorth
-                
-                # Get September 1st data from historical_net_worth table
-                sept_1_start = datetime(current_year, 9, 1)
-                sept_1_end = datetime(current_year, 9, 2)
-                
-                sept_1_entry = HistoricalNetWorth.query.filter(
-                    HistoricalNetWorth.created_at >= sept_1_start,
-                    HistoricalNetWorth.created_at < sept_1_end
-                ).order_by(HistoricalNetWorth.created_at.asc()).first()
-                
-                if sept_1_entry:
-                    month_start_baseline = sept_1_entry.net_worth
-                    logging.info(f"Found September 1st baseline in historical_net_worth: £{month_start_baseline}")
-            
-            # Fallback to networth_entries table if no historical data found
-            if month_start_baseline == 0:
-                # Map month number to month name
-                month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                              'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                current_month_name = f"1st {month_names[current_month - 1]}"
-                
-                # Get current year's data from networth_entries
-                current_year_data = get_data_manager().get_networth_data(current_year)
-                
-                # Try current month first
-                month_start_data = current_year_data.get(current_month_name, {})
-                
+            if month_start_data:
+                # Use the stored total_networth from the NetworthEntry
+                from models import NetworthEntry
+                month_entry = NetworthEntry.query.filter_by(year=current_year, month=current_month_name).first()
+                if month_entry and month_entry.total_networth:
+                    month_start_baseline = month_entry.total_networth
+                    logging.info(f"Found {current_month_name} baseline from networth_entries: £{month_start_baseline}")
+                else:
+                    # Fallback: calculate from platform data if total_networth not available
+                    for platform, value in month_start_data.items():
+                        if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                            month_start_baseline += value
+                    logging.info(f"Calculated {current_month_name} baseline from platform data: £{month_start_baseline}")
+            else:
                 # If no data for current month, use most recent available month
-                if not month_start_data:
-                    for i in range(current_month - 2, -1, -1):  # Start from previous month
-                        fallback_month_name = f"1st {month_names[i]}"
-                        month_start_data = current_year_data.get(fallback_month_name, {})
-                        if month_start_data:
-                            logging.info(f"Using fallback baseline from {fallback_month_name}")
-                            break
-                
-                # Calculate month start total from platform data
-                for platform, value in month_start_data.items():
-                    if platform != 'total_net_worth' and isinstance(value, (int, float)):
-                        month_start_baseline += value
+                for i in range(current_month - 2, -1, -1):  # Start from previous month
+                    fallback_month_name = f"1st {month_names[i]}"
+                    fallback_data = current_year_data.get(fallback_month_name, {})
+                    if fallback_data:
+                        # Try to get stored total first
+                        month_entry = NetworthEntry.query.filter_by(year=current_year, month=fallback_month_name).first()
+                        if month_entry and month_entry.total_networth:
+                            month_start_baseline = month_entry.total_networth
+                        else:
+                            # Calculate from platform data
+                            for platform, value in fallback_data.items():
+                                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                    month_start_baseline += value
+                        logging.info(f"Using fallback baseline from {fallback_month_name}: £{month_start_baseline}")
+                        break
             
             # Calculate changes
             if month_start_baseline > 0:
