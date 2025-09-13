@@ -999,7 +999,7 @@ def dashboard_chart_data():
             for data_point in historical_data:
                 chart_data.append({
                     'date': data_point.timestamp.isoformat(),
-                    'value': data_point.total_networth,
+                    'value': data_point.net_worth,
                     'label': data_point.timestamp.strftime('%d %b %Y %H:%M')
                 })
         

@@ -276,10 +276,17 @@
                 const labels = data.map(d => {
                     const date = new Date(d.date);
                     if (period === '24H') {
-                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        // Show clean 15-min intervals: 00:00, 00:15, 00:30, 00:45
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
                     } else if (period === '1W') {
-                        return date.toLocaleDateString('en-US', { weekday: 'short', hour: '2-digit' });
+                        // Show 6-hour intervals: Mon 00:00, Mon 06:00, etc.
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        return `${day} ${hours}:00`;
                     } else if (period === '1M' || period === '3M') {
+                        // Show end of day: Sep 13 (or middle of day)
                         return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                     } else {
                         return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
