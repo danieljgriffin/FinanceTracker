@@ -229,6 +229,9 @@
     let chartInstance = null;
     let currentPeriod = '24H';
     
+    // Platform colors from backend
+    const platformColors = {{ platform_colors|tojson }};
+    
     // Initialize chart
     function initChart() {
         const ctx = document.getElementById('networthChart').getContext('2d');
@@ -454,20 +457,8 @@
         container.innerHTML = '';
         
         platforms.forEach((platform, index) => {
-            // Assign colors to platforms
-            const colors = [
-                '#3B82F6', // Blue
-                '#10B981', // Green
-                '#F59E0B', // Yellow
-                '#EF4444', // Red
-                '#8B5CF6', // Purple
-                '#F97316', // Orange
-                '#06B6D4', // Cyan
-                '#84CC16', // Lime
-                '#EC4899', // Pink
-                '#6B7280'  // Gray
-            ];
-            const color = colors[index % colors.length];
+            // Get platform-specific color from backend, fallback to blue if not found
+            const color = platformColors[platform.name] || '#3B82F6';
             
             // Format change amount and percentage
             const changeAmount = platform.change_amount;
