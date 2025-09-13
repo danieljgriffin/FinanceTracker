@@ -949,55 +949,99 @@ def dashboard_chart_data():
     """API endpoint for dashboard chart data with time period filtering"""
     try:
         period = request.args.get('period', '1Y')  # Default to 1 year
-        
-        # Get all historical data
-        from models import NetworthEntry
-        entries = NetworthEntry.query.filter(NetworthEntry.year >= 2023).order_by(NetworthEntry.year, NetworthEntry.created_at).all()
-        
-        # Convert to chart format
-        chart_data = []
-        for entry in entries:
-            # Parse month string to get approximate date
-            month_parts = entry.month.split(' ')
-            if len(month_parts) >= 2:
-                month_name = month_parts[1]
-                month_map = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
-                            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
-                
-                if month_name in month_map:
-                    # Create date (use 1st for beginning of month, 31st for end of month)
-                    is_month_end = '31st' in entry.month or '30th' in entry.month or '28th' in entry.month or '29th' in entry.month
-                    day = 28 if is_month_end else 1  # Use 28 to avoid month overflow issues
-                    
-                    try:
-                        date_obj = datetime(entry.year, month_map[month_name], day)
-                        chart_data.append({
-                            'date': date_obj.isoformat(),
-                            'value': entry.total_networth,
-                            'label': f"{month_name} {entry.year}"
-                        })
-                    except ValueError:
-                        continue
-        
-        # Filter by period
         now = datetime.now()
-        if period != 'Max':
-            if period == '24H':
-                cutoff = now - timedelta(days=1)
-            elif period == '1W':
-                cutoff = now - timedelta(weeks=1)
-            elif period == '1M':
-                cutoff = now - timedelta(days=30)
-            elif period == '3M':
-                cutoff = now - timedelta(days=90)
-            elif period == '6M':
-                cutoff = now - timedelta(days=180)
-            elif period == '1Y':
-                cutoff = now - timedelta(days=365)
-            else:
-                cutoff = now - timedelta(days=365)  # Default to 1Y
+        chart_data = []
+        
+        # Use collection system for shorter periods, monthly tracker for longer periods
+        if period in ['24H', '1W', '1M', '3M']:
+            from models import HistoricalNetWorth, db
             
-            chart_data = [d for d in chart_data if datetime.fromisoformat(d['date']) >= cutoff]
+            if period == '24H':
+                # 15-minute intervals for last 24 hours
+                cutoff = now - timedelta(days=1)
+                historical_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Use raw data (already at 15-min intervals)
+                
+            elif period == '1W':
+                # 6-hour intervals for last week
+                cutoff = now - timedelta(days=7)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 6 hours
+                historical_data = sample_data_by_interval(all_data, hours=6)
+                
+            elif period == '1M':
+                # End-of-day intervals for last month
+                cutoff = now - timedelta(days=30)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 24 hours (end of day)
+                historical_data = sample_data_by_interval(all_data, hours=24)
+                
+            elif period == '3M':
+                # End-of-day intervals for last 3 months
+                cutoff = now - timedelta(days=90)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 24 hours (end of day)
+                historical_data = sample_data_by_interval(all_data, hours=24)
+            
+            # Convert historical data to chart format
+            for data_point in historical_data:
+                chart_data.append({
+                    'date': data_point.timestamp.isoformat(),
+                    'value': data_point.total_networth,
+                    'label': data_point.timestamp.strftime('%d %b %Y %H:%M')
+                })
+        
+        else:
+            # Use monthly tracker for longer periods (6M, 1Y, Max)
+            from models import NetworthEntry
+            entries = NetworthEntry.query.filter(NetworthEntry.year >= 2023).order_by(NetworthEntry.year, NetworthEntry.created_at).all()
+            
+            # Convert to chart format
+            for entry in entries:
+                # Parse month string to get approximate date
+                month_parts = entry.month.split(' ')
+                if len(month_parts) >= 2:
+                    month_name = month_parts[1]
+                    month_map = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+                                'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
+                    
+                    if month_name in month_map:
+                        # Create date (use 1st for beginning of month, 31st for end of month)
+                        is_month_end = '31st' in entry.month or '30th' in entry.month or '28th' in entry.month or '29th' in entry.month
+                        day = 28 if is_month_end else 1  # Use 28 to avoid month overflow issues
+                        
+                        try:
+                            date_obj = datetime(entry.year, month_map[month_name], day)
+                            chart_data.append({
+                                'date': date_obj.isoformat(),
+                                'value': entry.total_networth,
+                                'label': f"{month_name} {entry.year}"
+                            })
+                        except ValueError:
+                            continue
+            
+            # Filter by period for longer timeframes
+            if period != 'Max':
+                if period == '6M':
+                    cutoff = now - timedelta(days=180)
+                elif period == '1Y':
+                    cutoff = now - timedelta(days=365)
+                else:
+                    cutoff = now - timedelta(days=365)  # Default to 1Y
+                
+                chart_data = [d for d in chart_data if datetime.fromisoformat(d['date']) >= cutoff]
         
         return jsonify(chart_data)
     

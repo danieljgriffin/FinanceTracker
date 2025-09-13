@@ -272,12 +272,25 @@
             const data = await response.json();
             
             if (chartInstance && data.length > 0) {
-                chartInstance.data.labels = data.map(d => {
+                // Format labels based on time period
+                const labels = data.map(d => {
                     const date = new Date(d.date);
-                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    if (period === '24H') {
+                        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    } else if (period === '1W') {
+                        return date.toLocaleDateString('en-US', { weekday: 'short', hour: '2-digit' });
+                    } else if (period === '1M' || period === '3M') {
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
                 });
+                
+                chartInstance.data.labels = labels;
                 chartInstance.data.datasets[0].data = data.map(d => d.value);
-                chartInstance.update('active');
+                
+                // Update chart instantly without animation for smooth filtering
+                chartInstance.update('none');
             }
         } catch (error) {
             console.error('Error loading chart data:', error);
