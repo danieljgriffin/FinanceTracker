@@ -118,6 +118,10 @@
                 <!-- Line Chart Section (2/3 width) -->
                 <div class="flex-1" style="flex: 2;">
                     <div class="relative">
+                        <!-- Time Period Controls -->
+                        <div id="chartControls" class="flex justify-end space-x-2 mb-4">
+                            <!-- Controls will be added by JavaScript -->
+                        </div>
                         <!-- Chart Container -->
                         <div class="relative h-96">
                             <canvas id="networthChart" class="w-full h-full"></canvas>
@@ -151,7 +155,7 @@
                 datasets: [{
                     label: 'Net Worth',
                     data: [],
-                    borderColor: '#BB86FC',
+                    borderColor: '#3B82F6',
                     backgroundColor: function(context) {
                         const chart = context.chart;
                         const {ctx, chartArea} = chart;
@@ -159,15 +163,15 @@
                             return null;
                         }
                         const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        gradient.addColorStop(0, 'rgba(187, 134, 252, 0.3)');
-                        gradient.addColorStop(1, 'rgba(187, 134, 252, 0)');
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
                         return gradient;
                     },
                     fill: true,
                     tension: 0.4,
                     pointRadius: 0,
                     pointHoverRadius: 6,
-                    pointHoverBackgroundColor: '#BB86FC',
+                    pointHoverBackgroundColor: '#3B82F6',
                     pointHoverBorderColor: '#ffffff',
                     pointHoverBorderWidth: 2,
                     borderWidth: 2
@@ -179,7 +183,7 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Portfolio Performance',
+                        text: 'Net Worth Performance',
                         color: '#ffffff',
                         font: {
                             size: 18,
@@ -196,7 +200,7 @@
                     x: {
                         display: true,
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
+                            display: false
                         },
                         ticks: {
                             color: '#9CA3AF',
@@ -207,7 +211,7 @@
                         display: true,
                         position: 'right',
                         grid: {
-                            color: 'rgba(255, 255, 255, 0.1)'
+                            display: false
                         },
                         ticks: {
                             color: '#9CA3AF',
@@ -236,9 +240,7 @@
     
     // Add time period control buttons
     function addTimeControls() {
-        const chartContainer = document.getElementById('networthChart').parentElement;
-        const controlsDiv = document.createElement('div');
-        controlsDiv.className = 'absolute top-4 right-4 flex space-x-2';
+        const controlsContainer = document.getElementById('chartControls');
         
         const periods = ['24H', '1W', '1M', '3M', '6M', '1Y', 'Max'];
         periods.forEach(period => {
@@ -246,14 +248,12 @@
             btn.textContent = period;
             btn.className = `px-3 py-1 text-sm rounded transition-colors ${
                 period === currentPeriod 
-                    ? 'bg-purple-500 text-white' 
-                    : 'text-gray-400 hover:text-white hover:bg-purple-500/20'
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-blue-500/20'
             }`;
             btn.onclick = () => switchPeriod(period);
-            controlsDiv.appendChild(btn);
+            controlsContainer.appendChild(btn);
         });
-        
-        chartContainer.appendChild(controlsDiv);
     }
     
     // Switch time period
@@ -261,12 +261,12 @@
         currentPeriod = period;
         
         // Update button states
-        const buttons = document.querySelectorAll('#networthChart').parentElement.querySelectorAll('button');
+        const buttons = document.querySelectorAll('#chartControls button');
         buttons.forEach(btn => {
             if (btn.textContent === period) {
-                btn.className = 'px-3 py-1 text-sm rounded transition-colors bg-purple-500 text-white';
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors bg-blue-500 text-white';
             } else {
-                btn.className = 'px-3 py-1 text-sm rounded transition-colors text-gray-400 hover:text-white hover:bg-purple-500/20';
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors text-gray-400 hover:text-white hover:bg-blue-500/20';
             }
         });
         
