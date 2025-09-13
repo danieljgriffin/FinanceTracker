@@ -61,47 +61,64 @@
     <!-- Main Content Area -->
     <div class="ml-20 min-h-screen bg-black relative">
         <div class="p-8 pt-12">
-            <!-- Top Section: Net Worth Display + Net Worth Breakdown -->
-            <div class="flex items-start space-x-8 ml-4 mr-4 mb-16">
-                <!-- Left Side - Net Worth Display -->
-                <div class="flex items-start space-x-24">
-                    <!-- Main Net Worth -->
-                    <div>
-                        <!-- Big Net Worth Number (no bold) -->
-                        <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
-                            £{{ "{:,.0f}".format(current_net_worth) }}
-                        </div>
-                        <!-- Subtitle with last updated -->
-                        <div class="flex items-center space-x-4 text-gray-400">
-                            <span class="text-lg">Current Net Worth</span>
-                            <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Performance Metrics (horizontal layout) -->
-                    <div class="flex space-x-12 text-right">
-                        <!-- This Month -->
+            <!-- Asymmetric Layout: Left Column (Net Worth + Chart) | Right Column (Breakdown) -->
+            <div class="flex items-start space-x-8 ml-4 mr-4">
+                <!-- Left Column: Net Worth Display + Chart -->
+                <div class="w-1/2">
+                    <!-- Net Worth Display Section -->
+                    <div class="flex items-start space-x-24 mb-12">
+                        <!-- Main Net Worth -->
                         <div>
-                            <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
-                            <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
-                                {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
-                                <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                            <!-- Big Net Worth Number (no bold) -->
+                            <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                                £{{ "{:,.0f}".format(current_net_worth) }}
+                            </div>
+                            <!-- Subtitle with last updated -->
+                            <div class="flex items-center space-x-4 text-gray-400">
+                                <span class="text-lg">Current Net Worth</span>
+                                <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
                             </div>
                         </div>
                         
-                        <!-- This Year -->
-                        <div>
-                            <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
-                            <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
-                                {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
-                                <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                        <!-- Performance Metrics (horizontal layout) -->
+                        <div class="flex space-x-12 text-right">
+                            <!-- This Month -->
+                            <div>
+                                <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
+                                <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                    {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                                    <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                                </div>
                             </div>
+                            
+                            <!-- This Year -->
+                            <div>
+                                <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
+                                <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                    {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                                    <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Section (directly under Net Worth) -->
+                    <div class="relative">
+                        <!-- Chart Title -->
+                        <h2 class="text-2xl font-medium text-white mb-4">Net Worth Performance</h2>
+                        <!-- Filter Controls -->
+                        <div id="chartControls" class="flex justify-start space-x-2 mb-6">
+                            <!-- Controls will be added by JavaScript -->
+                        </div>
+                        <!-- Chart Container -->
+                        <div class="relative h-96">
+                            <canvas id="networthChart" class="w-full h-full"></canvas>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Right Side - Net Worth Breakdown -->
-                <div class="flex-1">
+                <!-- Right Column: Net Worth Breakdown (Full Height) -->
+                <div class="w-1/2">
                     <div class="text-white">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
@@ -112,22 +129,6 @@
                         <div id="platformBreakdown" class="grid grid-cols-3 gap-4">
                             <!-- Platform cards will be loaded here -->
                         </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Chart Section -->
-            <div class="ml-4 mr-4">
-                <div class="relative">
-                    <!-- Chart Title -->
-                    <h2 class="text-2xl font-medium text-white mb-4">Net Worth Performance</h2>
-                    <!-- Filter Controls -->
-                    <div id="chartControls" class="flex justify-start space-x-2 mb-6">
-                        <!-- Controls will be added by JavaScript -->
-                    </div>
-                    <!-- Chart Container -->
-                    <div class="relative h-96">
-                        <canvas id="networthChart" class="w-full h-full"></canvas>
                     </div>
                 </div>
             </div>
