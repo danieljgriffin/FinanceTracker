@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard v2</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'steel': {
+                            500: '#6b7280'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen bg-black">
+    <!-- Pure Black Background -->
+    <div class="fixed inset-0 bg-black"></div>
+
+    <!-- Left Sidebar Navigation (Same as other pages) -->
+    <div class="fixed left-0 top-0 h-full w-72 bg-slate-800 border-r border-steel-500 z-50">
+        <div class="p-6">
+            <!-- Desktop Header -->
+            <div class="flex items-center mb-12">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mr-4" style="background-color: #BB86FC;">
+                    <i class="fas fa-chart-line text-white text-xl"></i>
+                </div>
+                <span class="text-xl font-bold text-white">Portfolio Tracker</span>
+            </div>
+            
+            <!-- Navigation Links -->
+            <nav class="space-y-2">
+                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-tachometer-alt mr-4 text-lg"></i>
+                    Dashboard
+                </a>
+                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-calendar-alt mr-4 text-lg"></i>
+                    Year / Month Tracker
+                </a>
+                <a href="{{ url_for('goals') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'goals' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'goals' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-bullseye mr-4 text-lg"></i>
+                    Goals
+                </a>
+                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'monthly_breakdown' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-chart-pie mr-4 text-lg"></i>
+                    Monthly Breakdown
+                </a>
+                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'investment_manager' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'investment_manager' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-briefcase mr-4 text-lg"></i>
+                    Investment Manager
+                </a>
+                <a href="{{ url_for('dashboard_v2') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard_v2' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard_v2' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-home mr-4 text-lg"></i>
+                    Dashboard v2
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="ml-72 min-h-screen bg-black relative">
+        <!-- Top Header Section - Clean Floating Design -->
+        <div class="p-8 pt-12">
+            <!-- Net Worth Display Section -->
+            <div class="flex items-center justify-between">
+                <!-- Left Side - Main Net Worth -->
+                <div>
+                    <!-- Big Net Worth Number -->
+                    <div class="text-6xl font-bold text-white mb-2 privacy-sensitive">
+                        £{{ "{:,.0f}".format(current_net_worth) }}
+                    </div>
+                    <!-- Subtitle with last updated -->
+                    <div class="flex items-center space-x-4 text-gray-400">
+                        <span class="text-lg">Current Net Worth</span>
+                        <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
+                    </div>
+                </div>
+                
+                <!-- Right Side - Performance Metrics -->
+                <div class="space-y-4 text-right">
+                    <!-- This Month -->
+                    <div>
+                        <div class="text-sm text-gray-400 mb-1">This Month</div>
+                        <div class="text-2xl font-semibold {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                            {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                            <span class="text-lg ml-2">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                        </div>
+                    </div>
+                    
+                    <!-- This Year -->
+                    <div>
+                        <div class="text-sm text-gray-400 mb-1">This Year</div>
+                        <div class="text-2xl font-semibold {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}">
+                            {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                            <span class="text-lg ml-2">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

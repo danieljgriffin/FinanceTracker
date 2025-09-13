@@ -944,6 +944,129 @@ def dashboard():
         response.headers['Expires'] = '0'
         return response
 
+@app.route('/dashboard-v2')
+def dashboard_v2():
+    """Clean black theme dashboard showing essential net worth metrics"""
+    # Ensure data is fresh when users visit
+    ensure_recent_prices()
+    
+    try:
+        # Force database session refresh to ensure fresh data on every page load
+        from app import db
+        db.session.expire_all()
+        
+        # Get last price update time
+        global last_price_update
+        investments_data = get_data_manager().get_investments_data()
+        if not last_price_update:
+            # Check if we have any investment with last_updated timestamp
+            for platform, investments in investments_data.items():
+                if not platform.endswith('_cash') and isinstance(investments, list):
+                    for investment in investments:
+                        if investment.get('last_updated'):
+                            try:
+                                update_time = datetime.fromisoformat(investment['last_updated'])
+                                if not last_price_update or update_time > last_price_update:
+                                    last_price_update = update_time
+                            except:
+                                pass
+        
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
+        
+        # Calculate month-on-month change (current net worth vs current month's 1st day)
+        mom_change = 0
+        mom_amount_change = 0
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            
+            # Get current month's 1st day data
+            month_start_data = current_year_data.get(current_month_name, {})
+            month_start_total = 0
+            
+            # Calculate month start total
+            for platform, value in month_start_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    month_start_total += value
+            
+            # Calculate changes
+            if month_start_total > 0:
+                mom_amount_change = current_net_worth - month_start_total
+                mom_change = (mom_amount_change / month_start_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            mom_change = 0
+            mom_amount_change = 0
+        
+        # Calculate yearly net worth increase (current live portfolio vs 1st Jan current year)
+        yearly_increase = 0
+        yearly_amount_change = 0
+        try:
+            current_year = datetime.now().year
+            
+            # Get current year's 1st January data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            jan_total = 0
+            
+            # Get 1st Jan data
+            jan_data = current_year_data.get('1st Jan', {})
+            
+            # Calculate January total
+            for platform, value in jan_data.items():
+                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                    jan_total += value
+            
+            # Calculate changes
+            if jan_total > 0:
+                yearly_amount_change = current_net_worth - jan_total
+                yearly_increase = (yearly_amount_change / jan_total) * 100
+            
+        except Exception as e:
+            logging.error(f"Error calculating yearly increase: {str(e)}")
+            yearly_increase = 0
+            yearly_amount_change = 0
+        
+        # Create response with no-cache headers
+        response = make_response(render_template('dashboard_v2.html', 
+                             current_net_worth=current_net_worth,
+                             mom_change=mom_change,
+                             mom_amount_change=mom_amount_change,
+                             yearly_increase=yearly_increase,
+                             yearly_amount_change=yearly_amount_change,
+                             last_price_update=last_price_update))
+        
+        # Force fresh content, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
+    
+    except Exception as e:
+        logging.error(f"Error in dashboard_v2: {str(e)}")
+        # Return error fallback
+        response = make_response(render_template('dashboard_v2.html', 
+                             current_net_worth=0,
+                             mom_change=0,
+                             mom_amount_change=0,
+                             yearly_increase=0,
+                             yearly_amount_change=0,
+                             last_price_update=None))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
+
 @app.route('/mobile')
 def mobile_dashboard():
     """Mobile-only dashboard with Trading212-style interface"""
