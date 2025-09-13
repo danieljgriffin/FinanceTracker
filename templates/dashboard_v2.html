@@ -265,6 +265,49 @@
         loadChartData(period);
     }
     
+    // Calculate smart Y-axis settings based on data range
+    function updateChartYAxis(values, period) {
+        if (!values || values.length === 0) return;
+        
+        const minValue = Math.min(...values);
+        const maxValue = Math.max(...values);
+        const dataRange = maxValue - minValue;
+        
+        // Calculate smart step size based on range
+        function calculateSmartStep(range) {
+            if (range <= 500) return 100;
+            if (range <= 2000) return 250;
+            if (range <= 5000) return 500;
+            if (range <= 10000) return 1000;
+            if (range <= 25000) return 2500;
+            if (range <= 50000) return 5000;
+            return Math.ceil(range / 8 / 10000) * 10000; // For larger ranges
+        }
+        
+        const stepSize = calculateSmartStep(dataRange);
+        
+        // Calculate nice min/max values that align with step size
+        const paddingSteps = Math.max(1, Math.ceil(dataRange * 0.05 / stepSize)); // 5% padding in steps
+        const alignedMin = Math.floor(minValue / stepSize) * stepSize - (paddingSteps * stepSize);
+        const alignedMax = Math.ceil(maxValue / stepSize) * stepSize + (paddingSteps * stepSize);
+        
+        // Update Y-axis configuration
+        chartInstance.options.scales.y.min = alignedMin;
+        chartInstance.options.scales.y.max = alignedMax;
+        chartInstance.options.scales.y.ticks.stepSize = stepSize;
+        
+        // Update tick formatting based on period and step size
+        chartInstance.options.scales.y.ticks.callback = function(value) {
+            if (stepSize < 1000) {
+                // For small steps, show more precision
+                return '£' + (value / 1000).toFixed(2) + 'k';
+            } else {
+                // For large steps, keep simple format
+                return '£' + (value / 1000).toFixed(0) + 'k';
+            }
+        };
+    }
+    
     // Load chart data
     async function loadChartData(period) {
         try {
@@ -294,7 +337,11 @@
                 });
                 
                 chartInstance.data.labels = labels;
-                chartInstance.data.datasets[0].data = data.map(d => d.value);
+                const values = data.map(d => d.value);
+                chartInstance.data.datasets[0].data = values;
+                
+                // Calculate smart Y-axis scaling
+                updateChartYAxis(values, period);
                 
                 // Update chart instantly without animation for smooth filtering
                 chartInstance.update('none');
