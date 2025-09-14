@@ -66,7 +66,7 @@
                 <!-- Left Column: Net Worth Display + Chart -->
                 <div class="w-1/2">
                     <!-- Glass Card Container for Performance Section -->
-                    <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
+                    <div class="rounded-2xl border border-white/8 p-6 backdrop-blur-sm" style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%);">
                     <!-- Net Worth Display Section -->
                     <div class="flex items-start space-x-24 mb-12">
                         <!-- Main Net Worth -->
@@ -130,17 +130,20 @@
                 <div class="w-1/2 flex space-x-8">
                     <!-- Net Worth Breakdown (Half Width) -->
                     <div class="w-1/2">
-                        <!-- Glass Card Container for Breakdown Section -->
-                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
-                        <div class="text-gray-200">
-                            <div class="flex justify-between items-center mb-2">
+                        <!-- Glass Card Container for Breakdown Section - Match left column height -->
+                        <div class="rounded-2xl border border-white/8 p-6 backdrop-blur-sm h-full flex flex-col" style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%);">
+                        <div class="text-gray-200 flex-1 flex flex-col">
+                            <div class="mb-2">
                                 <h2 class="text-2xl font-medium text-gray-100">Net Worth Breakdown</h2>
-                                <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
                             </div>
                             <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
                             <!-- Platform Vertical List Container -->
-                            <div id="platformBreakdown" class="space-y-3">
+                            <div id="platformBreakdown" class="space-y-3 flex-1">
                                 <!-- Platform cards will be loaded here as vertical list -->
+                            </div>
+                            <!-- View All Button moved to bottom -->
+                            <div class="mt-6 pt-4 border-t border-white/8">
+                                <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
                             </div>
                         </div>
                         </div> <!-- End Glass Card Container -->
@@ -149,7 +152,7 @@
                     <!-- Goals Progress Section -->
                     <div class="w-1/2">
                         <!-- Glass Card Container for Goals Section -->
-                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
+                        <div class="rounded-2xl border border-white/8 p-6 backdrop-blur-sm" style="background: linear-gradient(145deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.5) 100%);">
                         {% if next_target and progress_info %}
                         <div class="text-gray-200">
                             <div class="flex justify-between items-center mb-2">
