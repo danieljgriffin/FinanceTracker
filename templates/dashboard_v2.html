@@ -185,19 +185,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Status Cards -->
-                            <div class="grid grid-cols-2 gap-3">
+                            <!-- Status Info -->
+                            <div class="grid grid-cols-2 gap-6">
                                 <!-- Days Remaining -->
-                                <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(59, 130, 246, 0.15); backdrop-filter: blur(8px);">
-                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Days Remaining</div>
+                                <div class="">
+                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">Days Remaining</div>
                                     <div class="text-gray-100 text-2xl font-semibold" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
                                         {{ progress_info.days_remaining }}
                                     </div>
                                 </div>
                                 
                                 <!-- Amount Remaining -->
-                                <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(59, 130, 246, 0.15); backdrop-filter: blur(8px);">
-                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount Remaining</div>
+                                <div class="">
+                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">Amount Remaining</div>
                                     <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                                         £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
                                     </div>
@@ -565,7 +565,7 @@
             const changeIcon = isPositive ? '↗' : '↘';
             
             const platformHtml = `
-                <div class="flex items-center justify-between p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(59, 130, 246, 0.15); backdrop-filter: blur(8px);">
+                <div class="flex items-center justify-between py-3 px-2 hover:bg-white/5 rounded-lg transition-colors duration-200">
                     <!-- Left side: Platform name with colored dot -->
                     <div class="flex items-center space-x-3">
                         <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color};"></div>
