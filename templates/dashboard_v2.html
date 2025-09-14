@@ -571,24 +571,26 @@
             const changeIcon = isPositive ? '↗' : '↘';
             
             const platformHtml = `
-                <div class="flex items-start justify-between py-3 px-2 hover:bg-white/5 rounded-lg transition-colors duration-200">
+                <div class="flex justify-between py-3 px-2 hover:bg-white/5 rounded-lg transition-colors duration-200">
                     <!-- Left side: Platform name with colored dot and percentage -->
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2.5 h-2.5 rounded-full mt-1" style="background-color: ${color};"></div>
-                        <div>
-                            <div class="text-gray-100 font-medium text-sm">${platform.name}</div>
-                            <div class="text-gray-400 text-xs">${portfolioPercentage}% of total</div>
+                    <div class="flex space-x-3">
+                        <div class="flex flex-col items-center justify-start pt-0.5">
+                            <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color};"></div>
+                        </div>
+                        <div class="flex flex-col">
+                            <div class="text-gray-100 font-medium text-sm leading-tight">${platform.name}</div>
+                            <div class="text-gray-400 text-xs mt-0.5">${portfolioPercentage}% of total</div>
                         </div>
                     </div>
                     
                     <!-- Right side: Value and change -->
-                    <div class="text-right">
+                    <div class="text-right flex flex-col">
                         <!-- Value -->
-                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive leading-tight" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                             £${Math.round(platform.value).toLocaleString()}
                         </div>
                         <!-- Monthly change -->
-                        <div class="text-xs ${changeClass}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400;">
+                        <div class="text-xs ${changeClass} mt-0.5" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400;">
                             ${isPositive ? '+' : ''}£${Math.abs(changeAmount).toFixed(0)} (${isPositive ? '+' : ''}${changePercent.toFixed(1)}%)
                         </div>
                     </div>
