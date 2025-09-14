@@ -2244,7 +2244,34 @@ def add_investment():
     
     return redirect(url_for('investment_manager'))
 
-
+def check_and_complete_goals():
+    """Check if any active goals have been achieved and automatically mark them as completed"""
+    try:
+        from models import Goal, db
+        from datetime import datetime
+        
+        # Get current net worth
+        current_net_worth = calculate_current_net_worth()
+        
+        # Find all active goals that have been achieved
+        active_goals = Goal.query.filter_by(status='active').all()
+        completed_goals = []
+        
+        for goal in active_goals:
+            if current_net_worth >= goal.target_amount:
+                # Goal achieved! Mark as completed
+                goal.status = 'completed'
+                goal.completed_at = datetime.utcnow()
+                completed_goals.append(goal)
+                logging.info(f"🎉 Goal automatically completed: '{goal.title}' (£{goal.target_amount:,.0f}) achieved with net worth £{current_net_worth:,.0f}")
+        
+        if completed_goals:
+            db.session.commit()
+            logging.info(f"✅ {len(completed_goals)} goal(s) automatically completed")
+            
+    except Exception as e:
+        logging.error(f"Error in automatic goal completion: {str(e)}")
+        # Don't re-raise since this shouldn't break the price update process
 
 def update_all_prices():
     """Update live prices for all investments using optimized batch fetching"""
@@ -2310,6 +2337,12 @@ def update_all_prices():
         global last_price_update
         last_price_update = datetime.now()
         logging.info(f'Background price update completed: {updated_count}/{len(symbols_to_update)} prices updated')
+        
+        # Check for automatic goal completion after price updates
+        try:
+            check_and_complete_goals()
+        except Exception as e:
+            logging.error(f"Error checking goal completion: {str(e)}")
         
         return updated_count
         
