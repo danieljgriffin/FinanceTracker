@@ -27,9 +27,9 @@
         }
     </script>
 </head>
-<body class="min-h-screen bg-black">
-    <!-- Pure Black Background -->
-    <div class="fixed inset-0 bg-black"></div>
+<body class="min-h-screen text-gray-200" style="background-color: #0B0F14;">
+    <!-- Charcoal Blue Background -->
+    <div class="fixed inset-0" style="background-color: #0B0F14;"></div>
 
     <!-- Left Sidebar Navigation - Icon Only -->
     <div class="fixed left-0 top-0 h-full w-20 z-50">
@@ -59,19 +59,21 @@
     </div>
 
     <!-- Main Content Area -->
-    <div class="ml-20 min-h-screen bg-black relative">
+    <div class="ml-20 min-h-screen relative" style="background-color: #0B0F14;">
         <div class="p-8 pt-12">
             <!-- Asymmetric Layout: Left Column (Net Worth + Chart) | Right Column (Breakdown) -->
             <div class="flex items-start space-x-8 ml-4 mr-4">
                 <!-- Left Column: Net Worth Display + Chart -->
                 <div class="w-1/2">
+                    <!-- Glass Card Container for Performance Section -->
+                    <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
                     <!-- Net Worth Display Section -->
                     <div class="flex items-start space-x-24 mb-12">
                         <!-- Main Net Worth -->
                         <div>
                             <!-- Big Net Worth Number with Privacy Button -->
                             <div class="flex items-center space-x-4">
-                                <div class="text-6xl text-white mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                                <div class="text-6xl text-gray-100 mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
                                     £{{ "{:,.0f}".format(current_net_worth) }}
                                 </div>
                                 <!-- Privacy Toggle Button -->
@@ -111,7 +113,7 @@
                     <!-- Chart Section (directly under Net Worth) -->
                     <div class="relative">
                         <!-- Chart Title -->
-                        <h2 class="text-2xl font-medium text-white mb-4">Net Worth Performance</h2>
+                        <h2 class="text-2xl font-medium text-gray-100 mb-4">Net Worth Performance</h2>
                         <!-- Filter Controls -->
                         <div id="chartControls" class="flex justify-start space-x-2 mb-6">
                             <!-- Controls will be added by JavaScript -->
@@ -121,15 +123,18 @@
                             <canvas id="networthChart" class="w-full h-full"></canvas>
                         </div>
                     </div>
+                    </div> <!-- End Glass Card Container -->
                 </div>
                 
                 <!-- Right Column: Split between Breakdown and Future Content -->
                 <div class="w-1/2 flex space-x-8">
                     <!-- Net Worth Breakdown (Half Width) -->
                     <div class="w-1/2">
-                        <div class="text-white">
+                        <!-- Glass Card Container for Breakdown Section -->
+                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
+                        <div class="text-gray-200">
                             <div class="flex justify-between items-center mb-2">
-                                <h2 class="text-2xl font-medium text-white">Net Worth Breakdown</h2>
+                                <h2 class="text-2xl font-medium text-gray-100">Net Worth Breakdown</h2>
                                 <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
                             </div>
                             <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
@@ -138,14 +143,17 @@
                                 <!-- Platform cards will be loaded here as vertical list -->
                             </div>
                         </div>
+                        </div> <!-- End Glass Card Container -->
                     </div>
                     
                     <!-- Goals Progress Section -->
                     <div class="w-1/2">
+                        <!-- Glass Card Container for Goals Section -->
+                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background-color: rgba(71, 85, 105, 0.4);">
                         {% if next_target and progress_info %}
-                        <div class="text-white">
+                        <div class="text-gray-200">
                             <div class="flex justify-between items-center mb-2">
-                                <h2 class="text-2xl font-medium text-white">Current Goal</h2>
+                                <h2 class="text-2xl font-medium text-gray-100">Current Goal</h2>
                                 <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View Goals →</span>
                             </div>
                             <p class="text-gray-400 text-sm mb-6">{{ next_target.title if next_target.title else 'Financial Target' }}</p>
@@ -170,7 +178,7 @@
                                     <div class="text-blue-400 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                                         £{{ "{:,.0f}".format(current_net_worth) }}
                                     </div>
-                                    <div class="text-white text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                    <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                                         £{{ "{:,.0f}".format(next_target.target_amount) }}
                                     </div>
                                 </div>
@@ -181,7 +189,7 @@
                                 <!-- Days Remaining -->
                                 <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(59, 130, 246, 0.15); backdrop-filter: blur(8px);">
                                     <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Days Remaining</div>
-                                    <div class="text-white text-2xl font-semibold" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                    <div class="text-gray-100 text-2xl font-semibold" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
                                         {{ progress_info.days_remaining }}
                                     </div>
                                 </div>
@@ -189,7 +197,7 @@
                                 <!-- Amount Remaining -->
                                 <div class="p-4 rounded-xl" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%); border: 1px solid rgba(59, 130, 246, 0.15); backdrop-filter: blur(8px);">
                                     <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Amount Remaining</div>
-                                    <div class="text-white text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                    <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                                         £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
                                     </div>
                                 </div>
@@ -203,7 +211,7 @@
                                     {% for goal in upcoming_targets[:4] %}
                                     <div class="flex justify-between items-center">
                                         <div class="text-gray-300 text-sm">{{ goal.target_date.strftime('%b %Y') }}</div>
-                                        <div class="text-white font-medium text-sm privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                        <div class="text-gray-100 font-medium text-sm privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                                             £{{ "{:,.0f}".format(goal.target_amount) }}
                                         </div>
                                     </div>
@@ -225,6 +233,7 @@
                             </a>
                         </div>
                         {% endif %}
+                        </div> <!-- End Glass Card Container -->
                     </div>
                 </div>
             </div>
@@ -559,13 +568,13 @@
                     <!-- Left side: Platform name with colored dot -->
                     <div class="flex items-center space-x-3">
                         <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color};"></div>
-                        <div class="text-white font-medium text-sm">${platform.name}</div>
+                        <div class="text-gray-100 font-medium text-sm">${platform.name}</div>
                     </div>
                     
                     <!-- Right side: Value and change -->
                     <div class="text-right">
                         <!-- Value -->
-                        <div class="text-white text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
                             £${Math.round(platform.value).toLocaleString()}
                         </div>
                         <!-- Monthly change -->
