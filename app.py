@@ -1148,7 +1148,7 @@ def dashboard_chart_data():
         logging.error(f"Error getting chart data: {str(e)}")
         return jsonify([])
 
-@app.route('/dashboard-v2')
+@app.route('/')
 def dashboard_v2():
     """Clean black theme dashboard showing essential net worth metrics"""
     # Ensure data is fresh when users visit
