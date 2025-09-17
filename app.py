@@ -2496,7 +2496,7 @@ def update_prices():
     if referrer and '/update-prices' not in referrer:
         return redirect(referrer)
     else:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard_v2'))
 
 @app.route('/manual-collect-data')
 def manual_collect_data():
@@ -4283,7 +4283,7 @@ def goals():
     except Exception as e:
         logging.error(f"Error loading goals page: {e}")
         flash(f'Error loading goals: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('dashboard_v2'))
 
 @app.route('/api/goals', methods=['POST'])
 def create_goal():
