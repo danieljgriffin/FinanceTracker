@@ -37,7 +37,7 @@
             <!-- Navigation Links - Icons Only -->
             <nav class="space-y-4">
                 <a href="{{ url_for('dashboard_v2') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'dashboard_v2' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard_v2' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
-                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-home"></i>
                 </a>
                 <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
                     <i class="fas fa-calendar-alt"></i>
