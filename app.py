@@ -885,6 +885,7 @@ def dashboard_chart_data():
         return jsonify([])
 
 @app.route('/')
+@app.route('/dashboard_v2')
 def dashboard_v2():
     """Clean black theme dashboard showing essential net worth metrics"""
     # Ensure data is fresh when users visit
