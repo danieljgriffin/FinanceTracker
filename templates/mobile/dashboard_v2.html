@@ -107,6 +107,41 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Chart Section -->
+            <div class="mt-6 bg-gray-800/20 rounded-xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                <div id="mobileChartContainer" class="h-48 w-full relative mb-4">
+                    <!-- Chart loading state -->
+                    <div id="chartLoading" class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-gray-400 text-sm">Loading chart...</div>
+                    </div>
+                    
+                    <!-- SVG Chart -->
+                    <svg id="mobileChart" viewBox="0 0 400 192" class="w-full h-full opacity-0 transition-opacity duration-300">
+                        <!-- Chart content will be generated here -->
+                    </svg>
+                    
+                    <!-- Touch interaction overlay -->
+                    <div id="touchOverlay" class="absolute inset-0 bg-transparent pointer-events-auto"></div>
+                    
+                    <!-- Value tooltip -->
+                    <div id="chartTooltip" class="absolute pointer-events-none opacity-0 transition-all duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20 z-10">
+                        <div id="tooltipValue" class="font-semibold text-blue-400"></div>
+                        <div id="tooltipDate" class="text-gray-300 text-xs mt-1"></div>
+                    </div>
+                </div>
+                
+                <!-- Time Range Selector -->
+                <div id="timeRangeContainer" class="flex flex-wrap justify-center gap-2">
+                    <button data-range="1d" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1D</button>
+                    <button data-range="1w" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1W</button>
+                    <button data-range="1m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1M</button>
+                    <button data-range="3m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">3M</button>
+                    <button data-range="1y" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1Y</button>
+                    <!-- Year buttons will be inserted here dynamically -->
+                    <button data-range="max" class="chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors">MAX</button>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -151,13 +186,296 @@
     </div>
     
     <script>
-        let privacyMode = false;
+        // Mobile Chart System - Clean Implementation
+        class MobileChart {
+            constructor() {
+                this.currentRange = '1d';
+                this.chartData = null;
+                this.isLoading = false;
+                
+                // Chart dimensions (adjusted for smaller chart height)
+                this.width = 400;
+                this.height = 192;
+                this.padding = { top: 15, right: 40, bottom: 30, left: 15 };
+                this.plotWidth = this.width - this.padding.left - this.padding.right;
+                this.plotHeight = this.height - this.padding.top - this.padding.bottom;
+                
+                this.init();
+            }
+            
+            async init() {
+                console.log('🚀 Initializing Mobile Chart System');
+                await this.loadAvailableYears(); // Load year buttons first
+                this.setupEventListeners();
+                this.loadChart('1d'); // Start with 1D view
+            }
+            
+            async loadAvailableYears() {
+                try {
+                    console.log('🔍 Loading available years for chart buttons...');
+                    const response = await fetch(`/api/available-years?_t=${Date.now()}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const years = data.years || [];
+                        
+                        // Insert year buttons before MAX button
+                        const container = document.getElementById('timeRangeContainer');
+                        const maxButton = container.querySelector('[data-range="max"]');
+                        
+                        // Remove any existing year buttons
+                        container.querySelectorAll('[data-range*="20"]').forEach(btn => btn.remove());
+                        
+                        // Add year buttons
+                        years.forEach(year => {
+                            const yearBtn = document.createElement('button');
+                            yearBtn.setAttribute('data-range', year.toString());
+                            yearBtn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
+                            yearBtn.textContent = year.toString();
+                            container.insertBefore(yearBtn, maxButton);
+                        });
+                        
+                        console.log(`✅ Added ${years.length} year buttons: ${years.join(', ')}`);
+                    }
+                } catch (error) {
+                    console.error('Error loading available years:', error);
+                }
+            }
+            
+            setupEventListeners() {
+                // Range button clicks - use event delegation to handle dynamically added year buttons
+                document.getElementById('timeRangeContainer').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('chart-range-btn')) {
+                        const range = e.target.getAttribute('data-range');
+                        this.loadChart(range);
+                    }
+                });
+                
+                // Touch interactions
+                const overlay = document.getElementById('touchOverlay');
+                if (overlay) {
+                    overlay.addEventListener('touchstart', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchmove', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchend', this.hideTooltip.bind(this));
+                }
+            }
+            
+            updateRangeButtons(activeRange) {
+                document.querySelectorAll('.chart-range-btn').forEach(btn => {
+                    const range = btn.getAttribute('data-range');
+                    if (range === activeRange) {
+                        btn.className = 'chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors';
+                    } else {
+                        btn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
+                    }
+                });
+            }
+            
+            mapRangeToAPI(range) {
+                const mapping = {
+                    '1d': '24h',
+                    '1w': 'week',
+                    '1m': '1m',
+                    '3m': '3months',
+                    '1y': 'year',
+                    'max': 'max'
+                };
+                
+                // For year-specific filters (2023, 2024, 2025, etc.), pass them through directly
+                if (/^\d{4}$/.test(range)) {
+                    return range;
+                }
+                
+                return mapping[range] || range;
+            }
+            
+            async loadChart(range) {
+                if (this.currentRange === range && this.chartData) return;
+                
+                console.log(`📈 Loading chart for range: ${range}`);
+                this.isLoading = true;
+                this.currentRange = range;
+                this.updateRangeButtons(range);
+                this.showLoading();
+                
+                try {
+                    const apiFilter = this.mapRangeToAPI(range);
+                    const response = await fetch(`/api/realtime-chart-data?filter=${apiFilter}&_t=${Date.now()}`);
+                    const data = await response.json();
+                    
+                    console.log(`✅ Received data for ${range}:`, data);
+                    this.chartData = data;
+                    this.renderChart(data);
+                    
+                } catch (error) {
+                    console.error('❌ Error loading chart:', error);
+                    this.showError('Error loading chart data');
+                } finally {
+                    this.isLoading = false;
+                    this.hideLoading();
+                }
+            }
+            
+            renderChart(data) {
+                const svg = document.getElementById('mobileChart');
+                if (!svg || !data.labels || !data.values) {
+                    console.error('❌ Missing SVG element or invalid data');
+                    return;
+                }
+                
+                console.log(`🎨 Rendering chart with ${data.values.length} data points`);
+                
+                // Calculate data bounds
+                const minValue = Math.min(...data.values);
+                const maxValue = Math.max(...data.values);
+                const valueRange = maxValue - minValue || 1; // Prevent division by zero
+                
+                // Generate chart line points
+                const points = data.values.map((value, index) => {
+                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `${x},${y}`;
+                }).join(' ');
+                
+                // Generate data point circles
+                const dataPoints = data.values.map((value, index) => {
+                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `<circle cx="${x}" cy="${y}" r="2" fill="#3b82f6" stroke="#000" stroke-width="1"/>`;
+                }).join('');
+                
+                // Generate Y-axis labels
+                const yLabels = [];
+                for (let i = 0; i <= 3; i++) {
+                    const value = minValue + (valueRange * i / 3);
+                    const y = this.padding.top + this.plotHeight - (i / 3) * this.plotHeight;
+                    yLabels.push(`<text x="${this.width - 5}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(0)}k</text>`);
+                }
+                
+                // Generate X-axis labels with smart spacing
+                const xLabels = [];
+                const labelStep = Math.max(1, Math.ceil(data.labels.length / 4));
+                for (let i = 0; i < data.labels.length; i += labelStep) {
+                    const x = this.padding.left + (i / (data.labels.length - 1)) * this.plotWidth;
+                    xLabels.push(`<text x="${x}" y="${this.height - 5}" font-size="9" fill="#6b7280" text-anchor="middle">${data.labels[i]}</text>`);
+                }
+                
+                // Current value indicator
+                const lastIndex = data.values.length - 1;
+                const lastX = this.padding.left + (lastIndex / (data.values.length - 1)) * this.plotWidth;
+                const lastY = this.padding.top + this.plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * this.plotHeight;
+                const currentPoint = `<circle cx="${lastX}" cy="${lastY}" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>`;
+                
+                // Render complete chart
+                svg.innerHTML = `
+                    <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${points}"/>
+                    ${dataPoints}
+                    ${currentPoint}
+                    ${yLabels.join('')}
+                    ${xLabels.join('')}
+                `;
+                
+                // Store data for touch interactions
+                this.storeInteractionData(data, minValue, maxValue, valueRange);
+                
+                // Show chart with animation
+                svg.style.opacity = '1';
+                console.log('✅ Chart rendered successfully');
+            }
+            
+            storeInteractionData(data, minValue, maxValue, valueRange) {
+                this.interactionData = {
+                    values: data.values,
+                    labels: data.labels,
+                    dataPoints: data.values.map((value, index) => {
+                        const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                        const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                        return { x, y, value, label: data.labels[index] };
+                    }),
+                    minValue,
+                    maxValue,
+                    valueRange
+                };
+            }
+            
+            handleTouch(event) {
+                if (!this.interactionData) return;
+                
+                event.preventDefault();
+                const touch = event.touches[0] || event.changedTouches[0];
+                if (!touch) return;
+                
+                const rect = document.getElementById('mobileChartContainer').getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+                
+                // Find closest data point
+                let closestPoint = null;
+                let minDistance = Infinity;
+                
+                this.interactionData.dataPoints.forEach(point => {
+                    const distance = Math.abs(touchX - point.x * (rect.width / this.width));
+                    if (distance < minDistance && distance < 25) {
+                        minDistance = distance;
+                        closestPoint = point;
+                    }
+                });
+                
+                if (closestPoint) {
+                    this.showTooltip(closestPoint, touchX, touchY);
+                }
+            }
+            
+            showTooltip(point, x, y) {
+                const tooltip = document.getElementById('chartTooltip');
+                const valueEl = document.getElementById('tooltipValue');
+                const dateEl = document.getElementById('tooltipDate');
+                
+                if (tooltip && valueEl && dateEl) {
+                    valueEl.textContent = `£${point.value.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    dateEl.textContent = point.label;
+                    
+                    tooltip.style.left = `${Math.max(10, Math.min(x - 50, window.innerWidth - 110))}px`;
+                    tooltip.style.top = `${Math.max(10, y - 60)}px`;
+                    tooltip.style.opacity = '1';
+                }
+            }
+            
+            hideTooltip() {
+                const tooltip = document.getElementById('chartTooltip');
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                }
+            }
+            
+            showLoading() {
+                const loading = document.getElementById('chartLoading');
+                const chart = document.getElementById('mobileChart');
+                if (loading) loading.style.display = 'flex';
+                if (chart) chart.style.opacity = '0';
+            }
+            
+            hideLoading() {
+                const loading = document.getElementById('chartLoading');
+                if (loading) loading.style.display = 'none';
+            }
+            
+            showError(message) {
+                const svg = document.getElementById('mobileChart');
+                if (svg) {
+                    svg.innerHTML = `<text x="200" y="96" text-anchor="middle" fill="#ef4444" font-size="14">${message}</text>`;
+                    svg.style.opacity = '1';
+                }
+            }
+        }
         
         // Privacy mode functionality
+        let privacyMode = false;
+        
         function togglePrivacy() {
             privacyMode = !privacyMode;
             const sensitiveElements = document.querySelectorAll('.privacy-sensitive');
             const privacyIcon = document.getElementById('privacyIcon');
+            const chartContainer = document.getElementById('mobileChartContainer');
             
             sensitiveElements.forEach(element => {
                 if (privacyMode) {
@@ -173,6 +491,13 @@
                 }
             });
             
+            // Apply privacy mode to chart
+            if (privacyMode) {
+                chartContainer.classList.add('privacy-blur');
+            } else {
+                chartContainer.classList.remove('privacy-blur');
+            }
+            
             // Update button icon
             if (privacyMode) {
                 privacyIcon.className = 'fas fa-eye-slash text-blue-400 text-lg';
@@ -181,8 +506,18 @@
             }
         }
         
-        // Initialize privacy toggle
-        document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+        // Initialize chart system on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Mobile Dashboard v2 Initializing...');
+            
+            // Initialize privacy toggle
+            document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+            
+            // Initialize chart system
+            window.mobileChart = new MobileChart();
+            
+            console.log('✅ Mobile Dashboard v2 Ready');
+        });
     </script>
 </body>
 </html>
