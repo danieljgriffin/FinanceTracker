@@ -1026,6 +1026,46 @@ def dashboard_v2():
         if total_allocation > 0:
             for platform, amount in platform_allocations.items():
                 platform_percentages[platform] = (amount / total_allocation) * 100
+        
+        # Calculate platform-specific monthly changes (needed for mobile template)
+        platform_monthly_changes = {}
+        try:
+            current_date = datetime.now()
+            current_year = current_date.year
+            current_month = current_date.month
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            # If no current month data, use previous month
+            if not month_start_data and current_month > 1:
+                fallback_month_name = f"1st {month_names[current_month - 2]}"
+                month_start_data = current_year_data.get(fallback_month_name, {})
+            
+            # Calculate platform-specific changes
+            for platform in platform_allocations.keys():
+                current_value = platform_allocations.get(platform, 0)
+                baseline_value = month_start_data.get(platform, 0)
+                
+                amount_change = current_value - baseline_value
+                percent_change = 0
+                if baseline_value > 0:
+                    percent_change = (amount_change / baseline_value) * 100
+                
+                platform_monthly_changes[platform] = {
+                    'amount': amount_change,
+                    'percent': percent_change
+                }
+        
+        except Exception as e:
+            logging.error(f"Error calculating platform monthly changes: {str(e)}")
+            # Initialize empty platform changes
+            for platform in platform_allocations.keys():
+                platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
 
         # Get next financial target - closest to current day
         next_target = None
@@ -1068,6 +1108,7 @@ def dashboard_v2():
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
+                             platform_monthly_changes=platform_monthly_changes,
                              mom_change=mom_change,
                              mom_amount_change=mom_amount_change,
                              yearly_increase=yearly_increase,
@@ -1094,6 +1135,7 @@ def dashboard_v2():
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
+                             platform_monthly_changes={},
                              mom_change=0,
                              mom_amount_change=0,
                              yearly_increase=0,
