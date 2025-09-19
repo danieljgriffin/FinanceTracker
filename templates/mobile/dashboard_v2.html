@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Portfolio - Net Worth Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA and mobile icons -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    
+    <!-- iOS PWA Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Portfolio">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Additional PWA Meta Tags -->
+    <meta name="theme-color" content="#0B0F14">
+    <meta name="msapplication-navbutton-color" content="#0B0F14">
+    
+    <style>
+        body {
+            background: #0B0F14;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            /* iOS Safe Area support for standalone mode */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* Status bar handling for iOS standalone mode */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+        
+        /* Privacy mode styles */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-blur-heavy {
+            filter: blur(15px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-sensitive {
+            transition: filter 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen" style="background: #0B0F14 !important;">
+    
+    <!-- Main Content -->
+    <div class="px-4 pt-8 pb-24">
+        <!-- Portfolio Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-gray-100 text-xl font-medium">Portfolio</h1>
+                <!-- Privacy Toggle Button -->
+                <button id="privacyToggle" class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/40 transition-all duration-200" style="backdrop-filter: blur(8px);" title="Toggle Privacy Mode">
+                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Net Worth Display -->
+        <div class="mb-8">
+            <!-- Big Net Worth Number -->
+            <div class="mb-2">
+                <div class="text-5xl text-gray-100 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                    £{{ "{:,.0f}".format(current_net_worth) }}
+                </div>
+            </div>
+            
+            <!-- Last Updated Subtitle -->
+            <div class="mb-6">
+                <span class="text-gray-400 text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
+            </div>
+            
+            <!-- This Month and This Year Stats -->
+            <div class="space-y-4">
+                <!-- This Month -->
+                <div class="bg-gray-800/20 rounded-2xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">THIS MONTH</div>
+                    <div class="text-2xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                        {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                        <span class="ml-2 text-lg">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                    </div>
+                </div>
+                
+                <!-- This Year -->
+                <div class="bg-gray-800/20 rounded-2xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">THIS YEAR</div>
+                    <div class="text-2xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                        {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                        <span class="ml-2 text-lg">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 z-50" style="background: rgba(11, 15, 20, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <div class="flex justify-around items-center py-3 px-2">
+            <!-- Home (Active) -->
+            <a href="{{ url_for('dashboard_v2') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16" style="background: rgba(59, 130, 246, 0.2); border-radius: 12px;">
+                <i class="fas fa-home text-lg mb-1 text-blue-400"></i>
+                <span class="text-xs text-blue-400">Home</span>
+            </a>
+            
+            <!-- Investment Manager -->
+            <a href="{{ url_for('investment_manager') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-briefcase text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Investments</span>
+            </a>
+            
+            <!-- Year Month Tracker -->
+            <a href="{{ url_for('yearly_tracker') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-calendar-alt text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Tracker</span>
+            </a>
+            
+            <!-- Goals -->
+            <a href="{{ url_for('goals') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-bullseye text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Goals</span>
+            </a>
+            
+            <!-- Monthly Breakdown -->
+            <a href="{{ url_for('monthly_breakdown') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-chart-pie text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Monthly</span>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        let privacyMode = false;
+        
+        // Privacy mode functionality
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            const sensitiveElements = document.querySelectorAll('.privacy-sensitive');
+            const privacyIcon = document.getElementById('privacyIcon');
+            
+            sensitiveElements.forEach(element => {
+                if (privacyMode) {
+                    // Check if this is the main net worth number (text-5xl)
+                    if (element.classList.contains('text-5xl')) {
+                        element.classList.add('privacy-blur-heavy');
+                    } else {
+                        element.classList.add('privacy-blur');
+                    }
+                } else {
+                    element.classList.remove('privacy-blur');
+                    element.classList.remove('privacy-blur-heavy');
+                }
+            });
+            
+            // Update button icon
+            if (privacyMode) {
+                privacyIcon.className = 'fas fa-eye-slash text-blue-400 text-lg';
+            } else {
+                privacyIcon.className = 'fas fa-eye text-gray-400 text-lg';
+            }
+        }
+        
+        // Initialize privacy toggle
+        document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+    </script>
+</body>
+</html>
