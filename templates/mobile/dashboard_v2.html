@@ -271,13 +271,14 @@
             }
             
             mapRangeToAPI(range) {
+                // Use same mapping as desktop chart to ensure consistency
                 const mapping = {
-                    '1d': '24h',
-                    '1w': 'week',
-                    '1m': '1m',
-                    '3m': '3months',
-                    '1y': 'year',
-                    'max': 'max'
+                    '1d': '24H',
+                    '1w': '1W', 
+                    '1m': '1M',
+                    '3m': '3M',
+                    '1y': '1Y',
+                    'max': 'Max'
                 };
                 
                 // For year-specific filters (2023, 2024, 2025, etc.), pass them through directly
@@ -299,7 +300,7 @@
                 
                 try {
                     const apiFilter = this.mapRangeToAPI(range);
-                    const response = await fetch(`/api/realtime-chart-data?filter=${apiFilter}&_t=${Date.now()}`);
+                    const response = await fetch(`/api/dashboard-chart-data?period=${apiFilter}&_t=${Date.now()}`);
                     const data = await response.json();
                     
                     console.log(`✅ Received data for ${range}:`, data);
@@ -317,28 +318,57 @@
             
             renderChart(data) {
                 const svg = document.getElementById('mobileChart');
-                if (!svg || !data.labels || !data.values) {
+                if (!svg || !data || data.length === 0) {
                     console.error('❌ Missing SVG element or invalid data');
                     return;
                 }
                 
-                console.log(`🎨 Rendering chart with ${data.values.length} data points`);
+                console.log(`🎨 Rendering chart with ${data.length} data points`);
+                
+                // Process desktop data format (array of {date, value} objects)
+                const values = data.map(d => d.value);
+                const labels = data.map(d => {
+                    const date = new Date(d.date);
+                    if (this.currentRange === '1d') {
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
+                    } else if (this.currentRange === '1w') {
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        return `${day} ${hours}:00`;
+                    } else if (this.currentRange === '1m' || this.currentRange === '3m') {
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
+                });
                 
                 // Calculate data bounds
-                const minValue = Math.min(...data.values);
-                const maxValue = Math.max(...data.values);
+                const minValue = Math.min(...values);
+                const maxValue = Math.max(...values);
                 const valueRange = maxValue - minValue || 1; // Prevent division by zero
                 
                 // Generate chart line points
-                const points = data.values.map((value, index) => {
-                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                const points = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
                     const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
                     return `${x},${y}`;
                 }).join(' ');
                 
-                // Generate data point circles
-                const dataPoints = data.values.map((value, index) => {
-                    const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                // Generate gradient fill area points (same as line but closed to bottom)
+                const fillPoints = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `${x},${y}`;
+                });
+                // Close the path for gradient fill
+                fillPoints.push(`${this.padding.left + this.plotWidth},${this.padding.top + this.plotHeight}`);
+                fillPoints.push(`${this.padding.left},${this.padding.top + this.plotHeight}`);
+                
+                // Generate data point circles  
+                const dataPoints = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
                     const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
                     return `<circle cx="${x}" cy="${y}" r="2" fill="#3b82f6" stroke="#000" stroke-width="1"/>`;
                 }).join('');
@@ -353,20 +383,27 @@
                 
                 // Generate X-axis labels with smart spacing
                 const xLabels = [];
-                const labelStep = Math.max(1, Math.ceil(data.labels.length / 4));
-                for (let i = 0; i < data.labels.length; i += labelStep) {
-                    const x = this.padding.left + (i / (data.labels.length - 1)) * this.plotWidth;
-                    xLabels.push(`<text x="${x}" y="${this.height - 5}" font-size="9" fill="#6b7280" text-anchor="middle">${data.labels[i]}</text>`);
+                const labelStep = Math.max(1, Math.ceil(labels.length / 4));
+                for (let i = 0; i < labels.length; i += labelStep) {
+                    const x = this.padding.left + (i / (labels.length - 1)) * this.plotWidth;
+                    xLabels.push(`<text x="${x}" y="${this.height - 5}" font-size="9" fill="#6b7280" text-anchor="middle">${labels[i]}</text>`);
                 }
                 
                 // Current value indicator
-                const lastIndex = data.values.length - 1;
-                const lastX = this.padding.left + (lastIndex / (data.values.length - 1)) * this.plotWidth;
-                const lastY = this.padding.top + this.plotHeight - ((data.values[lastIndex] - minValue) / valueRange) * this.plotHeight;
+                const lastIndex = values.length - 1;
+                const lastX = this.padding.left + (lastIndex / (values.length - 1)) * this.plotWidth;
+                const lastY = this.padding.top + this.plotHeight - ((values[lastIndex] - minValue) / valueRange) * this.plotHeight;
                 const currentPoint = `<circle cx="${lastX}" cy="${lastY}" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>`;
                 
-                // Render complete chart
+                // Render complete chart with gradient fill
                 svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(59, 130, 246, 0.3);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(59, 130, 246, 0);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polygon fill="url(#chartGradient)" stroke="none" points="${fillPoints.join(' ')}"/>
                     <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${points}"/>
                     ${dataPoints}
                     ${currentPoint}
@@ -374,8 +411,9 @@
                     ${xLabels.join('')}
                 `;
                 
-                // Store data for touch interactions
-                this.storeInteractionData(data, minValue, maxValue, valueRange);
+                // Store data for touch interactions (convert back to expected format)
+                const chartData = { values, labels };
+                this.storeInteractionData(chartData, minValue, maxValue, valueRange);
                 
                 // Show chart with animation
                 svg.style.opacity = '1';
