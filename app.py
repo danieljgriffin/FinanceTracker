@@ -1062,8 +1062,9 @@ def dashboard_v2():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
-        # Create response with no-cache headers
-        response = make_response(render_template('dashboard_v2.html', 
+        # Create response with no-cache headers - use device detection for template
+        template_path = get_template_path('dashboard_v2.html')
+        response = make_response(render_template(template_path, 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -1087,8 +1088,9 @@ def dashboard_v2():
     
     except Exception as e:
         logging.error(f"Error in dashboard_v2: {str(e)}")
-        # Return error fallback
-        response = make_response(render_template('dashboard_v2.html', 
+        # Return error fallback - use device detection for template
+        template_path = get_template_path('dashboard_v2.html')
+        response = make_response(render_template(template_path, 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
