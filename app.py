@@ -2062,7 +2062,7 @@ def update_all_prices():
         
         # Collect all symbols to update
         symbols_to_update = []
-        symbol_to_investment = {}
+        symbol_to_investments = {}  # Changed to handle multiple investments per symbol
         
         for platform, investments in investments_data.items():
             # Skip cash platforms and ensure investments is a list
@@ -2072,8 +2072,13 @@ def update_all_prices():
             for investment in investments:
                 symbol = investment.get('symbol')
                 if symbol and investment.get('id'):
-                    symbols_to_update.append(symbol)
-                    symbol_to_investment[symbol] = investment
+                    if symbol not in symbols_to_update:
+                        symbols_to_update.append(symbol)
+                    
+                    # Store all investments for this symbol
+                    if symbol not in symbol_to_investments:
+                        symbol_to_investments[symbol] = []
+                    symbol_to_investments[symbol].append(investment)
         
         if not symbols_to_update:
             logging.info("No symbols to update")
@@ -2105,14 +2110,16 @@ def update_all_prices():
         # Update database with fetched prices
         updated_count = 0
         for symbol, price in updated_prices.items():
-            if symbol in symbol_to_investment:
-                investment = symbol_to_investment[symbol]
-                try:
-                    data_manager.update_investment_price(investment['id'], price)
-                    updated_count += 1
-                    logging.info(f"Updated {symbol}: £{price}")
-                except Exception as e:
-                    logging.error(f"Error updating database for {symbol}: {str(e)}")
+            if symbol in symbol_to_investments:
+                # Update ALL investments with this symbol (across all platforms)
+                investments = symbol_to_investments[symbol]
+                for investment in investments:
+                    try:
+                        data_manager.update_investment_price(investment['id'], price)
+                        updated_count += 1
+                        logging.info(f"Updated {symbol} (ID {investment['id']}, {investment.get('platform', 'unknown')}): £{price}")
+                    except Exception as e:
+                        logging.error(f"Error updating database for {symbol} ID {investment['id']}: {str(e)}")
         
         global last_price_update
         last_price_update = datetime.now()
