@@ -98,9 +98,9 @@
             
             <!-- Navigation Links -->
             <nav class="space-y-2">
-                <a href="{{ url_for('mobile_dashboard_v2') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'mobile_dashboard_v2' or request.endpoint == 'dashboard_v2' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'mobile_dashboard_v2' or request.endpoint == 'dashboard_v2' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                <a href="{{ url_for('dashboard_v2') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard_v2' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'dashboard_v2' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-home mr-4 text-lg"></i>
-                    Portfolio
+                    Dashboard
                 </a>
                 <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-calendar-alt mr-4 text-lg"></i>
