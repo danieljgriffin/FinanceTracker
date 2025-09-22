@@ -448,27 +448,33 @@
                     return { x, y };
                 });
                 
-                // Create smooth curve path
-                let smoothPath = '';
-                if (chartPoints.length > 0) {
-                    smoothPath = `M ${chartPoints[0].x} ${chartPoints[0].y}`;
+                // Create smooth continuous curve using Catmull-Rom to Bézier conversion
+                function createSmoothPath(points, smoothing = 0.8) {
+                    if (points.length < 2) return '';
                     
-                    for (let i = 1; i < chartPoints.length; i++) {
-                        const current = chartPoints[i];
-                        const previous = chartPoints[i - 1];
+                    let path = `M ${points[0].x} ${points[0].y}`;
+                    
+                    for (let i = 0; i < points.length - 1; i++) {
+                        // Get neighboring points (duplicate endpoints for boundaries)
+                        const p0 = points[i - 1] || points[i];
+                        const p1 = points[i];
+                        const p2 = points[i + 1];
+                        const p3 = points[i + 2] || points[i + 1];
                         
-                        if (i === 1) {
-                            // First curve segment
-                            const controlX = previous.x + (current.x - previous.x) * 0.5;
-                            smoothPath += ` Q ${controlX} ${previous.y} ${current.x} ${current.y}`;
-                        } else {
-                            // Smooth curves using control points
-                            const controlX1 = previous.x + (current.x - previous.x) * 0.25;
-                            const controlX2 = previous.x + (current.x - previous.x) * 0.75;
-                            smoothPath += ` Q ${controlX1} ${previous.y} ${current.x} ${current.y}`;
-                        }
+                        // Calculate control points for smooth cubic Bézier curve
+                        const c1x = p1.x + (p2.x - p0.x) / 6 * smoothing;
+                        const c1y = p1.y + (p2.y - p0.y) / 6 * smoothing;
+                        const c2x = p2.x - (p3.x - p1.x) / 6 * smoothing;
+                        const c2y = p2.y - (p3.y - p1.y) / 6 * smoothing;
+                        
+                        // Add cubic Bézier curve segment
+                        path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
                     }
+                    
+                    return path;
                 }
+                
+                const smoothPath = createSmoothPath(chartPoints, 0.8);
                 
                 // Generate gradient fill area points (same as line but closed to bottom)
                 const fillPoints = values.map((value, index) => {
