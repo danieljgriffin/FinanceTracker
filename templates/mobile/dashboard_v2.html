@@ -470,7 +470,7 @@
                 for (let i = 0; i <= 3; i++) {
                     const value = minValue + (valueRange * i / 3);
                     const y = this.padding.top + this.plotHeight - (i / 3) * this.plotHeight;
-                    yLabels.push(`<text x="${this.width - 5}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(2)}k</text>`);
+                    yLabels.push(`<text x="${this.width - 1}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(2)}k</text>`);
                 }
                 
                 // Generate X-axis labels with smart spacing
