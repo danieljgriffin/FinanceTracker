@@ -1333,6 +1333,152 @@ def mobile_dashboard():
         response.headers['Expires'] = '0'
         return response
 
+@app.route('/mobile_v2')
+def mobile_dashboard_v2():
+    """Mobile Dashboard V2 with enhanced charts and smooth curves"""
+    # Ensure data is fresh when mobile users visit
+    ensure_recent_prices()
+    
+    try:
+        # Force database session refresh to ensure fresh data on every page load
+        from app import db
+        db.session.expire_all()
+        
+        # Get current net worth data
+        data_manager = get_data_manager()
+        networth_data = get_data_manager().get_networth_data()
+        investments_data = get_data_manager().get_investments_data()
+        
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
+        
+        # Sort platform allocations by value (high to low, with cash at bottom)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            sorted_platforms.append((platform, value))
+        
+        # Always add cash at the bottom if it exists
+        if cash_value > 0:
+            sorted_platforms.append(('Cash', cash_value))
+        
+        # Rebuild platform_allocations in sorted order
+        platform_allocations = dict(sorted_platforms)
+        
+        # Calculate percentage allocations
+        total_allocation = sum(platform_allocations.values())
+        platform_percentages = {}
+        if total_allocation > 0:
+            for platform, amount in platform_allocations.items():
+                platform_percentages[platform] = (amount / total_allocation) * 100
+        
+        # Calculate month-on-month change and platform-specific changes
+        mom_change = 0
+        mom_amount_change = 0
+        yearly_amount_change = 0
+        yearly_increase = 0
+        platform_monthly_changes = {}
+        
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            # Map month number to month name
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            
+            if current_year_data and current_month_name in current_year_data:
+                current_month_data = current_year_data[current_month_name]
+                current_month_total = current_month_data.get('total_networth', 0)
+                
+                # Get previous month for comparison
+                prev_month = current_month - 1 if current_month > 1 else 12
+                prev_year = current_year if current_month > 1 else current_year - 1
+                prev_month_name = f"1st {month_names[prev_month - 1]}"
+                
+                prev_year_data = get_data_manager().get_networth_data(prev_year)
+                if prev_year_data and prev_month_name in prev_year_data:
+                    prev_month_data = prev_year_data[prev_month_name]
+                    prev_month_total = prev_month_data.get('total_networth', 0)
+                    
+                    if prev_month_total > 0:
+                        mom_amount_change = current_month_total - prev_month_total
+                        mom_change = (mom_amount_change / prev_month_total) * 100
+                        
+                        # Calculate platform-specific changes
+                        for platform in platform_allocations.keys():
+                            current_value = current_month_data.get(platform, 0)
+                            prev_value = prev_month_data.get(platform, 0)
+                            platform_monthly_changes[platform] = current_value - prev_value
+        
+        except Exception as e:
+            logging.error(f"Error calculating monthly changes: {str(e)}")
+        
+        # Get chart data with invested amounts
+        chart_data = get_data_manager().get_chart_data_with_invested()
+        
+        # Get goals and progress
+        next_target = None
+        progress_info = None
+        upcoming_targets = []
+        
+        # Goals feature not implemented yet
+        pass
+        
+        # Render mobile dashboard v2 template
+        response = make_response(render_template('mobile/dashboard_v2.html', 
+                             current_net_worth=current_net_worth,
+                             platform_allocations=platform_allocations,
+                             platform_percentages=platform_percentages,
+                             platform_monthly_changes=platform_monthly_changes,
+                             mom_change=mom_change,
+                             mom_amount_change=mom_amount_change,
+                             yearly_amount_change=yearly_amount_change,
+                             yearly_increase=yearly_increase,
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
+                             chart_data=chart_data,
+                             next_target=next_target,
+                             progress_info=progress_info,
+                             upcoming_targets=upcoming_targets))
+        
+        # Force fresh content, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
+    
+    except Exception as e:
+        logging.error(f"Error in mobile dashboard v2: {str(e)}")
+        # Return error fallback
+        response = make_response(render_template('mobile/dashboard_v2.html',
+                             current_net_worth=0,
+                             platform_allocations={},
+                             platform_percentages={},
+                             platform_monthly_changes={},
+                             mom_change=0,
+                             mom_amount_change=0,
+                             yearly_amount_change=0,
+                             platform_colors=PLATFORM_COLORS,
+                             current_date=datetime.now().strftime('%B %d, %Y'),
+                             today=datetime.now(),
+                             chart_data={'labels': [], 'value_line': []},
+                             next_target=None,
+                             progress_info=None,
+                             upcoming_targets=[]))
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache' 
+        response.headers['Expires'] = '0'
+        return response
+
 @app.route('/mobile-info')
 def mobile_info():
     """Information page about the mobile app"""
