@@ -441,12 +441,34 @@
                 const maxValue = Math.max(...values);
                 const valueRange = maxValue - minValue || 1; // Prevent division by zero
                 
-                // Generate chart line points
-                const points = values.map((value, index) => {
+                // Generate smooth chart line points
+                const chartPoints = values.map((value, index) => {
                     const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
                     const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
-                    return `${x},${y}`;
-                }).join(' ');
+                    return { x, y };
+                });
+                
+                // Create smooth curve path
+                let smoothPath = '';
+                if (chartPoints.length > 0) {
+                    smoothPath = `M ${chartPoints[0].x} ${chartPoints[0].y}`;
+                    
+                    for (let i = 1; i < chartPoints.length; i++) {
+                        const current = chartPoints[i];
+                        const previous = chartPoints[i - 1];
+                        
+                        if (i === 1) {
+                            // First curve segment
+                            const controlX = previous.x + (current.x - previous.x) * 0.5;
+                            smoothPath += ` Q ${controlX} ${previous.y} ${current.x} ${current.y}`;
+                        } else {
+                            // Smooth curves using control points
+                            const controlX1 = previous.x + (current.x - previous.x) * 0.25;
+                            const controlX2 = previous.x + (current.x - previous.x) * 0.75;
+                            smoothPath += ` Q ${controlX1} ${previous.y} ${current.x} ${current.y}`;
+                        }
+                    }
+                }
                 
                 // Generate gradient fill area points (same as line but closed to bottom)
                 const fillPoints = values.map((value, index) => {
@@ -496,7 +518,7 @@
                         </linearGradient>
                     </defs>
                     <polygon fill="url(#chartGradient)" stroke="none" points="${fillPoints.join(' ')}"/>
-                    <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="${points}"/>
+                    <path fill="none" stroke="#3b82f6" stroke-width="2" d="${smoothPath}"/>
                     ${dataPoints}
                     ${currentPoint}
                     ${yLabels.join('')}
