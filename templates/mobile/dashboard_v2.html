@@ -288,7 +288,7 @@
                 // Chart dimensions (adjusted for smaller chart height)
                 this.width = 400;
                 this.height = 192;
-                this.padding = { top: 15, right: 40, bottom: 30, left: 15 };
+                this.padding = { top: 15, right: 55, bottom: 30, left: 15 };
                 this.plotWidth = this.width - this.padding.left - this.padding.right;
                 this.plotHeight = this.height - this.padding.top - this.padding.bottom;
                 
@@ -470,7 +470,7 @@
                 for (let i = 0; i <= 3; i++) {
                     const value = minValue + (valueRange * i / 3);
                     const y = this.padding.top + this.plotHeight - (i / 3) * this.plotHeight;
-                    yLabels.push(`<text x="${this.width + 2}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(2)}k</text>`);
+                    yLabels.push(`<text x="${this.width - 5}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(2)}k</text>`);
                 }
                 
                 // Generate X-axis labels with smart spacing
