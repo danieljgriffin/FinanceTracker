@@ -885,8 +885,7 @@ def dashboard_chart_data():
         return jsonify([])
 
 @app.route('/')
-@app.route('/dashboard_v2')
-def dashboard_v2():
+def home():
     """Clean black theme dashboard showing essential net worth metrics"""
     # Ensure data is fresh when users visit
     ensure_recent_prices()
@@ -2541,7 +2540,7 @@ def update_prices():
     if referrer and '/update-prices' not in referrer:
         return redirect(referrer)
     else:
-        return redirect(url_for('dashboard_v2'))
+        return redirect(url_for('home'))
 
 @app.route('/manual-collect-data')
 def manual_collect_data():
@@ -4328,7 +4327,7 @@ def goals():
     except Exception as e:
         logging.error(f"Error loading goals page: {e}")
         flash(f'Error loading goals: {str(e)}', 'error')
-        return redirect(url_for('dashboard_v2'))
+        return redirect(url_for('home'))
 
 @app.route('/api/goals', methods=['POST'])
 def create_goal():
