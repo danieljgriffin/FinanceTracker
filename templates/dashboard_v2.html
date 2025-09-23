@@ -700,8 +700,8 @@
                 }
             }
             
-            // Refresh chart data
-            await loadChartData('24h');
+            // Refresh chart data - preserve current period
+            await loadChartData(currentPeriod);
             
             // Refresh platform breakdown
             await loadPlatformBreakdown();

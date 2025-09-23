@@ -282,6 +282,7 @@
         class MobileChart {
             constructor() {
                 this.currentRange = '1d';
+                this.currentPeriod = '24h'; // Track period for auto-refresh
                 this.chartData = null;
                 this.isLoading = false;
                 
@@ -387,6 +388,7 @@
                 console.log(`📈 Loading chart for range: ${range}`);
                 this.isLoading = true;
                 this.currentRange = range;
+                this.currentPeriod = this.mapRangeToAPI(range); // Track for auto-refresh
                 this.updateRangeButtons(range);
                 this.showLoading();
                 
@@ -406,6 +408,22 @@
                     this.isLoading = false;
                     this.hideLoading();
                 }
+            }
+            
+            // Add loadChartData method for auto-refresh compatibility
+            async loadChartData(period) {
+                // Convert API period back to range format
+                const periodToRange = {
+                    '24H': '1d',
+                    '1W': '1w', 
+                    '1M': '1m',
+                    '3M': '3m',
+                    '1Y': '1y',
+                    'Max': 'max'
+                };
+                
+                const range = periodToRange[period] || '1d';
+                await this.loadChart(range);
             }
             
             renderChart(data) {
@@ -767,9 +785,9 @@
                     }
                 }
                 
-                // Refresh chart
+                // Refresh chart - preserve current period
                 if (window.mobileChart) {
-                    await window.mobileChart.loadChartData('24h');
+                    await window.mobileChart.loadChartData(window.mobileChart.currentPeriod || '24h');
                 }
                 
                 console.log('✅ Mobile dashboard refresh completed');
