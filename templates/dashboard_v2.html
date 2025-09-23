@@ -670,10 +670,14 @@
                 const currentValue = parseFloat(currentNetWorth.textContent.replace(/[£,\s]/g, ''));
                 const newValue = parseFloat(newNetWorth.textContent.replace(/[£,\s]/g, ''));
                 
-                if (Math.abs(currentValue - newValue) > 1) {
-                    // Animate main net worth with scramble effect
+                console.log('🔍 Checking net worth:', { currentValue, newValue, difference: Math.abs(currentValue - newValue) });
+                
+                if (Math.abs(currentValue - newValue) > 0.01) {
+                    // Animate main net worth with scramble effect (lowered threshold to catch small changes)
                     animateNumber(currentNetWorth, newValue, 1200);
-                    console.log('💰 Net worth updated with animation');
+                    console.log('🎯 Net worth updated with animation:', currentValue, '->', newValue);
+                } else {
+                    console.log('⚪ No significant net worth change detected');
                 }
             }
             
