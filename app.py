@@ -1102,6 +1102,13 @@ def home():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
+        # Convert last_price_update to BST timezone for display
+        last_price_update_bst = None
+        if last_price_update:
+            import pytz
+            uk_tz = pytz.timezone('Europe/London')
+            last_price_update_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(uk_tz)
+        
         # Create response with no-cache headers - use device detection for template
         template_path = get_template_path('dashboard_v2.html')
         response = make_response(render_template(template_path, 
@@ -1116,7 +1123,7 @@ def home():
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
-                             last_price_update=last_price_update,
+                             last_price_update=last_price_update_bst,
                              next_target=next_target,
                              progress_info=progress_info,
                              upcoming_targets=upcoming_targets))
