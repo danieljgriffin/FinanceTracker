@@ -664,6 +664,149 @@
             }
         }
         
+        // Number scramble animation function
+        function animateNumber(element, targetValue, duration = 800) {
+            const startValue = parseFloat(element.textContent.replace(/[£,\s]/g, '')) || 0;
+            const startTime = Date.now();
+            const isNegative = targetValue < 0;
+            const absTarget = Math.abs(targetValue);
+            const absStart = Math.abs(startValue);
+            
+            function scrambleStep() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                if (progress < 1) {
+                    // Generate random numbers during animation
+                    const currentValue = absStart + (absTarget - absStart) * progress;
+                    const randomOffset = (Math.random() - 0.5) * absTarget * 0.1 * (1 - progress);
+                    const displayValue = Math.max(0, currentValue + randomOffset);
+                    
+                    // Format based on element type
+                    if (element.classList.contains('percentage')) {
+                        element.textContent = `${isNegative ? '-' : '+'}${displayValue.toFixed(1)}%`;
+                    } else {
+                        element.textContent = `${isNegative ? '-' : ''}£${Math.round(displayValue).toLocaleString()}`;
+                    }
+                    
+                    requestAnimationFrame(scrambleStep);
+                } else {
+                    // Set final value
+                    if (element.classList.contains('percentage')) {
+                        element.textContent = `${isNegative ? '-' : '+'}${absTarget.toFixed(1)}%`;
+                    } else {
+                        element.textContent = `${isNegative ? '-' : ''}£${Math.round(absTarget).toLocaleString()}`;
+                    }
+                }
+            }
+            
+            scrambleStep();
+        }
+        
+        // Auto-refresh functionality
+        let refreshInterval;
+        
+        async function refreshMobileDashboardData() {
+            try {
+                console.log('📱 Refreshing mobile dashboard data...');
+                
+                // Fetch fresh data from the current page URL
+                const response = await fetch(window.location.pathname, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                
+                // Extract new values from the fresh HTML
+                const newNetWorth = newDoc.querySelector('.text-5xl');
+                const newLastUpdate = newDoc.querySelector('.text-gray-400.text-sm');
+                const newMomChanges = newDoc.querySelectorAll('.text-lg.text-green-400, .text-lg.text-red-400');
+                
+                if (newNetWorth) {
+                    const currentNetWorth = document.querySelector('.text-5xl');
+                    const currentValue = parseFloat(currentNetWorth.textContent.replace(/[£,\s]/g, ''));
+                    const newValue = parseFloat(newNetWorth.textContent.replace(/[£,\s]/g, ''));
+                    
+                    if (Math.abs(currentValue - newValue) > 1) {
+                        // Animate main net worth with scramble effect
+                        animateNumber(currentNetWorth, newValue, 1200);
+                        console.log('💰 Mobile net worth updated with animation');
+                    }
+                }
+                
+                // Update last updated time
+                if (newLastUpdate) {
+                    const currentLastUpdate = document.querySelector('.text-gray-400.text-sm');
+                    if (currentLastUpdate) {
+                        currentLastUpdate.textContent = newLastUpdate.textContent;
+                    }
+                }
+                
+                // Update monthly and yearly changes
+                if (newMomChanges.length >= 2) {
+                    const currentMomChanges = document.querySelectorAll('.text-lg.text-green-400, .text-lg.text-red-400');
+                    if (currentMomChanges.length >= 2) {
+                        // This month
+                        if (currentMomChanges[0].textContent !== newMomChanges[0].textContent) {
+                            currentMomChanges[0].innerHTML = newMomChanges[0].innerHTML;
+                        }
+                        // This year
+                        if (currentMomChanges[1].textContent !== newMomChanges[1].textContent) {
+                            currentMomChanges[1].innerHTML = newMomChanges[1].innerHTML;
+                        }
+                    }
+                }
+                
+                // Refresh chart
+                if (window.mobileChart) {
+                    await window.mobileChart.loadChartData('24h');
+                }
+                
+                console.log('✅ Mobile dashboard refresh completed');
+                
+            } catch (error) {
+                console.warn('⚠️  Mobile dashboard refresh failed:', error);
+            }
+        }
+        
+        function startMobileAutoRefresh() {
+            // Clear any existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            // Start refreshing every 30 seconds
+            refreshInterval = setInterval(refreshMobileDashboardData, 30000);
+            console.log('🚀 Mobile auto-refresh started (30s intervals)');
+        }
+        
+        function stopMobileAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                console.log('⏹️  Mobile auto-refresh stopped');
+            }
+        }
+        
+        // Pause auto-refresh when page is not visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopMobileAutoRefresh();
+            } else {
+                startMobileAutoRefresh();
+            }
+        });
+        
         // Initialize chart system on page load
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Mobile Dashboard v2 Initializing...');
@@ -674,7 +817,10 @@
             // Initialize chart system
             window.mobileChart = new MobileChart();
             
-            console.log('✅ Mobile Dashboard v2 Ready');
+            // Start auto-refresh
+            startMobileAutoRefresh();
+            
+            console.log('✅ Mobile Dashboard v2 with auto-refresh and animations ready');
         });
     </script>
 </body>

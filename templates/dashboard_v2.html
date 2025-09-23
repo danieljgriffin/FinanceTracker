@@ -596,6 +596,151 @@
         });
     }
     
+    // Number scramble animation function
+    function animateNumber(element, targetValue, duration = 800) {
+        const startValue = parseFloat(element.textContent.replace(/[£,\s]/g, '')) || 0;
+        const startTime = Date.now();
+        const isNegative = targetValue < 0;
+        const absTarget = Math.abs(targetValue);
+        const absStart = Math.abs(startValue);
+        
+        function scrambleStep() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            if (progress < 1) {
+                // Generate random numbers during animation
+                const currentValue = absStart + (absTarget - absStart) * progress;
+                const randomOffset = (Math.random() - 0.5) * absTarget * 0.1 * (1 - progress);
+                const displayValue = Math.max(0, currentValue + randomOffset);
+                
+                // Format based on element type
+                if (element.classList.contains('percentage')) {
+                    element.textContent = `${isNegative ? '-' : '+'}${displayValue.toFixed(1)}%`;
+                } else {
+                    element.textContent = `${isNegative ? '-' : ''}£${Math.round(displayValue).toLocaleString()}`;
+                }
+                
+                requestAnimationFrame(scrambleStep);
+            } else {
+                // Set final value
+                if (element.classList.contains('percentage')) {
+                    element.textContent = `${isNegative ? '-' : '+'}${absTarget.toFixed(1)}%`;
+                } else {
+                    element.textContent = `${isNegative ? '-' : ''}£${Math.round(absTarget).toLocaleString()}`;
+                }
+            }
+        }
+        
+        scrambleStep();
+    }
+    
+    // Auto-refresh functionality
+    let refreshInterval;
+    
+    async function refreshDashboardData() {
+        try {
+            console.log('🔄 Refreshing dashboard data...');
+            
+            // Fetch fresh data from the current page URL
+            const response = await fetch(window.location.pathname, {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(html, 'text/html');
+            
+            // Extract new values from the fresh HTML
+            const newNetWorth = newDoc.querySelector('.text-6xl');
+            const newMomChange = newDoc.querySelector('.text-xl');
+            const newYearlyChange = newDoc.querySelectorAll('.text-xl')[1];
+            const newLastUpdate = newDoc.querySelector('.text-sm');
+            
+            if (newNetWorth) {
+                const currentNetWorth = document.querySelector('.text-6xl');
+                const currentValue = parseFloat(currentNetWorth.textContent.replace(/[£,\s]/g, ''));
+                const newValue = parseFloat(newNetWorth.textContent.replace(/[£,\s]/g, ''));
+                
+                if (Math.abs(currentValue - newValue) > 1) {
+                    // Animate main net worth with scramble effect
+                    animateNumber(currentNetWorth, newValue, 1200);
+                    console.log('💰 Net worth updated with animation');
+                }
+            }
+            
+            // Update other financial numbers
+            if (newMomChange) {
+                const currentMomChange = document.querySelector('.text-xl');
+                if (currentMomChange && currentMomChange.textContent !== newMomChange.textContent) {
+                    currentMomChange.innerHTML = newMomChange.innerHTML;
+                }
+            }
+            
+            if (newYearlyChange) {
+                const currentYearlyChange = document.querySelectorAll('.text-xl')[1];
+                if (currentYearlyChange && currentYearlyChange.textContent !== newYearlyChange.textContent) {
+                    currentYearlyChange.innerHTML = newYearlyChange.innerHTML;
+                }
+            }
+            
+            // Update last updated time
+            if (newLastUpdate) {
+                const currentLastUpdate = document.querySelector('.text-sm');
+                if (currentLastUpdate) {
+                    currentLastUpdate.textContent = newLastUpdate.textContent;
+                }
+            }
+            
+            // Refresh chart data
+            await loadChartData('24h');
+            
+            // Refresh platform breakdown
+            await loadPlatformBreakdown();
+            
+            console.log('✅ Dashboard refresh completed');
+            
+        } catch (error) {
+            console.warn('⚠️  Dashboard refresh failed:', error);
+        }
+    }
+    
+    function startAutoRefresh() {
+        // Clear any existing interval
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+        
+        // Start refreshing every 30 seconds
+        refreshInterval = setInterval(refreshDashboardData, 30000);
+        console.log('🚀 Auto-refresh started (30s intervals)');
+    }
+    
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+            console.log('⏹️  Auto-refresh stopped');
+        }
+    }
+    
+    // Pause auto-refresh when page is not visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            startAutoRefresh();
+        }
+    });
+    
     // Initialize when page loads
     document.addEventListener('DOMContentLoaded', function() {
         initChart();
@@ -603,6 +748,11 @@
         
         // Add privacy toggle event listener
         document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+        
+        // Start auto-refresh
+        startAutoRefresh();
+        
+        console.log('🎯 Dashboard v2 with auto-refresh and animations ready');
     });
     </script>
 </body>
