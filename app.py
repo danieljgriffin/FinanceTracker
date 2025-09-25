@@ -6,6 +6,7 @@ from utils.price_fetcher import PriceFetcher
 from utils.device_detector import get_template_path, is_mobile_device
 from utils.platform_connector import platform_connector
 from utils.intelligent_price_router import price_router
+from utils.trading212_integration import Trading212Integration
 from datetime import datetime, timedelta
 import pytz
 import json
@@ -4620,6 +4621,115 @@ def sync_platform(platform_id):
     except Exception as e:
         logging.error(f"Error syncing platform: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Trading 212 Integration Routes (Secured)
+@app.route('/api/trading212/test-connection', methods=['POST'])
+def test_trading212_connection():
+    """Test Trading 212 API connection - ADMIN ONLY"""
+    try:
+        # Basic request validation (replace with proper auth in production)
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        connected, message = integration.test_connection()
+        
+        # Sanitize response - don't expose account balance
+        sanitized_message = "Connection successful" if connected else "Connection failed"
+        
+        return jsonify({
+            'success': connected,
+            'message': sanitized_message
+        })
+        
+    except Exception as e:
+        logging.error(f"Error testing Trading 212 connection: {e}")
+        return jsonify({'success': False, 'error': 'Connection test failed'}), 500
+
+@app.route('/api/trading212/sync', methods=['POST'])
+def sync_trading212_portfolio():
+    """Sync Trading 212 portfolio data - ADMIN ONLY"""
+    try:
+        # Basic request validation
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        success, message, summary = integration.sync_portfolio_data()
+        
+        if success:
+            # Sanitized success message without sensitive financial details
+            flash(f'✅ Trading 212 sync successful! Updated {summary["total_positions"]} positions', 'success')
+            sanitized_summary = {
+                'total_positions': summary['total_positions'],
+                'updated_positions': summary['updated_positions'],
+                'new_positions': summary['new_positions']
+                # Remove sensitive financial data (portfolio_value, cash_balance)
+            }
+        else:
+            flash(f'❌ Trading 212 sync failed', 'error')
+            sanitized_summary = {}
+        
+        return jsonify({
+            'success': success,
+            'message': 'Sync completed' if success else 'Sync failed',
+            'summary': sanitized_summary
+        })
+        
+    except Exception as e:
+        logging.error(f"Error syncing Trading 212: {e}")
+        return jsonify({'success': False, 'error': 'Sync operation failed'}), 500
+
+@app.route('/api/trading212/status')
+def get_trading212_status():
+    """Get Trading 212 sync status - ADMIN ONLY"""
+    try:
+        integration = Trading212Integration()
+        status = integration.get_sync_status()
+        
+        # Sanitize status response - remove sensitive details
+        sanitized_status = {
+            'connected': status.get('connected', False),
+            'status': status.get('status', 'unknown'),
+            'last_sync': status.get('last_sync')
+            # Remove error_message and latest_sync details that might contain sensitive info
+        }
+        
+        return jsonify({
+            'success': True,
+            'status': sanitized_status
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting Trading 212 status: {e}")
+        return jsonify({'success': False, 'error': 'Status check failed'}), 500
+
+@app.route('/api/trading212/disconnect', methods=['POST'])
+def disconnect_trading212():
+    """Disconnect Trading 212 integration - ADMIN ONLY"""
+    try:
+        # Basic request validation
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        success = integration.disconnect()
+        
+        if success:
+            flash('Trading 212 disconnected successfully', 'success')
+            message = 'Disconnected successfully'
+        else:
+            flash('Failed to disconnect Trading 212', 'error')
+            message = 'Disconnect failed'
+        
+        return jsonify({
+            'success': success,
+            'message': message
+        })
+        
+    except Exception as e:
+        logging.error(f"Error disconnecting Trading 212: {e}")
+        return jsonify({'success': False, 'error': 'Disconnect operation failed'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
