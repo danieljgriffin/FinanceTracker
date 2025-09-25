@@ -125,6 +125,10 @@ class Trading212Integration:
                 'cash_balance': 0.0
             }
             
+            # Initialize variables for error handling
+            platform = None
+            positions = []
+            
             try:
                 # Get or create Trading 212 platform entry
                 platform = Platform.query.filter_by(
@@ -169,155 +173,155 @@ class Trading212Integration:
                     return False, "Failed to fetch portfolio positions", sync_summary
                 
                 sync_summary['total_positions'] = len(positions)
-            
-            for position in positions:
-                try:
-                    # Extract position data
-                    ticker = position.get('ticker', '')
-                    quantity = position.get('quantity', 0.0)
-                    current_price_raw = position.get('currentPrice', 0.0)
-                    average_price_raw = position.get('averagePrice', 0.0)
-                    pnl = position.get('ppl', 0.0)
-                    fx_pnl = position.get('fxPpl', 0.0)
-                    
-                    # CRITICAL FIX: Convert UK stock prices from pence to pounds
-                    # UK stocks (ending with _EQ but not _US_EQ) are in pence
-                    if ticker.endswith('_EQ') and not ticker.endswith('_US_EQ'):
-                        # UK stock - convert pence to pounds
-                        current_price = current_price_raw / 100.0
-                        average_price = average_price_raw / 100.0
-                        self.logger.info(f"UK stock {ticker}: converted {current_price_raw}p to £{current_price:.2f}")
-                    else:
-                        # US/other stocks - already in correct currency
-                        current_price = current_price_raw
-                        average_price = average_price_raw
-                    
-                    # Normalize ticker and get company name
-                    normalized_symbol = self._normalize_symbol(ticker)
-                    company_name = self._get_company_name(normalized_symbol)
-                    
-                    # Calculate market value
-                    market_value = quantity * current_price
-                    total_invested = quantity * average_price
-                    
-                    sync_summary['total_portfolio_value'] += market_value
-                    
-                    # Update APIHolding
-                    api_holding = APIHolding.query.filter_by(
-                        platform_id=platform.id, 
-                        symbol=normalized_symbol
-                    ).first()
-                    
-                    if api_holding:
-                        # Update existing holding
-                        api_holding.quantity = quantity
-                        api_holding.average_price = average_price
-                        api_holding.total_invested = total_invested
-                        api_holding.current_price = current_price
-                        api_holding.current_value = market_value
-                        api_holding.unrealized_pnl = pnl
-                        api_holding.last_updated = datetime.utcnow()
-                        api_holding.last_price_update = datetime.utcnow()
-                        sync_summary['updated_positions'] += 1
+                
+                for position in positions:
+                    try:
+                        # Extract position data
+                        ticker = position.get('ticker', '')
+                        quantity = position.get('quantity', 0.0)
+                        current_price_raw = position.get('currentPrice', 0.0)
+                        average_price_raw = position.get('averagePrice', 0.0)
+                        pnl = position.get('ppl', 0.0)
+                        fx_pnl = position.get('fxPpl', 0.0)
                         
-                    else:
-                        # Create new holding
-                        api_holding = APIHolding(
+                        # CRITICAL FIX: Convert UK stock prices from pence to pounds
+                        # UK stocks (ending with _EQ but not _US_EQ) are in pence
+                        if ticker.endswith('_EQ') and not ticker.endswith('_US_EQ'):
+                            # UK stock - convert pence to pounds
+                            current_price = current_price_raw / 100.0
+                            average_price = average_price_raw / 100.0
+                            self.logger.info(f"UK stock {ticker}: converted {current_price_raw}p to £{current_price:.2f}")
+                        else:
+                            # US/other stocks - already in correct currency
+                            current_price = current_price_raw
+                            average_price = average_price_raw
+                        
+                        # Normalize ticker and get company name
+                        normalized_symbol = self._normalize_symbol(ticker)
+                        company_name = self._get_company_name(normalized_symbol)
+                        
+                        # Calculate market value
+                        market_value = quantity * current_price
+                        total_invested = quantity * average_price
+                        
+                        sync_summary['total_portfolio_value'] += market_value
+                        
+                        # Update APIHolding
+                        api_holding = APIHolding.query.filter_by(
+                            platform_id=platform.id, 
+                            symbol=normalized_symbol
+                        ).first()
+                        
+                        if api_holding:
+                            # Update existing holding
+                            api_holding.quantity = quantity
+                            api_holding.average_price = average_price
+                            api_holding.total_invested = total_invested
+                            api_holding.current_price = current_price
+                            api_holding.current_value = market_value
+                            api_holding.unrealized_pnl = pnl
+                            api_holding.last_updated = datetime.utcnow()
+                            api_holding.last_price_update = datetime.utcnow()
+                            sync_summary['updated_positions'] += 1
+                            
+                        else:
+                            # Create new holding
+                            api_holding = APIHolding(
+                                platform_id=platform.id,
+                                symbol=normalized_symbol,
+                                name=company_name,
+                                quantity=quantity,
+                                average_price=average_price,
+                                total_invested=total_invested,
+                                current_price=current_price,
+                                current_value=market_value,
+                                unrealized_pnl=pnl,
+                                currency='GBP'
+                            )
+                            db.session.add(api_holding)
+                            sync_summary['new_positions'] += 1
+                        
+                        # Also sync with legacy Investment table for backwards compatibility
+                        investment = Investment.query.filter_by(
+                            platform=self.platform_name, 
+                            symbol=normalized_symbol
+                        ).first()
+                        
+                        if investment:
+                            # Update existing investment
+                            investment.holdings = quantity
+                            investment.current_price = current_price
+                            investment.average_buy_price = average_price
+                            investment.amount_spent = total_invested
+                            investment.last_updated = datetime.utcnow()
+                        else:
+                            # Create new investment
+                            investment = Investment(
+                                platform=self.platform_name,
+                                name=company_name,
+                                symbol=normalized_symbol,
+                                holdings=quantity,
+                                amount_spent=total_invested,
+                                average_buy_price=average_price,
+                                current_price=current_price
+                            )
+                            db.session.add(investment)
+                        
+                        self.logger.info(f"Synced {normalized_symbol}: {quantity:.4f} @ £{current_price:.2f} = £{market_value:.2f}")
+                        
+                    except Exception as e:
+                        self.logger.error(f"Error syncing position {position.get('ticker', 'Unknown')}: {str(e)}")
+                        continue
+                
+                # Update platform sync status
+                platform.last_sync = datetime.utcnow()
+                platform.sync_status = 'active'
+                platform.error_message = None
+                
+                # Log successful sync
+                sync_log = SyncLog(
+                    platform_id=platform.id,
+                    sync_type='holdings',
+                    sync_status='success',
+                    items_processed=len(positions),
+                    items_successful=sync_summary['updated_positions'] + sync_summary['new_positions'],
+                    items_failed=0,
+                    execution_time_ms=int((datetime.utcnow() - sync_start).total_seconds() * 1000),
+                    completed_at=datetime.utcnow()
+                )
+                db.session.add(sync_log)
+                
+                # Commit all changes
+                db.session.commit()
+                
+                message = f"✅ Successfully synced {len(positions)} positions and cash balance"
+                return True, message, sync_summary
+                
+            except Exception as e:
+                db.session.rollback()
+                error_msg = f"Sync failed: {str(e)}"
+                self.logger.error(error_msg)
+                
+                # Log failed sync if platform exists
+                try:
+                    if platform:
+                        sync_log = SyncLog(
                             platform_id=platform.id,
-                            symbol=normalized_symbol,
-                            name=company_name,
-                            quantity=quantity,
-                            average_price=average_price,
-                            total_invested=total_invested,
-                            current_price=current_price,
-                            current_value=market_value,
-                            unrealized_pnl=pnl,
-                            currency='GBP'
+                            sync_type='holdings',
+                            sync_status='failed',
+                            error_message=error_msg,
+                            execution_time_ms=int((datetime.utcnow() - sync_start).total_seconds() * 1000),
+                            completed_at=datetime.utcnow()
                         )
-                        db.session.add(api_holding)
-                        sync_summary['new_positions'] += 1
-                    
-                    # Also sync with legacy Investment table for backwards compatibility
-                    investment = Investment.query.filter_by(
-                        platform=self.platform_name, 
-                        symbol=normalized_symbol
-                    ).first()
-                    
-                    if investment:
-                        # Update existing investment
-                        investment.holdings = quantity
-                        investment.current_price = current_price
-                        investment.average_buy_price = average_price
-                        investment.amount_spent = total_invested
-                        investment.last_updated = datetime.utcnow()
-                    else:
-                        # Create new investment
-                        investment = Investment(
-                            platform=self.platform_name,
-                            name=company_name,
-                            symbol=normalized_symbol,
-                            holdings=quantity,
-                            amount_spent=total_invested,
-                            average_buy_price=average_price,
-                            current_price=current_price
-                        )
-                        db.session.add(investment)
-                    
-                    self.logger.info(f"Synced {normalized_symbol}: {quantity:.4f} @ £{current_price:.2f} = £{market_value:.2f}")
-                    
-                except Exception as e:
-                    self.logger.error(f"Error syncing position {position.get('ticker', 'Unknown')}: {str(e)}")
-                    continue
-            
-            # Update platform sync status
-            platform.last_sync = datetime.utcnow()
-            platform.sync_status = 'active'
-            platform.error_message = None
-            
-            # Log successful sync
-            sync_log = SyncLog(
-                platform_id=platform.id,
-                sync_type='holdings',
-                sync_status='success',
-                items_processed=len(positions),
-                items_successful=sync_summary['updated_positions'] + sync_summary['new_positions'],
-                items_failed=0,
-                execution_time_ms=int((datetime.utcnow() - sync_start).total_seconds() * 1000),
-                completed_at=datetime.utcnow()
-            )
-            db.session.add(sync_log)
-            
-            # Commit all changes
-            db.session.commit()
-            
-            message = f"✅ Successfully synced {len(positions)} positions and cash balance"
-            return True, message, sync_summary
-            
-        except Exception as e:
-            db.session.rollback()
-            error_msg = f"Sync failed: {str(e)}"
-            self.logger.error(error_msg)
-            
-            # Log failed sync if platform exists
-            try:
-                if platform:
-                    sync_log = SyncLog(
-                        platform_id=platform.id,
-                        sync_type='holdings',
-                        sync_status='failed',
-                        error_message=error_msg,
-                        execution_time_ms=int((datetime.utcnow() - sync_start).total_seconds() * 1000),
-                        completed_at=datetime.utcnow()
-                    )
-                    db.session.add(sync_log)
-                    
-                    platform.sync_status = 'error'
-                    platform.error_message = error_msg
-                    db.session.commit()
-            except:
-                pass  # Ignore errors in error handling
-            
-            return False, error_msg, sync_summary
+                        db.session.add(sync_log)
+                        
+                        platform.sync_status = 'error'
+                        platform.error_message = error_msg
+                        db.session.commit()
+                except:
+                    pass  # Ignore errors in error handling
+                
+                return False, error_msg, sync_summary
     
     def get_sync_status(self) -> Dict:
         """Get current sync status and last sync information"""
