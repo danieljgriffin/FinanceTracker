@@ -150,35 +150,47 @@ class Trading212Integration:
                 if cash_balance is not None:
                     cash_entry = PlatformCash.query.filter_by(platform=self.platform_name).first()
                     if cash_entry:
-                    cash_entry.cash_balance = cash_balance
-                    cash_entry.last_updated = datetime.utcnow()
-                else:
-                    cash_entry = PlatformCash(
-                        platform=self.platform_name, 
-                        cash_balance=cash_balance
-                    )
-                    db.session.add(cash_entry)
+                        cash_entry.cash_balance = cash_balance
+                        cash_entry.last_updated = datetime.utcnow()
+                    else:
+                        cash_entry = PlatformCash(
+                            platform=self.platform_name, 
+                            cash_balance=cash_balance
+                        )
+                        db.session.add(cash_entry)
+                    
+                    sync_summary['cash_updated'] = True
+                    sync_summary['cash_balance'] = cash_balance
+                    self.logger.info(f"Updated {self.platform_name} cash: £{cash_balance:.2f}")
                 
-                sync_summary['cash_updated'] = True
-                sync_summary['cash_balance'] = cash_balance
-                self.logger.info(f"Updated {self.platform_name} cash: £{cash_balance:.2f}")
-            
-            # 2. Sync Portfolio Positions
-            positions = self.get_portfolio_positions()
-            if positions is None:
-                return False, "Failed to fetch portfolio positions", sync_summary
-            
-            sync_summary['total_positions'] = len(positions)
+                # 2. Sync Portfolio Positions
+                positions = self.get_portfolio_positions()
+                if positions is None:
+                    return False, "Failed to fetch portfolio positions", sync_summary
+                
+                sync_summary['total_positions'] = len(positions)
             
             for position in positions:
                 try:
                     # Extract position data
                     ticker = position.get('ticker', '')
                     quantity = position.get('quantity', 0.0)
-                    current_price = position.get('currentPrice', 0.0)
-                    average_price = position.get('averagePrice', 0.0)
+                    current_price_raw = position.get('currentPrice', 0.0)
+                    average_price_raw = position.get('averagePrice', 0.0)
                     pnl = position.get('ppl', 0.0)
                     fx_pnl = position.get('fxPpl', 0.0)
+                    
+                    # CRITICAL FIX: Convert UK stock prices from pence to pounds
+                    # UK stocks (ending with _EQ but not _US_EQ) are in pence
+                    if ticker.endswith('_EQ') and not ticker.endswith('_US_EQ'):
+                        # UK stock - convert pence to pounds
+                        current_price = current_price_raw / 100.0
+                        average_price = average_price_raw / 100.0
+                        self.logger.info(f"UK stock {ticker}: converted {current_price_raw}p to £{current_price:.2f}")
+                    else:
+                        # US/other stocks - already in correct currency
+                        current_price = current_price_raw
+                        average_price = average_price_raw
                     
                     # Normalize ticker and get company name
                     normalized_symbol = self._normalize_symbol(ticker)
