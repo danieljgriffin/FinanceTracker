@@ -191,12 +191,16 @@ class Trading212Integration:
                 # 2. Sync Portfolio Positions
                 positions = self.get_portfolio_positions()
                 if positions is None:
+                    db.session.rollback()  # Rollback any pending changes before returning
                     return False, "Failed to fetch portfolio positions", sync_summary
                 
                 sync_summary['total_positions'] = len(positions)
                 
                 # Get USD to GBP exchange rate once for all US stocks
                 usd_to_gbp_rate = self._get_usd_to_gbp_rate()
+                
+                # Track symbols from API to identify stale holdings
+                api_symbols = set()
                 
                 for position in positions:
                     try:
@@ -230,6 +234,9 @@ class Trading212Integration:
                         # Normalize ticker and get company name
                         normalized_symbol = self._normalize_symbol(ticker)
                         company_name = self._get_company_name(normalized_symbol)
+                        
+                        # Track this symbol as present in API
+                        api_symbols.add(normalized_symbol)
                         
                         # Calculate market value
                         market_value = quantity * current_price
@@ -303,6 +310,27 @@ class Trading212Integration:
                     except Exception as e:
                         self.logger.error(f"Error syncing position {position.get('ticker', 'Unknown')}: {str(e)}")
                         continue
+                
+                # 3. Remove stale holdings (positions no longer in API response)
+                # This ensures the database mirrors the API exactly
+                stale_api_holdings = APIHolding.query.filter(
+                    APIHolding.platform_id == platform.id,
+                    ~APIHolding.symbol.in_(api_symbols)
+                ).all()
+                
+                stale_investments = Investment.query.filter(
+                    Investment.platform == self.platform_name,
+                    ~Investment.symbol.in_(api_symbols)
+                ).all()
+                
+                for stale in stale_api_holdings:
+                    self.logger.info(f"Removing stale holding: {stale.symbol} (no longer in API)")
+                    db.session.delete(stale)
+                    sync_summary['removed_positions'] = sync_summary.get('removed_positions', 0) + 1
+                
+                for stale in stale_investments:
+                    self.logger.info(f"Removing stale investment: {stale.symbol} (no longer in API)")
+                    db.session.delete(stale)
                 
                 # Update platform sync status
                 platform.last_sync = datetime.utcnow()
