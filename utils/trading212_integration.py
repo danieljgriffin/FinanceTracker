@@ -6,6 +6,7 @@ Syncs portfolio data with existing investment tracking system
 import os
 import requests
 import logging
+import base64
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from models import db, Investment, PlatformCash
@@ -18,17 +19,23 @@ class Trading212Integration:
         self.logger = logging.getLogger(__name__)
         self.base_url = "https://live.trading212.com/api/v0/equity"
         self.api_key = os.environ.get('TRADING212_API_KEY')
+        self.api_secret = os.environ.get('TRADING212_API_SECRET')
         self.platform_name = "Trading212 ISA"
         
-        if not self.api_key:
-            raise ValueError("TRADING212_API_KEY environment variable is required")
+        if not self.api_key or not self.api_secret:
+            raise ValueError("TRADING212_API_KEY and TRADING212_API_SECRET environment variables are required")
     
     def _get_headers(self) -> Dict[str, str]:
-        """Get API request headers"""
-        if not self.api_key:
-            raise ValueError("API key is required")
+        """Get API request headers with Basic Auth"""
+        if not self.api_key or not self.api_secret:
+            raise ValueError("API key and secret are required")
+        
+        # Create Basic Auth header
+        credentials = f"{self.api_key}:{self.api_secret}"
+        encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+        
         return {
-            'Authorization': self.api_key,
+            'Authorization': f'Basic {encoded_credentials}',
             'Content-Type': 'application/json'
         }
     
