@@ -3578,6 +3578,19 @@ def run_daily_job():
             collect_daily_historical_data()
             cleanup_old_historical_data()
             
+            # Sync Trading 212 portfolio data (once per day to avoid rate limits)
+            try:
+                from utils.trading212_integration import Trading212Integration
+                app.logger.info("📊 Starting Trading 212 daily sync...")
+                t212 = Trading212Integration()
+                success, message, summary = t212.sync_portfolio_data()
+                if success:
+                    app.logger.info(f"✅ Trading 212 sync successful: {summary.get('total_positions', 0)} positions updated")
+                else:
+                    app.logger.warning(f"⚠️ Trading 212 sync failed: {message}")
+            except Exception as e:
+                app.logger.error(f"❌ Trading 212 sync error: {str(e)}")
+            
             # Check if it's the 1st of the month for monthly tracker
             import pytz
             uk_tz = pytz.timezone('Europe/London')
