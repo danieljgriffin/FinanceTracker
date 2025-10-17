@@ -7,6 +7,7 @@ import os
 import requests
 import time
 import csv
+import base64
 from io import StringIO
 from datetime import datetime, timedelta
 
@@ -14,10 +15,15 @@ def test_csv_export():
     """Test the Trading 212 CSV export workflow"""
     
     API_KEY = os.environ.get('TRADING212_API_KEY')
+    API_SECRET = os.environ.get('TRADING212_API_SECRET')
     BASE_URL = "https://live.trading212.com/api/v0"
     
+    # Create Basic Auth header
+    credentials = f"{API_KEY}:{API_SECRET}"
+    encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+    
     headers = {
-        'Authorization': API_KEY,
+        'Authorization': f'Basic {encoded_credentials}',
         'Content-Type': 'application/json'
     }
     
