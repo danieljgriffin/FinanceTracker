@@ -108,6 +108,20 @@ class Trading212Integration:
         }
         return ticker_to_name.get(ticker, ticker)
     
+    def _get_usd_to_gbp_rate(self) -> float:
+        """Get current USD to GBP exchange rate using yfinance"""
+        try:
+            import yfinance as yf
+            gbp_usd_ticker = yf.Ticker('GBPUSD=X')
+            info = gbp_usd_ticker.info
+            gbp_usd_rate = info.get('regularMarketPrice', 1.33)  # GBP/USD rate
+            usd_to_gbp = 1.0 / gbp_usd_rate  # Convert to USD/GBP
+            self.logger.info(f"USD to GBP rate: {usd_to_gbp:.4f}")
+            return usd_to_gbp
+        except Exception as e:
+            self.logger.warning(f"Failed to get exchange rate, using default 0.75: {e}")
+            return 0.75  # Fallback rate
+    
     def sync_portfolio_data(self) -> Tuple[bool, str, Dict]:
         """
         Sync Trading 212 portfolio data with local database
@@ -181,6 +195,9 @@ class Trading212Integration:
                 
                 sync_summary['total_positions'] = len(positions)
                 
+                # Get USD to GBP exchange rate once for all US stocks
+                usd_to_gbp_rate = self._get_usd_to_gbp_rate()
+                
                 for position in positions:
                     try:
                         # Extract position data
@@ -191,15 +208,22 @@ class Trading212Integration:
                         pnl = position.get('ppl', 0.0)
                         fx_pnl = position.get('fxPpl', 0.0)
                         
-                        # CRITICAL FIX: Convert UK stock prices from pence to pounds
-                        # UK stocks (ending with _EQ but not _US_EQ) are in pence
-                        if ticker.endswith('_EQ') and not ticker.endswith('_US_EQ'):
+                        # CURRENCY CONVERSION LOGIC:
+                        # 1. US stocks (_US_EQ): Prices are in USD, convert to GBP
+                        # 2. UK stocks (_EQ but not _US_EQ): Prices are in pence, convert to pounds
+                        
+                        if ticker.endswith('_US_EQ'):
+                            # US stock - convert USD to GBP
+                            current_price = current_price_raw * usd_to_gbp_rate
+                            average_price = average_price_raw * usd_to_gbp_rate
+                            self.logger.info(f"US stock {ticker}: ${current_price_raw:.2f} USD → £{current_price:.2f} GBP")
+                        elif ticker.endswith('_EQ'):
                             # UK stock - convert pence to pounds
                             current_price = current_price_raw / 100.0
                             average_price = average_price_raw / 100.0
-                            self.logger.info(f"UK stock {ticker}: converted {current_price_raw}p to £{current_price:.2f}")
+                            self.logger.info(f"UK stock {ticker}: {current_price_raw}p → £{current_price:.2f}")
                         else:
-                            # US/other stocks - already in correct currency
+                            # Other stocks - use as is
                             current_price = current_price_raw
                             average_price = average_price_raw
                         
