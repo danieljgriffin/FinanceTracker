@@ -359,6 +359,50 @@
 
 <script>
 function openInvestmentModal() {
+    // Show choice screen first
+    document.getElementById('modalTitle').textContent = 'Add Investment';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="space-y-4">
+            <p class="text-gray-300 text-sm mb-6">Choose how you'd like to add investments:</p>
+            
+            <button onclick="showManualInvestmentForm()" class="w-full p-6 border-2 border-gray-600 hover:border-blue-500 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-all group">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-edit text-3xl text-blue-400 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <h3 class="text-lg font-semibold text-white mb-1">Add Manual Investment</h3>
+                        <p class="text-sm text-gray-400">Manually enter investment details for any platform</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            </button>
+            
+            <button onclick="window.location.href='/trading212/setup'" class="w-full p-6 border-2 border-gray-600 hover:border-green-500 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-all group">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-link text-3xl text-green-400 group-hover:scale-110 transition-transform"></i>
+                    </div>
+                    <div class="text-left flex-1">
+                        <h3 class="text-lg font-semibold text-white mb-1">Connect to Trading 212</h3>
+                        <p class="text-sm text-gray-400">Automatically sync your Trading 212 portfolio</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-chevron-right text-gray-400"></i>
+                    </div>
+                </div>
+            </button>
+        </div>
+    `;
+    
+    // Hide the Save button for choice screen
+    document.getElementById('modalSubmit').style.display = 'none';
+    document.getElementById('modalOverlay').classList.remove('hidden');
+}
+
+function showManualInvestmentForm() {
     const platforms = Object.keys({{ platform_colors|tojson }});
     const platformOptions = platforms.map(p => `<option value="${p}">${p}</option>`).join('');
     const investmentNames = {{ platform_investment_names|tojson }};
@@ -404,6 +448,9 @@ function openInvestmentModal() {
             </div>
         </div>
     `;
+    
+    // Show the Save button again for the form
+    document.getElementById('modalSubmit').style.display = 'block';
     
     // Initialize with first platform's options
     updateInvestmentNameOptions();

@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Connect Trading 212 - Net Worth Tracker{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6 max-w-4xl">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center space-x-3 mb-2">
+            <a href="{{ url_for('investment_manager') }}" class="text-gray-400 hover:text-white transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h1 class="text-3xl font-bold text-white">Connect to Trading 212</h1>
+        </div>
+        <p class="text-gray-400">Automatically sync your Trading 212 portfolio for hands-free tracking</p>
+    </div>
+
+    <!-- Connection Status -->
+    {% if is_connected %}
+    <div class="card mb-6 border-2 border-green-500/30">
+        <div class="p-6">
+            <div class="flex items-center space-x-3 mb-4">
+                <i class="fas fa-check-circle text-3xl text-green-400"></i>
+                <div>
+                    <h2 class="text-xl font-semibold text-white">Connected</h2>
+                    <p class="text-sm text-gray-400">Your Trading 212 account is connected and syncing</p>
+                </div>
+            </div>
+            
+            {% if last_sync %}
+            <div class="text-sm text-gray-300 mb-4">
+                <i class="fas fa-clock text-gray-400 mr-2"></i>
+                Last synced: {{ last_sync }}
+            </div>
+            {% endif %}
+            
+            <div class="flex space-x-3">
+                <form method="POST" action="{{ url_for('trading212_sync_now') }}" class="inline">
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-sync mr-2"></i>Sync Now
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('trading212_disconnect') }}" class="inline" onsubmit="return confirm('Are you sure you want to disconnect Trading 212? Your synced data will remain but no new updates will occur.');">
+                    <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                        <i class="fas fa-unlink mr-2"></i>Disconnect
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Setup Instructions -->
+    <div class="card mb-6">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">
+                <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+                How It Works
+            </h2>
+            <ul class="space-y-2 text-gray-300">
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-400 mr-3 mt-1"></i>
+                    <span>Automatically pulls your portfolio holdings from Trading 212</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-400 mr-3 mt-1"></i>
+                    <span>Handles currency conversion (USD → GBP for US stocks, pence → pounds for UK stocks)</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-400 mr-3 mt-1"></i>
+                    <span>Syncs daily to avoid rate limits</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check text-green-400 mr-3 mt-1"></i>
+                    <span>Automatically removes sold positions</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Step-by-step Setup -->
+    <div class="card mb-6">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-white mb-6">
+                <i class="fas fa-list-ol text-blue-400 mr-2"></i>
+                Setup Guide
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- Step 1 -->
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        1
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white mb-2">Log into Trading 212</h3>
+                        <p class="text-gray-400 text-sm">Visit <a href="https://www.trading212.com" target="_blank" class="text-blue-400 hover:underline">trading212.com</a> and log into your account</p>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        2
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white mb-2">Navigate to Settings → API (Beta)</h3>
+                        <p class="text-gray-400 text-sm mb-2">Go to Settings, then find the "API (Beta)" section</p>
+                        <div class="bg-gray-800/50 border border-gray-700 rounded-lg p-3 text-xs text-gray-300">
+                            <i class="fas fa-lightbulb text-yellow-400 mr-2"></i>
+                            The API section is usually under Account Settings or Advanced Settings
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        3
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white mb-2">Generate API Key</h3>
+                        <p class="text-gray-400 text-sm mb-2">Click "Generate New Key" or "Create API Key"</p>
+                        <div class="bg-yellow-900/20 border border-yellow-700/50 rounded-lg p-3 text-xs text-yellow-200">
+                            <i class="fas fa-exclamation-triangle text-yellow-400 mr-2"></i>
+                            <strong>Important:</strong> Copy your API key immediately! Trading 212 only shows it once.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                        4
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white mb-2">Enter Your API Key Below</h3>
+                        <p class="text-gray-400 text-sm">Paste your API key in the form below to connect</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- API Key Form -->
+    <div class="card">
+        <div class="p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">
+                <i class="fas fa-key text-blue-400 mr-2"></i>
+                Enter API Credentials
+            </h2>
+            
+            {% if error %}
+            <div class="bg-red-900/20 border border-red-700/50 rounded-lg p-4 mb-4 text-red-200">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="POST" action="{{ url_for('trading212_connect') }}" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-white mb-2">
+                        Trading 212 API Key
+                        <span class="text-red-400">*</span>
+                    </label>
+                    <input type="password" 
+                           name="api_key" 
+                           required 
+                           class="w-full border border-gray-600 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="Enter your Trading 212 API key">
+                    <p class="text-xs text-gray-400 mt-1">
+                        <i class="fas fa-lock mr-1"></i>
+                        Your API key is encrypted and stored securely
+                    </p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="submit" class="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+                        <i class="fas fa-plug mr-2"></i>Connect Trading 212
+                    </button>
+                    <a href="{{ url_for('investment_manager') }}" class="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Security Notice -->
+    <div class="card mt-6 border border-blue-500/30">
+        <div class="p-6">
+            <h3 class="font-semibold text-white mb-3 flex items-center">
+                <i class="fas fa-shield-alt text-blue-400 mr-2"></i>
+                Security & Privacy
+            </h3>
+            <ul class="space-y-2 text-sm text-gray-300">
+                <li class="flex items-start">
+                    <i class="fas fa-lock text-green-400 mr-2 mt-0.5"></i>
+                    <span>Your API keys are stored as environment variables (Replit Secrets)</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-eye-slash text-green-400 mr-2 mt-0.5"></i>
+                    <span>API keys are never displayed or logged</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-book-open text-green-400 mr-2 mt-0.5"></i>
+                    <span>Read-only access: The API can only view your portfolio, not make trades</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

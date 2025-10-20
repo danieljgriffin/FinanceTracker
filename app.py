@@ -3763,6 +3763,101 @@ def update_cash(platform):
     
     return redirect(url_for('investment_manager'))
 
+# Trading 212 Integration Routes
+@app.route('/trading212/setup')
+def trading212_setup():
+    """Show Trading 212 setup page"""
+    try:
+        t212 = Trading212Integration()
+        status = t212.get_sync_status()
+        
+        is_connected = status.get('connected', False) and status.get('status') != 'disconnected'
+        last_sync = None
+        
+        if is_connected and status.get('last_sync'):
+            try:
+                last_sync_dt = datetime.fromisoformat(status['last_sync'])
+                last_sync = last_sync_dt.strftime('%B %d, %Y at %H:%M')
+            except:
+                pass
+        
+        return render_template('trading212_setup.html',
+                             is_connected=is_connected,
+                             last_sync=last_sync,
+                             error=request.args.get('error'))
+    except Exception as e:
+        logging.error(f"Error in Trading 212 setup page: {str(e)}")
+        return render_template('trading212_setup.html',
+                             is_connected=False,
+                             last_sync=None,
+                             error=str(e))
+
+@app.route('/trading212/connect', methods=['POST'])
+def trading212_connect():
+    """Connect Trading 212 integration - temporarily stores API key"""
+    try:
+        api_key = request.form.get('api_key', '').strip()
+        
+        if not api_key:
+            return redirect(url_for('trading212_setup', error='API key is required'))
+        
+        # Temporarily set the API key in environment for this session
+        # Note: For production, user should add TRADING212_API_KEY to Replit Secrets
+        os.environ['TRADING212_API_KEY'] = api_key
+        
+        # Verify connection by testing the API
+        t212 = Trading212Integration()
+        cash = t212.get_account_cash()
+        
+        if cash is None:
+            return redirect(url_for('trading212_setup', error='Failed to connect. Please check your API key.'))
+        
+        # Run initial sync
+        success, message, summary = t212.sync_portfolio_data()
+        
+        if not success:
+            return redirect(url_for('trading212_setup', error=f'Connection succeeded but sync failed: {message}'))
+        
+        # Show success message with instructions to save to secrets
+        flash(f'✅ Trading 212 connected! {message}', 'success')
+        flash('⚠️ Important: Add TRADING212_API_KEY to Replit Secrets to persist this connection', 'warning')
+        return redirect(url_for('investment_manager'))
+            
+    except Exception as e:
+        logging.error(f"Error connecting Trading 212: {str(e)}")
+        return redirect(url_for('trading212_setup', error=str(e)))
+
+@app.route('/trading212/sync-now', methods=['POST'])
+def trading212_sync_now():
+    """Manually trigger Trading 212 sync"""
+    try:
+        t212 = Trading212Integration()
+        success, message, summary = t212.sync_portfolio_data()
+        
+        if success:
+            flash(f'✅ {message}', 'success')
+        else:
+            flash(f'❌ {message}', 'error')
+            
+    except Exception as e:
+        logging.error(f"Error syncing Trading 212: {str(e)}")
+        flash(f'Error syncing Trading 212: {str(e)}', 'error')
+    
+    return redirect(url_for('trading212_setup'))
+
+@app.route('/trading212/disconnect', methods=['POST'])
+def trading212_disconnect():
+    """Disconnect Trading 212 integration"""
+    try:
+        t212 = Trading212Integration()
+        t212.disconnect()
+        flash('Trading 212 disconnected successfully', 'success')
+    except Exception as e:
+        logging.error(f"Error disconnecting Trading 212: {str(e)}")
+        flash(f'Error disconnecting Trading 212: {str(e)}', 'error')
+    
+    return redirect(url_for('trading212_setup'))
+
 @app.route('/add_investment_mobile', methods=['POST'])
 def add_investment_mobile():
     """Add new investment from mobile"""
