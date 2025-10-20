@@ -188,9 +188,19 @@ class PriceFetcher:
             # Check if this is a special fund that needs web scraping
             if symbol in self.special_funds:
                 return self.get_special_fund_price(symbol)
+            
+            # Remap outdated ticker symbols to current ones
+            ticker_remapping = {
+                'FB': 'META',  # Meta Platforms changed from FB to META in 2022
+            }
+            
+            # Apply ticker remapping if needed
+            lookup_symbol = ticker_remapping.get(symbol, symbol)
+            if lookup_symbol != symbol:
+                self.logger.info(f"Remapping ticker {symbol} → {lookup_symbol}")
                 
             # Use yfinance to get price
-            ticker = yf.Ticker(symbol)
+            ticker = yf.Ticker(lookup_symbol)
             info = ticker.info
             
             # Try different price fields
