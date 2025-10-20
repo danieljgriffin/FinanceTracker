@@ -3835,8 +3835,17 @@ def trading212_connect():
             db.session.add(platform)
         
         # Encrypt and save credentials
-        platform.set_credentials(credentials)
-        db.session.commit()
+        try:
+            platform.set_credentials(credentials)
+            db.session.commit()
+            logging.info(f"✅ Successfully saved encrypted credentials to database for {platform.name}")
+        except Exception as cred_error:
+            logging.error(f"❌ Failed to save credentials to database: {str(cred_error)}")
+            raise ValueError(f"Failed to save credentials. Is ENCRYPTION_KEY set in Render environment? Error: {str(cred_error)}")
+        
+        # Clear temporary environment variable now that credentials are in database
+        if 'TRADING212_API_KEY' in os.environ:
+            del os.environ['TRADING212_API_KEY']
         
         # Run initial sync
         success, message, summary = t212.sync_portfolio_data()
