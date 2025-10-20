@@ -3794,15 +3794,22 @@ def trading212_setup():
 
 @app.route('/trading212/connect', methods=['POST'])
 def trading212_connect():
-    """Connect Trading 212 integration - temporarily stores API key"""
+    """Connect Trading 212 integration - saves credentials to database"""
     try:
+        from utils.api_platform_models import Platform
+        
         api_key = request.form.get('api_key', '').strip()
+        api_secret = request.form.get('api_secret', '').strip()
         
         if not api_key:
             return redirect(url_for('trading212_setup', error='API key is required'))
         
-        # Temporarily set the API key in environment for this session
-        # Note: For production, user should add TRADING212_API_KEY to Replit Secrets
+        # Prepare credentials dictionary
+        credentials = {'api_key': api_key}
+        if api_secret:
+            credentials['api_secret'] = api_secret
+        
+        # Temporarily set in environment for testing connection
         os.environ['TRADING212_API_KEY'] = api_key
         
         # Verify connection by testing the API
@@ -3812,17 +3819,39 @@ def trading212_connect():
         if cash is None:
             return redirect(url_for('trading212_setup', error='Failed to connect. Please check your API key.'))
         
+        # Connection successful - save encrypted credentials to database
+        platform = Platform.query.filter_by(
+            name='Trading212 ISA',
+            platform_type='trading212'
+        ).first()
+        
+        if not platform:
+            platform = Platform(
+                name='Trading212 ISA',
+                platform_type='trading212',
+                api_type='rest_api',
+                sync_status='pending'
+            )
+            db.session.add(platform)
+        
+        # Encrypt and save credentials
+        platform.set_credentials(credentials)
+        db.session.commit()
+        
         # Run initial sync
         success, message, summary = t212.sync_portfolio_data()
         
         if not success:
             return redirect(url_for('trading212_setup', error=f'Connection succeeded but sync failed: {message}'))
         
-        # Show success message with instructions to save to secrets
-        flash(f'✅ Trading 212 connected! {message}', 'success')
-        flash('⚠️ Important: Add TRADING212_API_KEY to Replit Secrets to persist this connection', 'warning')
+        flash(f'✅ Trading 212 connected successfully! {message}', 'success')
         return redirect(url_for('investment_manager'))
             
+    except ValueError as e:
+        # Encryption key missing
+        logging.error(f"Encryption error: {str(e)}")
+        flash('⚠️ Setup required: Please add ENCRYPTION_KEY to your Render environment variables (one-time setup)', 'warning')
+        return redirect(url_for('trading212_setup', error='Encryption key not configured. Contact administrator.'))
     except Exception as e:
         logging.error(f"Error connecting Trading 212: {str(e)}")
         return redirect(url_for('trading212_setup', error=str(e)))

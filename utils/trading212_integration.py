@@ -18,24 +18,55 @@ class Trading212Integration:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.base_url = "https://live.trading212.com/api/v0/equity"
-        self.api_key = os.environ.get('TRADING212_API_KEY')
-        self.api_secret = os.environ.get('TRADING212_API_SECRET')
         self.platform_name = "Trading212 ISA"
         
-        if not self.api_key or not self.api_secret:
-            raise ValueError("TRADING212_API_KEY and TRADING212_API_SECRET environment variables are required")
+        # Try to get credentials from database first, then fall back to environment
+        self.api_key = None
+        self.api_secret = None
+        
+        try:
+            # Try database first
+            platform = Platform.query.filter_by(
+                name=self.platform_name,
+                platform_type='trading212'
+            ).first()
+            
+            if platform and platform.encrypted_credentials:
+                credentials = platform.get_credentials()
+                self.api_key = credentials.get('api_key')
+                self.api_secret = credentials.get('api_secret')
+                self.logger.info("Loaded Trading 212 credentials from database")
+        except Exception as e:
+            self.logger.debug(f"Could not load credentials from database: {str(e)}")
+        
+        # Fall back to environment variables if not in database
+        if not self.api_key:
+            self.api_key = os.environ.get('TRADING212_API_KEY')
+            self.api_secret = os.environ.get('TRADING212_API_SECRET')
+            if self.api_key:
+                self.logger.info("Loaded Trading 212 credentials from environment variables")
+        
+        if not self.api_key:
+            raise ValueError("Trading 212 API credentials not found. Please connect via the setup page or add TRADING212_API_KEY to environment variables.")
     
     def _get_headers(self) -> Dict[str, str]:
-        """Get API request headers with Basic Auth"""
-        if not self.api_key or not self.api_secret:
-            raise ValueError("API key and secret are required")
+        """Get API request headers"""
+        if not self.api_key:
+            raise ValueError("API key is required")
         
-        # Create Basic Auth header
-        credentials = f"{self.api_key}:{self.api_secret}"
-        encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+        # Trading 212 uses the API key directly in Authorization header
+        # If api_secret is provided, use Basic Auth format, otherwise just the key
+        if self.api_secret:
+            # Create Basic Auth header with key:secret
+            credentials = f"{self.api_key}:{self.api_secret}"
+            encoded_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
+            auth_header = f'Basic {encoded_credentials}'
+        else:
+            # Use API key directly (most common for Trading 212)
+            auth_header = self.api_key
         
         return {
-            'Authorization': f'Basic {encoded_credentials}',
+            'Authorization': auth_header,
             'Content-Type': 'application/json'
         }
     
