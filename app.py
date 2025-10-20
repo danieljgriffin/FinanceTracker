@@ -3809,17 +3809,7 @@ def trading212_connect():
         if api_secret:
             credentials['api_secret'] = api_secret
         
-        # Temporarily set in environment for testing connection
-        os.environ['TRADING212_API_KEY'] = api_key
-        
-        # Verify connection by testing the API
-        t212 = Trading212Integration()
-        cash = t212.get_account_cash()
-        
-        if cash is None:
-            return redirect(url_for('trading212_setup', error='Failed to connect. Please check your API key.'))
-        
-        # Connection successful - save encrypted credentials to database
+        # Get or create platform record FIRST
         platform = Platform.query.filter_by(
             name='Trading212 ISA',
             platform_type='trading212'
@@ -3834,20 +3824,27 @@ def trading212_connect():
             )
             db.session.add(platform)
         
-        # Encrypt and save credentials
+        # Save credentials to database BEFORE testing
+        # This ensures Trading212Integration() will load the NEW credentials
         try:
             platform.set_credentials(credentials)
             db.session.commit()
             logging.info(f"✅ Successfully saved encrypted credentials to database for {platform.name}")
         except Exception as cred_error:
             logging.error(f"❌ Failed to save credentials to database: {str(cred_error)}")
-            raise ValueError(f"Failed to save credentials. Is ENCRYPTION_KEY set in Render environment? Error: {str(cred_error)}")
+            return redirect(url_for('trading212_setup', error=f'Encryption failed. Is ENCRYPTION_KEY set in Render? Error: {str(cred_error)}'))
         
-        # Clear temporary environment variable now that credentials are in database
-        if 'TRADING212_API_KEY' in os.environ:
-            del os.environ['TRADING212_API_KEY']
+        # Now test the connection (will load from database)
+        t212 = Trading212Integration()
+        cash = t212.get_account_cash()
         
-        # Run initial sync
+        if cash is None:
+            # Connection failed - clear the bad credentials
+            platform.encrypted_credentials = None
+            db.session.commit()
+            return redirect(url_for('trading212_setup', error='Failed to connect. Please check your API key.'))
+        
+        # Connection successful! Run initial sync
         success, message, summary = t212.sync_portfolio_data()
         
         if not success:
