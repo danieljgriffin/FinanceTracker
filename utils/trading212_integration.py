@@ -97,10 +97,14 @@ class Trading212Integration:
             return False, data.get('error', 'Unknown connection error')
     
     def get_account_cash(self) -> Optional[float]:
-        """Get account cash balance"""
+        """Get account cash balance - returns FREE cash only"""
         success, data = self._make_api_request("account/cash")
         if success:
-            return data.get('total', 0.0)
+            # Log the full API response to debug cash issues
+            self.logger.info(f"Trading 212 Cash API response: {data}")
+            # Use 'free' instead of 'total' - only count cash available to trade
+            # 'total' includes blocked/pending funds which aren't actually available
+            return data.get('free', 0.0)
         return None
     
     def get_portfolio_positions(self) -> Optional[List[Dict]]:
