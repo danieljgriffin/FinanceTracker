@@ -1958,13 +1958,15 @@ def add_investment():
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
             # Create investment data dictionary
+            calculated_amount_spent = average_buy_price * holdings
             investment_data = {
                 'name': name,
                 'holdings': holdings,
-                'amount_spent': average_buy_price * holdings,
+                'amount_spent': calculated_amount_spent,
                 'average_buy_price': average_buy_price,
                 'symbol': symbol
             }
+            logging.info(f"Adding investment with average_buy_price mode: avg_price={average_buy_price}, holdings={holdings}, calculated_amount_spent={calculated_amount_spent}")
             get_data_manager().add_investment(platform, investment_data)
         else:
             flash('Invalid input type', 'error')
