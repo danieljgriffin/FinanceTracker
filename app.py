@@ -1943,15 +1943,29 @@ def add_investment():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            # Pass individual parameters correctly
-            get_data_manager().add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
+            # Create investment data dictionary
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': amount_spent,
+                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'symbol': symbol
+            }
+            get_data_manager().add_investment(platform, investment_data)
         elif input_type == 'average_buy_price':
             average_buy_price = float(request.form.get('average_buy_price', 0))
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
-            # Pass individual parameters correctly
-            get_data_manager().add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
+            # Create investment data dictionary
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': average_buy_price * holdings,
+                'average_buy_price': average_buy_price,
+                'symbol': symbol
+            }
+            get_data_manager().add_investment(platform, investment_data)
         else:
             flash('Invalid input type', 'error')
             return redirect(url_for('investment_manager'))
@@ -3913,15 +3927,29 @@ def add_investment_mobile():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('mobile_investments'))
-            # Pass individual parameters correctly
-            get_data_manager().add_investment(platform, name, holdings, amount_spent=amount_spent, symbol=symbol)
+            # Create investment data dictionary
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': amount_spent,
+                'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
+                'symbol': symbol
+            }
+            get_data_manager().add_investment(platform, investment_data)
         elif input_type == 'average_buy_price':
             average_buy_price = float(request.form.get('average_buy_price', 0))
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('mobile_investments'))
-            # Pass individual parameters correctly
-            get_data_manager().add_investment(platform, name, holdings, average_buy_price=average_buy_price, symbol=symbol)
+            # Create investment data dictionary
+            investment_data = {
+                'name': name,
+                'holdings': holdings,
+                'amount_spent': average_buy_price * holdings,
+                'average_buy_price': average_buy_price,
+                'symbol': symbol
+            }
+            get_data_manager().add_investment(platform, investment_data)
         else:
             flash('Invalid input type', 'error')
             return redirect(url_for('mobile_investments'))
