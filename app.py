@@ -1885,22 +1885,71 @@ def investment_manager():
         total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
+        # Get bank account cash (Cash platform only) - needed for mobile template
+        bank_account_cash = get_data_manager().get_platform_cash('Cash')
+        
+        # Use consistent net worth calculation - needed for mobile template
+        current_net_worth = calculate_current_net_worth()
+        
+        # Calculate month-on-month platform changes - needed for mobile template
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            for platform in platform_totals.keys():
+                try:
+                    current_platform_value = platform_totals[platform]['total_value']
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if month_start_platform_value > 0:
+                        platform_change_amount = current_platform_value - month_start_platform_value
+                        platform_change_percent = (platform_change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': platform_change_amount,
+                            'percent': platform_change_percent
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+        except Exception as e:
+            logging.error(f"Error calculating monthly changes: {str(e)}")
+        
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
         
         # Get investment names by platform for dropdown
         platform_investment_names = data_manager.get_all_investment_names()
         
-        return render_template('investment_manager.html',
+        # Use device detection to serve appropriate template
+        # Desktop: investment_manager.html, Mobile: mobile/investments.html
+        if is_mobile_device():
+            template_name = 'mobile/investments.html'
+        else:
+            template_name = 'investment_manager.html'
+        
+        return render_template(template_name,
                              investments_data=investments_data,
                              platform_colors=PLATFORM_COLORS,
                              platform_totals=platform_totals,
                              total_current_value=total_current_value,
                              total_amount_spent=total_amount_spent,
                              total_cash=total_cash,
+                             bank_account_cash=bank_account_cash,
+                             current_net_worth=current_net_worth,
                              total_portfolio_value=total_portfolio_value,
                              total_portfolio_pl=total_portfolio_pl,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl,
+                             platform_monthly_changes=platform_monthly_changes,
                              unique_names=unique_names,
                              platform_investment_names=platform_investment_names,
                              data_manager=data_manager,
@@ -1908,16 +1957,26 @@ def investment_manager():
     except Exception as e:
         logging.error(f"Error in investment manager: {str(e)}")
         flash(f'Error loading investment manager: {str(e)}', 'error')
-        return render_template('investment_manager.html',
+        
+        # Use device detection for error template as well
+        if is_mobile_device():
+            template_name = 'mobile/investments.html'
+        else:
+            template_name = 'investment_manager.html'
+        
+        return render_template(template_name,
                              investments_data={},
                              platform_colors=PLATFORM_COLORS,
                              platform_totals={},
                              total_current_value=0,
                              total_amount_spent=0,
                              total_cash=0,
+                             bank_account_cash=0,
+                             current_net_worth=0,
                              total_portfolio_value=0,
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
+                             platform_monthly_changes={},
                              unique_names=[],
                              platform_investment_names={},
                              data_manager=data_manager,
