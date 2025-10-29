@@ -37,7 +37,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
-from models import db, Goal
+from models import db, Goal, NetworthEntry
 db.init_app(app)
 
 # Initialize utilities with caching
@@ -938,7 +938,6 @@ def home():
             
             if month_start_data:
                 # Use the stored total_networth from the NetworthEntry
-                from models import NetworthEntry
                 month_entry = NetworthEntry.query.filter_by(year=current_year, month=current_month_name).first()
                 if month_entry and month_entry.total_networth:
                     month_start_baseline = month_entry.total_networth
@@ -4622,8 +4621,10 @@ def toggle_goal_completion(goal_id):
         # Toggle the status
         if goal.status == 'completed':
             goal.status = 'active'
+            goal.completed_at = None
         else:
             goal.status = 'completed'
+            goal.completed_at = datetime.now()
             
         goal.updated_at = datetime.now()
         db.session.commit()
@@ -4645,6 +4646,7 @@ def complete_goal(goal_id):
         
         # Mark as completed
         goal.status = 'completed'
+        goal.completed_at = datetime.now()
         goal.updated_at = datetime.now()
         db.session.commit()
         
