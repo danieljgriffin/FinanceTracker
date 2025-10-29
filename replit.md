@@ -30,6 +30,7 @@ Animation preferences: User wants animated number cycling on net worth updates w
 - **Multi-Year Tracking**: Supports tracking financial data across multiple years with month-on-month calculations.
 - **Platform-Based Tracking**: Tracks total values for various investment platforms, including cash balances.
 - **Real-time Price Fetching**: Utilizes `yfinance` for stocks and a custom CoinGecko integration for cryptocurrencies. Includes specialized web scraping for specific HL LISA funds and automatic USD to GBP conversion for US stocks, and pence to pounds conversion for UK stocks. Features automatic background price updates every 15 minutes with status display and manual override.
+- **Trading 212 API Integration**: Automated portfolio synchronization with Trading 212. Users connect via UI by entering API credentials (API Key and optional API Secret) which are encrypted and stored in the database using ENCRYPTION_KEY. No backend configuration required - works like GetQuin app. Features daily scheduled sync to avoid rate limits (50 requests/minute), intelligent currency conversion (USD→GBP for US stocks, pence→pounds for UK stocks), and automatic duplicate detection. API serves as single source of truth for Trading 212 holdings. Credentials stored in Platform table with Fernet encryption.
 - **Editable Interface**: Allows in-app editing of financial data (income, monthly values, investments) with immediate persistence.
 - **Goals Tracking**: Comprehensive goal tracking system with progress visualization, compound interest calculator, and quarterly milestone tracking similar to the user's Google Sheets approach.
 - **PWA Mobile Experience**: Separate mobile templates with bottom tab navigation, touch-optimized interactions, installable app functionality, and privacy mode. Device detection serves appropriate templates automatically.
@@ -56,3 +57,17 @@ Animation preferences: User wants animated number cycling on net worth updates w
 - Crypto
 - HL Stocks & Shares LISA
 - Cash
+
+## Deployment Notes
+
+### Environment Variables Required for Production (Render)
+- **ENCRYPTION_KEY**: Required for encrypting API credentials stored in database. Generate using `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`. Set once during initial Render setup.
+- **DATABASE_URL**: Provided automatically by Neon PostgreSQL integration.
+
+### Trading 212 Connection Flow (Production)
+1. Admin sets ENCRYPTION_KEY in Render environment variables (one-time setup)
+2. User clicks "Connect to Trading 212" in app UI
+3. User enters API Key (and optional API Secret) in the form
+4. Credentials are encrypted and stored in Platform table in database
+5. Integration automatically syncs daily - no further backend configuration needed
+6. Works identically to GetQuin app - no manual backend credential management required

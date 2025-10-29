@@ -188,9 +188,19 @@ class PriceFetcher:
             # Check if this is a special fund that needs web scraping
             if symbol in self.special_funds:
                 return self.get_special_fund_price(symbol)
+            
+            # Remap outdated ticker symbols to current ones
+            ticker_remapping = {
+                'FB': 'META',  # Meta Platforms changed from FB to META in 2022
+            }
+            
+            # Apply ticker remapping if needed
+            lookup_symbol = ticker_remapping.get(symbol, symbol)
+            if lookup_symbol != symbol:
+                self.logger.info(f"Remapping ticker {symbol} → {lookup_symbol}")
                 
             # Use yfinance to get price
-            ticker = yf.Ticker(symbol)
+            ticker = yf.Ticker(lookup_symbol)
             info = ticker.info
             
             # Try different price fields
@@ -384,28 +394,66 @@ class PriceFetcher:
             # Try to extract price from raw HTML first
             html_content = response.text
             
-            # Look for price patterns in the HTML
+            # Enhanced price patterns with comma support
             price_patterns = [
-                r'Sell:(\d+\.?\d*)p',  # Sell:355.10p or Sell:211.06p
-                r'Buy:(\d+\.?\d*)p',   # Buy:355.10p or Buy:211.06p
-                r'Price:(\d+\.?\d*)p', # Price:355.10p
-                r'(\d+\.?\d*)p\s*Buy', # 355.10p Buy or 211.06p Buy
-                r'(\d+\.?\d*)p\s*Sell', # 355.10p Sell or 211.06p Sell
-                r'(\d{2,3}\.\d{2})p',  # Generic pattern for XXX.XXp like 211.06p
+                # Patterns with comma support (highest priority)
+                r'Sell:\s*([1-9][\d,]{3,6}\.?\d*)p',  # Sell: 1,004.50p (with commas)
+                r'Buy:\s*([1-9][\d,]{3,6}\.?\d*)p',   # Buy: 1,004.50p (with commas)  
+                r'Price:\s*([1-9][\d,]{3,6}\.?\d*)p', # Price: 1,004.50p (with commas)
+                r'>([1-9][\d,]{3,6}\.?\d*)p</span>', # <span>1,004.50p</span> (with commas)
+                
+                # More specific patterns without commas (high priority)
+                r'Sell:\s*(\d{3,4}\.?\d*)p',  # Sell: 1004.50p or Sell: 355.10p (3-4 digits)
+                r'Buy:\s*(\d{3,4}\.?\d*)p',   # Buy: 1004.50p or Buy: 355.10p (3-4 digits)
+                r'Price:\s*(\d{3,4}\.?\d*)p', # Price: 1004.50p (3-4 digits)
+                r'(\d{3,4}\.?\d*)p\s+(?:Buy|Sell)', # 1004.50p Buy/Sell (3-4 digits)
+                
+                # Fallback patterns for shorter prices
+                r'Sell:\s*(\d+\.?\d*)p',  # Sell:355.10p or Sell:211.06p
+                r'Buy:\s*(\d+\.?\d*)p',   # Buy:355.10p or Buy:211.06p
+                r'Price:\s*(\d+\.?\d*)p', # Price:355.10p
+                r'(\d+\.?\d*)p\s*(?:Buy|Sell)', # 355.10p Buy or 211.06p Buy/Sell
+                
+                # Generic patterns (lowest priority)
+                r'(\d{3,4}\.\d{1,2})p',  # XXX.XXp or XXXX.XXp (3-4 digits with decimal)
                 r'price[\'\"]\s*:\s*[\'\"]\s*(\d+\.?\d*)',
                 r'\"price\"\s*:\s*\"(\d+\.?\d*)',
                 r'<span[^>]*>(\d+\.?\d*)p</span>'
             ]
             
-            for pattern in price_patterns:
+            all_matches = []
+            
+            for i, pattern in enumerate(price_patterns):
                 matches = re.findall(pattern, html_content, re.IGNORECASE)
                 if matches:
-                    price = float(matches[0])
-                    if 0.01 <= price <= 10000:  # Reasonable price range
-                        # Convert pence to pounds if necessary
-                        if price > 100:  # Likely in pence
-                            price = price / 100
-                        return price
+                    for match in matches:
+                        try:
+                            # Remove commas from the match before converting to float
+                            clean_match = match.replace(',', '')
+                            price = float(clean_match)
+                            if 10 <= price <= 500000:  # Reasonable price range for pence (10p-5000p)
+                                all_matches.append((price, i, pattern))
+                                self.logger.debug(f"HL: Found price {price}p (from '{match}') using pattern {i}: {pattern}")
+                        except ValueError:
+                            continue
+            
+            if all_matches:
+                # Sort by pattern priority (lower index = higher priority)
+                all_matches.sort(key=lambda x: x[1])
+                best_price = all_matches[0][0]
+                best_pattern_idx = all_matches[0][1]
+                
+                self.logger.info(f"HL: Selected price {best_price}p from pattern {best_pattern_idx} (total matches: {len(all_matches)})")
+                
+                # Convert pence to pounds
+                final_price = best_price / 100
+                self.logger.info(f"HL: Converted {best_price}p to £{final_price}")
+                
+                # Sanity check - reasonable fund price range
+                if 0.01 <= final_price <= 100:  # £0.01 to £100 per unit is reasonable for funds
+                    return final_price
+                else:
+                    self.logger.warning(f"HL: Price £{final_price} outside reasonable fund range, skipping")
                         
         except Exception as e:
             self.logger.error(f"Error scraping HL for {url}: {str(e)}")

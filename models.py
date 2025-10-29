@@ -176,6 +176,7 @@ class Goal(db.Model):
     target_amount = db.Column(db.Float, nullable=False)
     target_date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), default='active')  # active, completed, paused
+    completed_at = db.Column(db.DateTime, nullable=True)  # When goal was automatically achieved
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -187,6 +188,7 @@ class Goal(db.Model):
             'target_amount': self.target_amount,
             'target_date': self.target_date.isoformat() if self.target_date else None,
             'status': self.status,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }
