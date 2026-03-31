@@ -4,11 +4,18 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_sqlalchemy import SQLAlchemy
 from utils.price_fetcher import PriceFetcher
 from utils.device_detector import get_template_path, is_mobile_device
+from utils.platform_connector import platform_connector
+from utils.intelligent_price_router import price_router
+from utils.trading212_integration import Trading212Integration
 from datetime import datetime, timedelta
 import pytz
 import json
 import threading
 import time
+
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
 
 # Tasks blueprint will be imported later to avoid circular imports
 
@@ -16,7 +23,9 @@ import time
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key")
+app.secret_key = os.environ.get("SESSION_SECRET")
+if not app.secret_key:
+    raise ValueError("SESSION_SECRET environment variable is required for secure session management")
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Database configuration
@@ -28,7 +37,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
-from models import db, Goal
+from models import db, Goal, NetworthEntry
 db.init_app(app)
 
 # Initialize utilities with caching
@@ -373,6 +382,8 @@ def generate_y_labels(min_val, max_val):
 with app.app_context():
     # Import models after app context is established
     from models import Investment, PlatformCash, NetworthEntry, Expense, MonthlyCommitment, IncomeData, MonthlyBreakdown
+    # Import API platform models to ensure their tables are created
+    from utils.api_platform_models import Platform, APIHolding, BankBalance, PriceCache, SyncLog
     db.create_all()
     
     # Initialize defaults for database
@@ -458,99 +469,246 @@ def calculate_current_net_worth():
 
 # Investment platform color scheme
 PLATFORM_COLORS = {
-    'Degiro': '#1e3a8a',  # Dark Blue
-    'Trading212 ISA': '#0d9488',  # Teal
+    'Degiro': '#1d4ed8',  # Strong Blue
+    'Trading212 ISA': '#0d9488',  # Teal Blue
     'EQ (GSK shares)': '#dc2626',  # Red
-    'InvestEngine ISA': '#ea580c',  # Orange
-    'Crypto': '#7c3aed',  # Purple
-    'HL Stocks & Shares LISA': '#0ea5e9',  # Baby Blue
-    'Cash': '#059669'  # Green
+    'InvestEngine ISA': '#f97316',  # Orange
+    'Crypto': '#8b5cf6',  # Purple
+    'HL Stocks & Shares LISA': '#60a5fa',  # Light Blue
+    'Cash': '#10b981'  # Green
 }
 
-@app.route('/')
-def dashboard():
-    """Main dashboard showing current net worth and allocations"""
-    # Ensure data is fresh when users visit
-    ensure_recent_prices()
-    # Note: Historical data collection only happens at scheduled times (:00, :15, :30, :45)
-    
-    # Force no-cache to ensure fresh content (fix browser cache issue)
-    from flask import make_response
-    
-    # Check if this is a mobile device and redirect to mobile version
-    user_agent = request.headers.get('User-Agent', '').lower()
-    if any(device in user_agent for device in ['mobile', 'android', 'iphone', 'ipad', 'tablet']):
-        return mobile_dashboard()
-    
+def calculate_dashboard_analytics(data_manager, networth_data, investments_data):
+    """Calculate comprehensive dashboard analytics for command center"""
     try:
-        # Force database session refresh to ensure fresh data on every page load
+        analytics = {}
+        
+        # Calculate 12-month net worth trend data
+        analytics['twelve_month_trend'] = calculate_twelve_month_trend(data_manager)
+        
+        # Calculate top movers (biggest gainers/losers)
+        analytics['top_movers'] = calculate_top_movers(investments_data)
+        
+        # Calculate total cash across all platforms
+        analytics['total_cash'] = calculate_total_cash_summary(data_manager)
+        
+        # Calculate daily P/L (if we have yesterday's data)
+        analytics['daily_pl'] = calculate_daily_pl(data_manager)
+        
+        # Generate alerts for dashboard
+        analytics['alerts'] = generate_dashboard_alerts(data_manager, investments_data)
+        
+        return analytics
+    except Exception as e:
+        logging.error(f"Error calculating dashboard analytics: {str(e)}")
+        return {
+            'twelve_month_trend': [],
+            'top_movers': {'gainers': [], 'losers': []},
+            'total_cash': 0,
+            'daily_pl': {'amount': 0, 'percent': 0},
+            'alerts': []
+        }
+
+def calculate_twelve_month_trend(data_manager):
+    """Calculate 12-month net worth trend for chart with robust data fetching"""
+    try:
+        trend_data = []
+        current_date = datetime.now()
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        
+        # Cache yearly data to avoid multiple calls
+        yearly_data_cache = {}
+        
+        # Get data for the last 12 months
+        for i in range(12, 0, -1):
+            target_date = current_date - timedelta(days=30 * i)
+            year = target_date.year
+            month_name_base = month_names[target_date.month - 1]
+            
+            # Get historical data for this year (with caching)
+            if year not in yearly_data_cache:
+                yearly_data_cache[year] = data_manager.get_networth_data(year)
+            year_data = yearly_data_cache[year]
+            
+            # Try multiple date formats (robust fallback like existing code)
+            month_data = {}
+            for day_prefix in ['1st', '31st', '30th', '29th', '28th']:
+                month_key = f"{day_prefix} {month_name_base}"
+                if month_key in year_data:
+                    month_data = year_data[month_key]
+                    break
+            
+            # Calculate total net worth for this month
+            total_networth = 0
+            for platform, value in month_data.items():
+                if isinstance(value, (int, float)):
+                    total_networth += value
+            
+            if total_networth > 0:
+                trend_data.append({
+                    'month': month_name_base,
+                    'year': year,
+                    'value': total_networth,
+                    'date': target_date.strftime('%Y-%m')
+                })
+        
+        # Add current month with live data
+        current_networth = calculate_current_net_worth()
+        if current_networth > 0:
+            trend_data.append({
+                'month': month_names[current_date.month - 1],
+                'year': current_date.year,
+                'value': current_networth,
+                'date': current_date.strftime('%Y-%m'),
+                'is_current': True
+            })
+        
+        return trend_data
+    except Exception as e:
+        logging.error(f"Error calculating 12-month trend: {str(e)}")
+        return []
+
+def calculate_top_movers(investments_data):
+    """Calculate biggest gainers and losers by value and percentage"""
+    try:
+        movers = []
+        
+        for platform, investments in investments_data.items():
+            if platform.endswith('_cash') or platform == 'Cash':
+                continue
+                
+            if isinstance(investments, list):
+                for investment in investments:
+                    holdings = investment.get('holdings', 0)
+                    current_price = investment.get('current_price', 0)
+                    current_value = holdings * current_price
+                    
+                    # Calculate daily change if we have purchase price or previous price
+                    daily_change_amount = 0
+                    daily_change_percent = 0
+                    
+                    # For now, use a simple calculation - in future we could track daily prices
+                    purchase_price = investment.get('purchase_price', current_price)
+                    if purchase_price > 0 and purchase_price != current_price:
+                        total_change_amount = (current_price - purchase_price) * holdings
+                        total_change_percent = ((current_price - purchase_price) / purchase_price) * 100
+                        
+                        movers.append({
+                            'symbol': investment.get('symbol', investment.get('name', 'Unknown')),
+                            'name': investment.get('name', investment.get('symbol', 'Unknown')),
+                            'platform': platform,
+                            'current_value': current_value,
+                            'change_amount': total_change_amount,
+                            'change_percent': total_change_percent,
+                            'holdings': holdings,
+                            'current_price': current_price
+                        })
+        
+        # Sort by absolute change amount
+        movers.sort(key=lambda x: abs(x['change_amount']), reverse=True)
+        
+        # Get top 5 gainers and losers
+        gainers = [m for m in movers if m['change_amount'] > 0][:5]
+        losers = [m for m in movers if m['change_amount'] < 0][:5]
+        
+        return {'gainers': gainers, 'losers': losers}
+    except Exception as e:
+        logging.error(f"Error calculating top movers: {str(e)}")
+        return {'gainers': [], 'losers': []}
+
+def calculate_total_cash_summary(data_manager):
+    """Calculate total cash across all platforms"""
+    try:
+        total_cash = 0
+        platform_cash = {}
+        
+        investments_data = data_manager.get_investments_data()
+        for platform in investments_data.keys():
+            if not platform.endswith('_cash'):
+                cash_amount = data_manager.get_platform_cash(platform)
+                if cash_amount > 0:
+                    platform_cash[platform] = cash_amount
+                    total_cash += cash_amount
+        
+        return {
+            'total': total_cash,
+            'by_platform': platform_cash
+        }
+    except Exception as e:
+        logging.error(f"Error calculating cash summary: {str(e)}")
+        return {'total': 0, 'by_platform': {}}
+
+def calculate_daily_pl(data_manager):
+    """Calculate daily profit/loss"""
+    try:
+        # For now, return zero - in future we could track daily snapshots
+        return {'amount': 0, 'percent': 0}
+    except Exception as e:
+        logging.error(f"Error calculating daily P/L: {str(e)}")
+        return {'amount': 0, 'percent': 0}
+
+def generate_dashboard_alerts(data_manager, investments_data):
+    """Generate alerts for stale data, issues, etc."""
+    try:
+        alerts = []
+        
+        # Check for stale price data
+        global last_price_update
+        if last_price_update:
+            hours_since_update = (datetime.now() - last_price_update).total_seconds() / 3600
+            if hours_since_update > 6:  # Alert if prices are more than 6 hours old
+                alerts.append({
+                    'type': 'warning',
+                    'message': f'Price data is {int(hours_since_update)} hours old',
+                    'action': 'refresh_prices'
+                })
+        
+        # Check for zero-value investments (potential data issues)
+        for platform, investments in investments_data.items():
+            if isinstance(investments, list):
+                for investment in investments:
+                    if investment.get('current_price', 0) <= 0:
+                        alerts.append({
+                            'type': 'error',
+                            'message': f'No price data for {investment.get("symbol", "investment")} on {platform}',
+                            'action': 'check_investment'
+                        })
+        
+        return alerts[:5]  # Limit to 5 most important alerts
+    except Exception as e:
+        logging.error(f"Error generating alerts: {str(e)}")
+        return []
+
+
+@app.route('/api/platform-breakdown')
+def api_platform_breakdown():
+    """API endpoint for platform breakdown data"""
+    try:
+        # Force database session refresh
         from app import db
         db.session.expire_all()
         
-        # Get current net worth data
-        data_manager = get_data_manager()
-        networth_data = get_data_manager().get_networth_data()
-        investments_data = get_data_manager().get_investments_data()
-        
-        # Get last price update time
-        global last_price_update
-        if not last_price_update:
-            # Check if we have any investment with last_updated timestamp
-            for platform, investments in investments_data.items():
-                if not platform.endswith('_cash') and isinstance(investments, list):
-                    for investment in investments:
-                        if investment.get('last_updated'):
-                            try:
-                                update_time = datetime.fromisoformat(investment['last_updated'])
-                                if not last_price_update or update_time > last_price_update:
-                                    last_price_update = update_time
-                            except:
-                                pass
-        
-        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        # Get platform data
         platform_allocations = calculate_platform_totals()
         current_net_worth = sum(platform_allocations.values())
         
-        # Sort platform allocations by value (high to low, with cash at bottom)
-        sorted_platforms = []
-        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
-        
-        # Sort non-cash platforms by value (descending)
-        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
-            sorted_platforms.append((platform, value))
-        
-        # Always add cash at the bottom if it exists
-        if cash_value > 0:
-            sorted_platforms.append(('Cash', cash_value))
-        
-        # Rebuild platform_allocations in sorted order
-        platform_allocations = dict(sorted_platforms)
-        
-        # Calculate percentage allocations
-        total_allocation = sum(platform_allocations.values())
-        platform_percentages = {}
-        if total_allocation > 0:
-            for platform, amount in platform_allocations.items():
-                platform_percentages[platform] = (amount / total_allocation) * 100
-        
-        # Calculate monthly changes for each platform
+        # Calculate monthly changes for each platform (same logic as dashboard)
         platform_monthly_changes = {}
         try:
             current_year = datetime.now().year
             current_month = datetime.now().month
             
-            # Map month number to month name
+            # Get current year's data for monthly comparison
+            data_manager = get_data_manager()
+            networth_data = data_manager.get_networth_data(current_year)
+            
             month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             current_month_name = f"1st {month_names[current_month - 1]}"
             
-            # Get current year's data
-            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = networth_data.get(current_month_name, {})
             
-            # Get current month's 1st day data
-            month_start_data = current_year_data.get(current_month_name, {})
-            
-            # Calculate platform-specific monthly changes
             for platform, current_value in platform_allocations.items():
                 try:
                     month_start_platform_value = month_start_data.get(platform, 0)
@@ -576,42 +734,246 @@ def dashboard():
                         'percent': 0,
                         'previous': 0
                     }
-                    
         except Exception as e:
             logging.error(f"Error calculating platform monthly changes: {str(e)}")
             platform_monthly_changes = {}
         
-        # Calculate month-on-month change (current net worth vs current month's 1st day)
+        # Sort platforms by value (highest to lowest)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
+        
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            change_data = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0})
+            sorted_platforms.append({
+                'name': platform,
+                'value': value,
+                'percentage': (value / current_net_worth) * 100 if current_net_worth > 0 else 0,
+                'change_amount': change_data['amount'],
+                'change_percent': change_data['percent']
+            })
+        
+        # Add cash at the end if it exists
+        if cash_value > 0:
+            change_data = platform_monthly_changes.get('Cash', {'amount': 0, 'percent': 0})
+            sorted_platforms.append({
+                'name': 'Cash',
+                'value': cash_value,
+                'percentage': (cash_value / current_net_worth) * 100 if current_net_worth > 0 else 0,
+                'change_amount': change_data['amount'],
+                'change_percent': change_data['percent']
+            })
+        
+        response = make_response(jsonify({
+            'platforms': sorted_platforms,
+            'total_net_worth': current_net_worth
+        }))
+        
+        # Force fresh API data, disable all caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
+        
+    except Exception as e:
+        logging.error(f"Error in platform breakdown API: {str(e)}")
+        return jsonify({'error': 'Failed to load platform breakdown data'}), 500
+
+@app.route('/api/dashboard-chart-data')
+def dashboard_chart_data():
+    """API endpoint for dashboard chart data with time period filtering"""
+    try:
+        period = request.args.get('period', '1Y')  # Default to 1 year
+        now = datetime.now()
+        chart_data = []
+        
+        # Use collection system for shorter periods, monthly tracker for longer periods
+        if period in ['24H', '1W', '1M', '3M']:
+            from models import HistoricalNetWorth, db
+            
+            if period == '24H':
+                # 15-minute intervals for last 24 hours
+                cutoff = now - timedelta(days=1)
+                historical_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Use raw data (already at 15-min intervals)
+                
+            elif period == '1W':
+                # 6-hour intervals for last week
+                cutoff = now - timedelta(days=7)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 6 hours
+                historical_data = sample_data_by_interval(all_data, hours=6)
+                
+            elif period == '1M':
+                # End-of-day intervals for last month
+                cutoff = now - timedelta(days=30)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 24 hours (end of day)
+                historical_data = sample_data_by_interval(all_data, hours=24)
+                
+            elif period == '3M':
+                # End-of-day intervals for last 3 months
+                cutoff = now - timedelta(days=90)
+                all_data = db.session.query(HistoricalNetWorth)\
+                    .filter(HistoricalNetWorth.timestamp >= cutoff)\
+                    .order_by(HistoricalNetWorth.timestamp.asc())\
+                    .all()
+                # Sample every 24 hours (end of day)
+                historical_data = sample_data_by_interval(all_data, hours=24)
+            
+            # Convert historical data to chart format
+            for data_point in historical_data:
+                chart_data.append({
+                    'date': data_point.timestamp.isoformat(),
+                    'value': data_point.net_worth,
+                    'label': data_point.timestamp.strftime('%d %b %Y %H:%M')
+                })
+        
+        else:
+            # Use monthly tracker for longer periods (6M, 1Y, Max)
+            from models import NetworthEntry
+            entries = NetworthEntry.query.filter(NetworthEntry.year >= 2023).order_by(NetworthEntry.year, NetworthEntry.created_at).all()
+            
+            # Convert to chart format
+            for entry in entries:
+                # Parse month string to get approximate date
+                month_parts = entry.month.split(' ')
+                if len(month_parts) >= 2:
+                    month_name = month_parts[1]
+                    month_map = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+                                'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
+                    
+                    if month_name in month_map:
+                        # Create date (use 1st for beginning of month, 31st for end of month)
+                        is_month_end = '31st' in entry.month or '30th' in entry.month or '28th' in entry.month or '29th' in entry.month
+                        day = 28 if is_month_end else 1  # Use 28 to avoid month overflow issues
+                        
+                        try:
+                            date_obj = datetime(entry.year, month_map[month_name], day)
+                            chart_data.append({
+                                'date': date_obj.isoformat(),
+                                'value': entry.total_networth,
+                                'label': f"{month_name} {entry.year}"
+                            })
+                        except ValueError:
+                            continue
+            
+            # Filter by period for longer timeframes
+            if period != 'Max':
+                if period == '6M':
+                    cutoff = now - timedelta(days=180)
+                elif period == '1Y':
+                    cutoff = now - timedelta(days=365)
+                else:
+                    cutoff = now - timedelta(days=365)  # Default to 1Y
+                
+                chart_data = [d for d in chart_data if datetime.fromisoformat(d['date']) >= cutoff]
+        
+        return jsonify(chart_data)
+    
+    except Exception as e:
+        logging.error(f"Error getting chart data: {str(e)}")
+        return jsonify([])
+
+@app.route('/')
+def home():
+    """Clean black theme dashboard showing essential net worth metrics"""
+    # Ensure data is fresh when users visit
+    ensure_recent_prices()
+    
+    try:
+        # Force database session refresh to ensure fresh data on every page load
+        from app import db
+        db.session.expire_all()
+        
+        # Get last price update time
+        global last_price_update
+        investments_data = get_data_manager().get_investments_data()
+        if not last_price_update:
+            # Check if we have any investment with last_updated timestamp
+            for platform, investments in investments_data.items():
+                if not platform.endswith('_cash') and isinstance(investments, list):
+                    for investment in investments:
+                        if investment.get('last_updated'):
+                            try:
+                                update_time = datetime.fromisoformat(investment['last_updated'])
+                                if not last_price_update or update_time > last_price_update:
+                                    last_price_update = update_time
+                            except:
+                                pass
+        
+        # Use the unified calculation - SINGLE SOURCE OF TRUTH
+        platform_allocations = calculate_platform_totals()
+        current_net_worth = sum(platform_allocations.values())
+        
+        # Calculate month-on-month change using networth_entries for current month's 1st day data
         mom_change = 0
         mom_amount_change = 0
         try:
-            current_year = datetime.now().year
-            current_month = datetime.now().month
+            current_date = datetime.now()
+            current_year = current_date.year
+            current_month = current_date.month
             
             # Map month number to month name
             month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
             current_month_name = f"1st {month_names[current_month - 1]}"
             
-            # Get current year's data
+            # Get current year's data from networth_entries
             current_year_data = get_data_manager().get_networth_data(current_year)
             
-            # Get current month's 1st day data
+            # Try to get current month's 1st day data first
             month_start_data = current_year_data.get(current_month_name, {})
-            month_start_total = 0
+            month_start_baseline = 0
             
-            # Calculate month start total
-            for platform, value in month_start_data.items():
-                if platform != 'total_net_worth' and isinstance(value, (int, float)):
-                    month_start_total += value
+            if month_start_data:
+                # Use the stored total_networth from the NetworthEntry
+                month_entry = NetworthEntry.query.filter_by(year=current_year, month=current_month_name).first()
+                if month_entry and month_entry.total_networth:
+                    month_start_baseline = month_entry.total_networth
+                    logging.info(f"Found {current_month_name} baseline from networth_entries: £{month_start_baseline}")
+                else:
+                    # Fallback: calculate from platform data if total_networth not available
+                    for platform, value in month_start_data.items():
+                        if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                            month_start_baseline += value
+                    logging.info(f"Calculated {current_month_name} baseline from platform data: £{month_start_baseline}")
+            else:
+                # If no data for current month, use most recent available month
+                for i in range(current_month - 2, -1, -1):  # Start from previous month
+                    fallback_month_name = f"1st {month_names[i]}"
+                    fallback_data = current_year_data.get(fallback_month_name, {})
+                    if fallback_data:
+                        # Try to get stored total first
+                        month_entry = NetworthEntry.query.filter_by(year=current_year, month=fallback_month_name).first()
+                        if month_entry and month_entry.total_networth:
+                            month_start_baseline = month_entry.total_networth
+                        else:
+                            # Calculate from platform data
+                            for platform, value in fallback_data.items():
+                                if platform != 'total_net_worth' and isinstance(value, (int, float)):
+                                    month_start_baseline += value
+                        logging.info(f"Using fallback baseline from {fallback_month_name}: £{month_start_baseline}")
+                        break
             
             # Calculate changes
-            if month_start_total > 0:
-                mom_amount_change = current_net_worth - month_start_total
-                mom_change = (mom_amount_change / month_start_total) * 100
+            if month_start_baseline > 0:
+                mom_amount_change = current_net_worth - month_start_baseline
+                mom_change = (mom_amount_change / month_start_baseline) * 100
+                logging.info(f"Monthly calculation - Current: £{current_net_worth}, Baseline: £{month_start_baseline}, Change: £{mom_amount_change} ({mom_change:.2f}%)")
             
         except Exception as e:
-            logging.error(f"Error calculating month-on-month change: {str(e)}")
+            logging.error(f"Error calculating month-on-month change in dashboard_v2: {str(e)}")
             mom_change = 0
             mom_amount_change = 0
         
@@ -642,12 +1004,75 @@ def dashboard():
             logging.error(f"Error calculating yearly increase: {str(e)}")
             yearly_increase = 0
             yearly_amount_change = 0
+
+        # Sort platform allocations by value (high to low, with cash at bottom)
+        sorted_platforms = []
+        cash_value = platform_allocations.pop('Cash', 0)  # Remove cash from main sorting
         
+        # Sort non-cash platforms by value (descending)
+        for platform, value in sorted(platform_allocations.items(), key=lambda x: x[1], reverse=True):
+            sorted_platforms.append((platform, value))
+        
+        # Always add cash at the bottom if it exists
+        if cash_value > 0:
+            sorted_platforms.append(('Cash', cash_value))
+        
+        # Rebuild platform_allocations in sorted order
+        platform_allocations = dict(sorted_platforms)
+        
+        # Calculate percentage allocations
+        total_allocation = sum(platform_allocations.values())
+        platform_percentages = {}
+        if total_allocation > 0:
+            for platform, amount in platform_allocations.items():
+                platform_percentages[platform] = (amount / total_allocation) * 100
+        
+        # Calculate platform-specific monthly changes (needed for mobile template)
+        platform_monthly_changes = {}
+        try:
+            current_date = datetime.now()
+            current_year = current_date.year
+            current_month = current_date.month
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            # Get current year's data
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            # If no current month data, use previous month
+            if not month_start_data and current_month > 1:
+                fallback_month_name = f"1st {month_names[current_month - 2]}"
+                month_start_data = current_year_data.get(fallback_month_name, {})
+            
+            # Calculate platform-specific changes
+            for platform in platform_allocations.keys():
+                current_value = platform_allocations.get(platform, 0)
+                baseline_value = month_start_data.get(platform, 0)
+                
+                amount_change = current_value - baseline_value
+                percent_change = 0
+                if baseline_value > 0:
+                    percent_change = (amount_change / baseline_value) * 100
+                
+                platform_monthly_changes[platform] = {
+                    'amount': amount_change,
+                    'percent': percent_change
+                }
+        
+        except Exception as e:
+            logging.error(f"Error calculating platform monthly changes: {str(e)}")
+            # Initialize empty platform changes
+            for platform in platform_allocations.keys():
+                platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+
         # Get next financial target - closest to current day
         next_target = None
         progress_info = None
         upcoming_targets = []
         try:
+            from models import Goal
             today = datetime.now().date()
             # Get all active goals and find the closest one to today (future or current)
             active_goals = Goal.query.filter_by(status='active').order_by(Goal.target_date.asc()).all()
@@ -677,8 +1102,16 @@ def dashboard():
         except Exception as e:
             logging.error(f"Error calculating next target: {str(e)}")
         
-        # Create response with no-cache headers to prevent browser cache issues
-        response = make_response(render_template(get_template_path('dashboard.html'), 
+        # Convert last_price_update to BST timezone for display
+        last_price_update_bst = None
+        if last_price_update:
+            import pytz
+            uk_tz = pytz.timezone('Europe/London')
+            last_price_update_bst = last_price_update.replace(tzinfo=pytz.UTC).astimezone(uk_tz)
+        
+        # Create response with no-cache headers - use device detection for template
+        template_path = get_template_path('dashboard_v2.html')
+        response = make_response(render_template(template_path, 
                              current_net_worth=current_net_worth,
                              platform_allocations=platform_allocations,
                              platform_percentages=platform_percentages,
@@ -690,21 +1123,22 @@ def dashboard():
                              platform_colors=PLATFORM_COLORS,
                              current_date=datetime.now().strftime('%B %d, %Y'),
                              today=datetime.now(),
-                             last_price_update=last_price_update,
+                             last_price_update=last_price_update_bst,
                              next_target=next_target,
                              progress_info=progress_info,
-                             upcoming_targets=upcoming_targets,
-                             is_mobile=is_mobile_device()))
+                             upcoming_targets=upcoming_targets))
         
         # Force fresh content, disable all caching
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache' 
         response.headers['Expires'] = '0'
         return response
+    
     except Exception as e:
-        logging.error(f"Error in dashboard: {str(e)}")
-        flash(f'Error loading dashboard: {str(e)}', 'error')
-        response = make_response(render_template(get_template_path('dashboard.html'), 
+        logging.error(f"Error in dashboard_v2: {str(e)}")
+        # Return error fallback - use device detection for template
+        template_path = get_template_path('dashboard_v2.html')
+        response = make_response(render_template(template_path, 
                              current_net_worth=0,
                              platform_allocations={},
                              platform_percentages={},
@@ -719,9 +1153,7 @@ def dashboard():
                              last_price_update=None,
                              next_target=None,
                              progress_info=None,
-                             upcoming_targets=[],
-                             is_mobile=is_mobile_device()))
-        # Force fresh content even in error case
+                             upcoming_targets=[]))
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
         response.headers['Pragma'] = 'no-cache' 
         response.headers['Expires'] = '0'
@@ -1452,22 +1884,71 @@ def investment_manager():
         total_portfolio_pl = total_portfolio_value - total_amount_spent  # Total portfolio gain vs amount spent
         total_portfolio_percentage_pl = (total_portfolio_pl / total_amount_spent * 100) if total_amount_spent > 0 else 0
         
+        # Get bank account cash (Cash platform only) - needed for mobile template
+        bank_account_cash = get_data_manager().get_platform_cash('Cash')
+        
+        # Use consistent net worth calculation - needed for mobile template
+        current_net_worth = calculate_current_net_worth()
+        
+        # Calculate month-on-month platform changes - needed for mobile template
+        platform_monthly_changes = {}
+        try:
+            current_year = datetime.now().year
+            current_month = datetime.now().month
+            
+            month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            current_month_name = f"1st {month_names[current_month - 1]}"
+            
+            current_year_data = get_data_manager().get_networth_data(current_year)
+            month_start_data = current_year_data.get(current_month_name, {})
+            
+            for platform in platform_totals.keys():
+                try:
+                    current_platform_value = platform_totals[platform]['total_value']
+                    month_start_platform_value = month_start_data.get(platform, 0)
+                    
+                    if month_start_platform_value > 0:
+                        platform_change_amount = current_platform_value - month_start_platform_value
+                        platform_change_percent = (platform_change_amount / month_start_platform_value) * 100
+                        platform_monthly_changes[platform] = {
+                            'amount': platform_change_amount,
+                            'percent': platform_change_percent
+                        }
+                    else:
+                        platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+                except Exception as platform_error:
+                    logging.error(f"Error calculating change for {platform}: {str(platform_error)}")
+                    platform_monthly_changes[platform] = {'amount': 0, 'percent': 0}
+        except Exception as e:
+            logging.error(f"Error calculating monthly changes: {str(e)}")
+        
         # Get unique investment names for dropdown
         unique_names = get_data_manager().get_unique_investment_names()
         
         # Get investment names by platform for dropdown
         platform_investment_names = data_manager.get_all_investment_names()
         
-        return render_template('investment_manager.html',
+        # Use device detection to serve appropriate template
+        # Desktop: investment_manager.html, Mobile: mobile/investments.html
+        if is_mobile_device():
+            template_name = 'mobile/investments.html'
+        else:
+            template_name = 'investment_manager.html'
+        
+        return render_template(template_name,
                              investments_data=investments_data,
                              platform_colors=PLATFORM_COLORS,
                              platform_totals=platform_totals,
                              total_current_value=total_current_value,
                              total_amount_spent=total_amount_spent,
                              total_cash=total_cash,
+                             bank_account_cash=bank_account_cash,
+                             current_net_worth=current_net_worth,
                              total_portfolio_value=total_portfolio_value,
                              total_portfolio_pl=total_portfolio_pl,
                              total_portfolio_percentage_pl=total_portfolio_percentage_pl,
+                             platform_monthly_changes=platform_monthly_changes,
                              unique_names=unique_names,
                              platform_investment_names=platform_investment_names,
                              data_manager=data_manager,
@@ -1475,16 +1956,26 @@ def investment_manager():
     except Exception as e:
         logging.error(f"Error in investment manager: {str(e)}")
         flash(f'Error loading investment manager: {str(e)}', 'error')
-        return render_template('investment_manager.html',
+        
+        # Use device detection for error template as well
+        if is_mobile_device():
+            template_name = 'mobile/investments.html'
+        else:
+            template_name = 'investment_manager.html'
+        
+        return render_template(template_name,
                              investments_data={},
                              platform_colors=PLATFORM_COLORS,
                              platform_totals={},
                              total_current_value=0,
                              total_amount_spent=0,
                              total_cash=0,
+                             bank_account_cash=0,
+                             current_net_worth=0,
                              total_portfolio_value=0,
                              total_portfolio_pl=0,
                              total_portfolio_percentage_pl=0,
+                             platform_monthly_changes={},
                              unique_names=[],
                              platform_investment_names={},
                              data_manager=data_manager,
@@ -1510,13 +2001,13 @@ def add_investment():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
+            # Create investment data dictionary
             investment_data = {
                 'name': name,
                 'holdings': holdings,
                 'amount_spent': amount_spent,
                 'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
-                'symbol': symbol,
-                'current_price': 0.0
+                'symbol': symbol
             }
             get_data_manager().add_investment(platform, investment_data)
         elif input_type == 'average_buy_price':
@@ -1524,14 +2015,16 @@ def add_investment():
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('investment_manager'))
+            # Create investment data dictionary
+            calculated_amount_spent = average_buy_price * holdings
             investment_data = {
                 'name': name,
                 'holdings': holdings,
-                'amount_spent': average_buy_price * holdings,
+                'amount_spent': calculated_amount_spent,
                 'average_buy_price': average_buy_price,
-                'symbol': symbol,
-                'current_price': 0.0
+                'symbol': symbol
             }
+            logging.info(f"Adding investment with average_buy_price mode: avg_price={average_buy_price}, holdings={holdings}, calculated_amount_spent={calculated_amount_spent}")
             get_data_manager().add_investment(platform, investment_data)
         else:
             flash('Invalid input type', 'error')
@@ -1554,6 +2047,18 @@ def add_investment():
                 if not price and symbol != original_symbol:
                     price = price_fetcher.get_price(original_symbol)
                     symbol = original_symbol
+                
+                # If legacy price fetcher failed, try intelligent price router
+                if not price:
+                    try:
+                        result = price_router.get_price(symbol)
+                        if 'price' in result:
+                            price = result['price']
+                            logging.info(f"Intelligent router found price for {symbol}: £{price}")
+                        else:
+                            logging.warning(f"Intelligent router failed for {symbol}: {result.get('error', 'Unknown error')}")
+                    except Exception as e:
+                        logging.error(f"Error with intelligent router for {symbol}: {str(e)}")
                 
                 if price:
                     # Update the newly added investment with the current price
@@ -1587,7 +2092,34 @@ def add_investment():
     
     return redirect(url_for('investment_manager'))
 
-
+def check_and_complete_goals():
+    """Check if any active goals have been achieved and automatically mark them as completed"""
+    try:
+        from models import Goal, db
+        from datetime import datetime
+        
+        # Get current net worth
+        current_net_worth = calculate_current_net_worth()
+        
+        # Find all active goals that have been achieved
+        active_goals = Goal.query.filter_by(status='active').all()
+        completed_goals = []
+        
+        for goal in active_goals:
+            if current_net_worth >= goal.target_amount:
+                # Goal achieved! Mark as completed
+                goal.status = 'completed'
+                goal.completed_at = datetime.utcnow()
+                completed_goals.append(goal)
+                logging.info(f"🎉 Goal automatically completed: '{goal.title}' (£{goal.target_amount:,.0f}) achieved with net worth £{current_net_worth:,.0f}")
+        
+        if completed_goals:
+            db.session.commit()
+            logging.info(f"✅ {len(completed_goals)} goal(s) automatically completed")
+            
+    except Exception as e:
+        logging.error(f"Error in automatic goal completion: {str(e)}")
+        # Don't re-raise since this shouldn't break the price update process
 
 def update_all_prices():
     """Update live prices for all investments using optimized batch fetching"""
@@ -1598,7 +2130,7 @@ def update_all_prices():
         
         # Collect all symbols to update
         symbols_to_update = []
-        symbol_to_investment = {}
+        symbol_to_investments = {}  # Changed to handle multiple investments per symbol
         
         for platform, investments in investments_data.items():
             # Skip cash platforms and ensure investments is a list
@@ -1608,8 +2140,13 @@ def update_all_prices():
             for investment in investments:
                 symbol = investment.get('symbol')
                 if symbol and investment.get('id'):
-                    symbols_to_update.append(symbol)
-                    symbol_to_investment[symbol] = investment
+                    if symbol not in symbols_to_update:
+                        symbols_to_update.append(symbol)
+                    
+                    # Store all investments for this symbol
+                    if symbol not in symbol_to_investments:
+                        symbol_to_investments[symbol] = []
+                    symbol_to_investments[symbol].append(investment)
         
         if not symbols_to_update:
             logging.info("No symbols to update")
@@ -1619,21 +2156,48 @@ def update_all_prices():
         logging.info(f"Batch updating prices for {len(symbols_to_update)} investments")
         updated_prices = price_fetcher.get_multiple_prices(symbols_to_update)
         
+        # Use intelligent price router for failed symbols
+        failed_symbols = []
+        for symbol in symbols_to_update:
+            if symbol not in updated_prices:
+                failed_symbols.append(symbol)
+        
+        if failed_symbols:
+            logging.info(f"Using intelligent price router for {len(failed_symbols)} failed symbols")
+            for symbol in failed_symbols:
+                try:
+                    result = price_router.get_price(symbol)
+                    if 'price' in result:
+                        updated_prices[symbol] = result['price']
+                        logging.info(f"Intelligent router found price for {symbol}: £{result['price']}")
+                    else:
+                        logging.warning(f"Intelligent router failed for {symbol}: {result.get('error', 'Unknown error')}")
+                except Exception as e:
+                    logging.error(f"Error with intelligent router for {symbol}: {str(e)}")
+        
         # Update database with fetched prices
         updated_count = 0
         for symbol, price in updated_prices.items():
-            if symbol in symbol_to_investment:
-                investment = symbol_to_investment[symbol]
-                try:
-                    data_manager.update_investment_price(investment['id'], price)
-                    updated_count += 1
-                    logging.info(f"Updated {symbol}: £{price}")
-                except Exception as e:
-                    logging.error(f"Error updating database for {symbol}: {str(e)}")
+            if symbol in symbol_to_investments:
+                # Update ALL investments with this symbol (across all platforms)
+                investments = symbol_to_investments[symbol]
+                for investment in investments:
+                    try:
+                        data_manager.update_investment_price(investment['id'], price)
+                        updated_count += 1
+                        logging.info(f"Updated {symbol} (ID {investment['id']}, {investment.get('platform', 'unknown')}): £{price}")
+                    except Exception as e:
+                        logging.error(f"Error updating database for {symbol} ID {investment['id']}: {str(e)}")
         
         global last_price_update
         last_price_update = datetime.now()
         logging.info(f'Background price update completed: {updated_count}/{len(symbols_to_update)} prices updated')
+        
+        # Check for automatic goal completion after price updates
+        try:
+            check_and_complete_goals()
+        except Exception as e:
+            logging.error(f"Error checking goal completion: {str(e)}")
         
         return updated_count
         
@@ -2051,7 +2615,7 @@ def update_prices():
     if referrer and '/update-prices' not in referrer:
         return redirect(referrer)
     else:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('home'))
 
 @app.route('/manual-collect-data')
 def manual_collect_data():
@@ -3088,6 +3652,19 @@ def run_daily_job():
             collect_daily_historical_data()
             cleanup_old_historical_data()
             
+            # Sync Trading 212 portfolio data (once per day to avoid rate limits)
+            try:
+                from utils.trading212_integration import Trading212Integration
+                app.logger.info("📊 Starting Trading 212 daily sync...")
+                t212 = Trading212Integration()
+                success, message, summary = t212.sync_portfolio_data()
+                if success:
+                    app.logger.info(f"✅ Trading 212 sync successful: {summary.get('total_positions', 0)} positions updated")
+                else:
+                    app.logger.warning(f"⚠️ Trading 212 sync failed: {message}")
+            except Exception as e:
+                app.logger.error(f"❌ Trading 212 sync error: {str(e)}")
+            
             # Check if it's the 1st of the month for monthly tracker
             import pytz
             uk_tz = pytz.timezone('Europe/London')
@@ -3260,6 +3837,136 @@ def update_cash(platform):
     
     return redirect(url_for('investment_manager'))
 
+# Trading 212 Integration Routes
+@app.route('/trading212/setup')
+def trading212_setup():
+    """Show Trading 212 setup page"""
+    try:
+        t212 = Trading212Integration()
+        status = t212.get_sync_status()
+        
+        is_connected = status.get('connected', False) and status.get('status') != 'disconnected'
+        last_sync = None
+        
+        if is_connected and status.get('last_sync'):
+            try:
+                last_sync_dt = datetime.fromisoformat(status['last_sync'])
+                last_sync = last_sync_dt.strftime('%B %d, %Y at %H:%M')
+            except:
+                pass
+        
+        return render_template('trading212_setup.html',
+                             is_connected=is_connected,
+                             last_sync=last_sync,
+                             error=request.args.get('error'))
+    except Exception as e:
+        logging.error(f"Error in Trading 212 setup page: {str(e)}")
+        return render_template('trading212_setup.html',
+                             is_connected=False,
+                             last_sync=None,
+                             error=str(e))
+
+@app.route('/trading212/connect', methods=['POST'])
+def trading212_connect():
+    """Connect Trading 212 integration - saves credentials to database"""
+    try:
+        from utils.api_platform_models import Platform
+        
+        api_key = request.form.get('api_key', '').strip()
+        api_secret = request.form.get('api_secret', '').strip()
+        
+        if not api_key:
+            return redirect(url_for('trading212_setup', error='API key is required'))
+        
+        # Prepare credentials dictionary
+        credentials = {'api_key': api_key}
+        if api_secret:
+            credentials['api_secret'] = api_secret
+        
+        # Get or create platform record FIRST
+        platform = Platform.query.filter_by(
+            name='Trading212 ISA',
+            platform_type='trading212'
+        ).first()
+        
+        if not platform:
+            platform = Platform(
+                name='Trading212 ISA',
+                platform_type='trading212',
+                api_type='rest_api',
+                sync_status='pending'
+            )
+            db.session.add(platform)
+        
+        # Save credentials to database BEFORE testing
+        # This ensures Trading212Integration() will load the NEW credentials
+        try:
+            platform.set_credentials(credentials)
+            db.session.commit()
+            logging.info(f"✅ Successfully saved encrypted credentials to database for {platform.name}")
+        except Exception as cred_error:
+            logging.error(f"❌ Failed to save credentials to database: {str(cred_error)}")
+            return redirect(url_for('trading212_setup', error=f'Encryption failed. Is ENCRYPTION_KEY set in Render? Error: {str(cred_error)}'))
+        
+        # Now test the connection (will load from database)
+        t212 = Trading212Integration()
+        cash = t212.get_account_cash()
+        
+        if cash is None:
+            # Connection failed - clear the bad credentials
+            platform.encrypted_credentials = None
+            db.session.commit()
+            return redirect(url_for('trading212_setup', error='Failed to connect. Please check your API key.'))
+        
+        # Connection successful! Run initial sync
+        success, message, summary = t212.sync_portfolio_data()
+        
+        if not success:
+            return redirect(url_for('trading212_setup', error=f'Connection succeeded but sync failed: {message}'))
+        
+        flash(f'✅ Trading 212 connected successfully! {message}', 'success')
+        return redirect(url_for('investment_manager'))
+            
+    except ValueError as e:
+        # Encryption key missing
+        logging.error(f"Encryption error: {str(e)}")
+        flash('⚠️ Setup required: Please add ENCRYPTION_KEY to your Render environment variables (one-time setup)', 'warning')
+        return redirect(url_for('trading212_setup', error='Encryption key not configured. Contact administrator.'))
+    except Exception as e:
+        logging.error(f"Error connecting Trading 212: {str(e)}")
+        return redirect(url_for('trading212_setup', error=str(e)))
+
+@app.route('/trading212/sync-now', methods=['POST'])
+def trading212_sync_now():
+    """Manually trigger Trading 212 sync"""
+    try:
+        t212 = Trading212Integration()
+        success, message, summary = t212.sync_portfolio_data()
+        
+        if success:
+            flash(f'✅ {message}', 'success')
+        else:
+            flash(f'❌ {message}', 'error')
+            
+    except Exception as e:
+        logging.error(f"Error syncing Trading 212: {str(e)}")
+        flash(f'Error syncing Trading 212: {str(e)}', 'error')
+    
+    return redirect(url_for('trading212_setup'))
+
+@app.route('/trading212/disconnect', methods=['POST'])
+def trading212_disconnect():
+    """Disconnect Trading 212 integration"""
+    try:
+        t212 = Trading212Integration()
+        t212.disconnect()
+        flash('Trading 212 disconnected successfully', 'success')
+    except Exception as e:
+        logging.error(f"Error disconnecting Trading 212: {str(e)}")
+        flash(f'Error disconnecting Trading 212: {str(e)}', 'error')
+    
+    return redirect(url_for('trading212_setup'))
+
 @app.route('/add_investment_mobile', methods=['POST'])
 def add_investment_mobile():
     """Add new investment from mobile"""
@@ -3280,13 +3987,13 @@ def add_investment_mobile():
             if amount_spent <= 0:
                 flash('Amount spent must be greater than 0', 'error')
                 return redirect(url_for('mobile_investments'))
+            # Create investment data dictionary
             investment_data = {
                 'name': name,
                 'holdings': holdings,
                 'amount_spent': amount_spent,
                 'average_buy_price': amount_spent / holdings if holdings > 0 else 0,
-                'symbol': symbol,
-                'current_price': 0.0
+                'symbol': symbol
             }
             get_data_manager().add_investment(platform, investment_data)
         elif input_type == 'average_buy_price':
@@ -3294,13 +4001,13 @@ def add_investment_mobile():
             if average_buy_price <= 0:
                 flash('Average buy price must be greater than 0', 'error')
                 return redirect(url_for('mobile_investments'))
+            # Create investment data dictionary
             investment_data = {
                 'name': name,
                 'holdings': holdings,
                 'amount_spent': average_buy_price * holdings,
                 'average_buy_price': average_buy_price,
-                'symbol': symbol,
-                'current_price': 0.0
+                'symbol': symbol
             }
             get_data_manager().add_investment(platform, investment_data)
         else:
@@ -3838,7 +4545,7 @@ def goals():
     except Exception as e:
         logging.error(f"Error loading goals page: {e}")
         flash(f'Error loading goals: {str(e)}', 'error')
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('home'))
 
 @app.route('/api/goals', methods=['POST'])
 def create_goal():
@@ -3914,8 +4621,10 @@ def toggle_goal_completion(goal_id):
         # Toggle the status
         if goal.status == 'completed':
             goal.status = 'active'
+            goal.completed_at = None
         else:
             goal.status = 'completed'
+            goal.completed_at = datetime.now()
             
         goal.updated_at = datetime.now()
         db.session.commit()
@@ -3937,6 +4646,7 @@ def complete_goal(goal_id):
         
         # Mark as completed
         goal.status = 'completed'
+        goal.completed_at = datetime.now()
         goal.updated_at = datetime.now()
         db.session.commit()
         
@@ -3947,6 +4657,313 @@ def complete_goal(goal_id):
     except Exception as e:
         logging.error(f"Error completing goal: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Platform Connection API Routes
+@app.route('/api/test_connection', methods=['POST'])
+def test_connection():
+    """Test API connection to platform"""
+    try:
+        data = request.get_json()
+        platform_type = data.get('platform_type')
+        credentials = data.get('credentials', {})
+        
+        if not platform_type:
+            return jsonify({'success': False, 'error': 'Platform type required'}), 400
+        
+        # Test the connection using platform connector
+        result = platform_connector.test_connection(platform_type, credentials)
+        
+        if result['success']:
+            return jsonify(result)
+        else:
+            return jsonify(result), 400
+            
+    except Exception as e:
+        logging.error(f"Error testing platform connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save_platform_connection', methods=['POST'])
+def save_platform_connection():
+    """Save platform connection and sync initial data"""
+    try:
+        from utils.api_platform_models import Platform, db
+        
+        data = request.get_json()
+        platform_type = data.get('platform_type')
+        credentials = data.get('credentials', {})
+        
+        if not platform_type:
+            return jsonify({'success': False, 'error': 'Platform type required'}), 400
+        
+        # Test connection first
+        test_result = platform_connector.test_connection(platform_type, credentials)
+        if not test_result['success']:
+            return jsonify({'success': False, 'error': 'Connection test failed'}), 400
+        
+        # Check if platform already exists
+        existing_platform = Platform.query.filter_by(
+            name=platform_type.title().replace('_', ' '),
+            platform_type=platform_type
+        ).first()
+        
+        if existing_platform:
+            # Update existing platform
+            platform = existing_platform
+            platform.set_credentials(credentials)
+            platform.sync_status = 'active'
+            platform.error_message = None
+        else:
+            # Create new platform
+            platform = Platform(
+                name=platform_type.title().replace('_', ' '),
+                platform_type=platform_type,
+                api_type='rest_api',
+                sync_status='active'
+            )
+            platform.set_credentials(credentials)
+            db.session.add(platform)
+        
+        platform.last_sync = datetime.utcnow()
+        db.session.commit()
+        
+        # Start initial data sync in background with improved rate limiting
+        from threading import Thread
+        import time
+        def sync_platform_data():
+            try:
+                # Add longer delay for Trading 212 beta API rate limiting
+                if platform_type == 'trading212':
+                    time.sleep(10)  # Extended delay for Trading 212's aggressive beta rate limiting
+                    logging.info(f"Starting Trading 212 sync after rate limit delay")
+                
+                sync_result = platform_connector.sync_platform_data(platform_type, credentials)
+                if sync_result['success']:
+                    # Update platform with successful sync
+                    platform.sync_status = 'active'
+                    platform.error_message = None
+                else:
+                    platform.sync_status = 'error'
+                    platform.error_message = sync_result.get('error', 'Unknown sync error')
+                db.session.commit()
+            except Exception as e:
+                platform.sync_status = 'error'
+                platform.error_message = str(e)
+                db.session.commit()
+                logging.error(f"Background sync failed: {e}")
+        
+        Thread(target=sync_platform_data, daemon=True).start()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{platform_type.title()} connected successfully',
+            'platform_id': platform.id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error saving platform connection: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/add_manual_platform', methods=['POST'])
+def add_manual_platform():
+    """Add manual platform for tracking"""
+    try:
+        from utils.api_platform_models import Platform, db
+        
+        data = request.get_json()
+        platform_name = data.get('platform_name')
+        platform_type = data.get('platform_type', 'manual')
+        
+        if not platform_name:
+            return jsonify({'success': False, 'error': 'Platform name required'}), 400
+        
+        # Check if platform already exists
+        existing_platform = Platform.query.filter_by(
+            name=platform_name,
+            platform_type='manual'
+        ).first()
+        
+        if existing_platform:
+            return jsonify({'success': False, 'error': 'Platform already exists'}), 400
+        
+        # Create new manual platform
+        platform = Platform(
+            name=platform_name,
+            platform_type='manual',
+            api_type='manual',
+            sync_status='manual'
+        )
+        
+        db.session.add(platform)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{platform_name} added successfully',
+            'platform_id': platform.id
+        })
+        
+    except Exception as e:
+        logging.error(f"Error adding manual platform: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/platforms', methods=['GET'])
+def get_platforms():
+    """Get list of connected platforms"""
+    try:
+        from utils.api_platform_models import Platform
+        
+        platforms = Platform.query.all()
+        return jsonify({
+            'success': True,
+            'platforms': [platform.to_dict() for platform in platforms]
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching platforms: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sync_platform/<int:platform_id>', methods=['POST'])
+def sync_platform(platform_id):
+    """Manually trigger platform sync"""
+    try:
+        from utils.api_platform_models import Platform
+        
+        platform = Platform.query.get_or_404(platform_id)
+        
+        if platform.api_type == 'manual':
+            return jsonify({'success': False, 'error': 'Manual platforms cannot be synced'}), 400
+        
+        credentials = platform.get_credentials()
+        if not credentials:
+            return jsonify({'success': False, 'error': 'No credentials found'}), 400
+        
+        # Sync data
+        sync_result = platform_connector.sync_platform_data(platform.platform_type, credentials)
+        
+        if sync_result['success']:
+            platform.last_sync = datetime.utcnow()
+            platform.sync_status = 'active'
+            platform.error_message = None
+            db.session.commit()
+        else:
+            platform.sync_status = 'error'
+            platform.error_message = sync_result.get('error', 'Sync failed')
+            db.session.commit()
+        
+        return jsonify(sync_result)
+        
+    except Exception as e:
+        logging.error(f"Error syncing platform: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# Trading 212 Integration Routes (Secured)
+@app.route('/api/trading212/test-connection', methods=['POST'])
+def test_trading212_connection():
+    """Test Trading 212 API connection - ADMIN ONLY"""
+    try:
+        # Basic request validation (replace with proper auth in production)
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        connected, message = integration.test_connection()
+        
+        # Sanitize response - don't expose account balance
+        sanitized_message = "Connection successful" if connected else "Connection failed"
+        
+        return jsonify({
+            'success': connected,
+            'message': sanitized_message
+        })
+        
+    except Exception as e:
+        logging.error(f"Error testing Trading 212 connection: {e}")
+        return jsonify({'success': False, 'error': 'Connection test failed'}), 500
+
+@app.route('/api/trading212/sync', methods=['POST'])
+def sync_trading212_portfolio():
+    """Sync Trading 212 portfolio data - ADMIN ONLY"""
+    try:
+        # Basic request validation
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        success, message, summary = integration.sync_portfolio_data()
+        
+        if success:
+            # Sanitized success message without sensitive financial details
+            flash(f'✅ Trading 212 sync successful! Updated {summary["total_positions"]} positions', 'success')
+            sanitized_summary = {
+                'total_positions': summary['total_positions'],
+                'updated_positions': summary['updated_positions'],
+                'new_positions': summary['new_positions']
+                # Remove sensitive financial data (portfolio_value, cash_balance)
+            }
+        else:
+            flash(f'❌ Trading 212 sync failed', 'error')
+            sanitized_summary = {}
+        
+        return jsonify({
+            'success': success,
+            'message': 'Sync completed' if success else 'Sync failed',
+            'summary': sanitized_summary
+        })
+        
+    except Exception as e:
+        logging.error(f"Error syncing Trading 212: {e}")
+        return jsonify({'success': False, 'error': 'Sync operation failed'}), 500
+
+@app.route('/api/trading212/status')
+def get_trading212_status():
+    """Get Trading 212 sync status - ADMIN ONLY"""
+    try:
+        integration = Trading212Integration()
+        status = integration.get_sync_status()
+        
+        # Sanitize status response - remove sensitive details
+        sanitized_status = {
+            'connected': status.get('connected', False),
+            'status': status.get('status', 'unknown'),
+            'last_sync': status.get('last_sync')
+            # Remove error_message and latest_sync details that might contain sensitive info
+        }
+        
+        return jsonify({
+            'success': True,
+            'status': sanitized_status
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting Trading 212 status: {e}")
+        return jsonify({'success': False, 'error': 'Status check failed'}), 500
+
+@app.route('/api/trading212/disconnect', methods=['POST'])
+def disconnect_trading212():
+    """Disconnect Trading 212 integration - ADMIN ONLY"""
+    try:
+        # Basic request validation
+        if not request.is_json:
+            return jsonify({'success': False, 'error': 'Invalid request format'}), 400
+        
+        integration = Trading212Integration()
+        success = integration.disconnect()
+        
+        if success:
+            flash('Trading 212 disconnected successfully', 'success')
+            message = 'Disconnected successfully'
+        else:
+            flash('Failed to disconnect Trading 212', 'error')
+            message = 'Disconnect failed'
+        
+        return jsonify({
+            'success': success,
+            'message': message
+        })
+        
+    except Exception as e:
+        logging.error(f"Error disconnecting Trading 212: {e}")
+        return jsonify({'success': False, 'error': 'Disconnect operation failed'}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

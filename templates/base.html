@@ -59,9 +59,9 @@
       }
     </script>
 </head>
-<body class="min-h-screen overflow-x-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #334155 50%, #1e293b 75%, #0f172a 100%); overflow-y: auto;">
-    <!-- Dark mode background overlay for glass effect -->
-    <div class="fixed inset-0 bg-gradient-to-br from-slate-900/20 to-slate-800/30 pointer-events-none"></div>
+<body class="min-h-screen overflow-x-hidden bg-black" style="overflow-y: auto;">
+    <!-- Clean dark background -->
+    <div class="fixed inset-0 bg-black pointer-events-none"></div>
     <!-- Mobile Menu Button -->
     <button id="mobile-menu-button" class="fixed top-4 left-4 z-50 md:hidden bg-slate-800/90 backdrop-blur-md border border-gray-600/20 rounded-xl p-3 text-white">
         <i class="fas fa-bars text-xl"></i>
@@ -71,7 +71,7 @@
     <div id="mobile-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden hidden"></div>
 
     <!-- Left Sidebar Navigation -->
-    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-800/60 to-slate-900/60 backdrop-blur-md border-r border-gray-600/20 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+    <div id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-slate-800 border-r border-steel-500 z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <div class="p-6">
             <!-- Mobile Close Button (Top Right) -->
             <div class="flex justify-end mb-4 md:hidden">
@@ -82,7 +82,7 @@
             
             <!-- Mobile Header -->
             <div class="flex items-center mb-6 md:hidden">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center mr-3" style="background-color: #BB86FC;">
                     <i class="fas fa-chart-line text-white text-lg"></i>
                 </div>
                 <span class="text-lg font-bold text-white">Portfolio</span>
@@ -90,7 +90,7 @@
             
             <!-- Desktop Header -->
             <div class="hidden md:flex items-center mb-12">
-                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mr-4">
+                <div class="w-12 h-12 rounded-xl flex items-center justify-center mr-4" style="background-color: #BB86FC;">
                     <i class="fas fa-chart-line text-white text-xl"></i>
                 </div>
                 <span class="text-xl font-bold text-white">Portfolio Tracker</span>
@@ -98,23 +98,23 @@
             
             <!-- Navigation Links -->
             <nav class="space-y-2">
-                <a href="{{ url_for('dashboard') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'dashboard' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
-                    <i class="fas fa-tachometer-alt mr-4 text-lg"></i>
+                <a href="{{ url_for('home') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'home' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'home' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
+                    <i class="fas fa-home mr-4 text-lg"></i>
                     Dashboard
                 </a>
-                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-calendar-alt mr-4 text-lg"></i>
                     Year / Month Tracker
                 </a>
-                <a href="{{ url_for('goals') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'goals' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                <a href="{{ url_for('goals') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'goals' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'goals' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-bullseye mr-4 text-lg"></i>
                     Goals
                 </a>
-                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'monthly_breakdown' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-chart-pie mr-4 text-lg"></i>
                     Monthly Breakdown
                 </a>
-                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'investment_manager' %}bg-gray-600/30 text-blue-400{% else %}text-gray-300 hover:bg-blue-500/10 hover:text-blue-400{% endif %}">
+                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 {% if request.endpoint == 'investment_manager' %}border border-purple-400/30 text-white{% else %}text-gray-300 hover:text-white{% endif %}" {% if request.endpoint == 'investment_manager' %}style="background-color: rgba(187, 134, 252, 0.2);"{% else %}onmouseover="this.style.backgroundColor='rgba(187, 134, 252, 0.1)'" onmouseout="this.style.backgroundColor='transparent'"{% endif %}>
                     <i class="fas fa-briefcase mr-4 text-lg"></i>
                     Investment Manager
                 </a>

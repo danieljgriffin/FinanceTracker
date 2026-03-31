@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Portfolio - Net Worth Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- PWA and mobile icons -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png">
+    
+    <!-- iOS PWA Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Portfolio">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Additional PWA Meta Tags -->
+    <meta name="theme-color" content="#0B0F14">
+    <meta name="msapplication-navbutton-color" content="#0B0F14">
+    
+    <style>
+        body {
+            background: #0B0F14;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            /* iOS Safe Area support for standalone mode */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        /* Status bar handling for iOS standalone mode */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            body {
+                padding-top: env(safe-area-inset-top);
+            }
+        }
+        
+        /* Privacy mode styles */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-blur-heavy {
+            filter: blur(15px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-sensitive {
+            transition: filter 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen" style="background: #0B0F14 !important;">
+    
+    <!-- Main Content -->
+    <div class="px-4 pt-8 pb-24">
+        <!-- Portfolio Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <h1 class="text-gray-100 text-xl font-medium">Portfolio</h1>
+                <!-- Privacy Toggle Button -->
+                <button id="privacyToggle" class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/40 transition-all duration-200" style="backdrop-filter: blur(8px);" title="Toggle Privacy Mode">
+                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Net Worth Display -->
+        <div class="mb-8">
+            <!-- Big Net Worth Number -->
+            <div class="mb-2">
+                <div class="text-5xl text-gray-100 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                    £{{ "{:,.0f}".format(current_net_worth) }}
+                </div>
+            </div>
+            
+            <!-- Last Updated Subtitle -->
+            <div class="mb-6">
+                <span class="text-gray-400 text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
+            </div>
+            
+            <!-- This Month and This Year Stats - Side by Side -->
+            <div class="flex space-x-3">
+                <!-- This Month -->
+                <div class="flex-1 bg-gray-800/20 rounded-xl p-3 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">THIS MONTH</div>
+                    <div class="text-lg {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                    </div>
+                    <div class="text-sm {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        ({{ "{:+.1f}".format(mom_change) }}%)
+                    </div>
+                </div>
+                
+                <!-- This Year -->
+                <div class="flex-1 bg-gray-800/20 rounded-xl p-3 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">THIS YEAR</div>
+                    <div class="text-lg {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                    </div>
+                    <div class="text-sm {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %} privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                        ({{ "{:+.1f}".format(yearly_increase) }}%)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart Section -->
+            <div class="mt-6 bg-gray-800/20 rounded-xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                <div id="mobileChartContainer" class="h-48 w-full relative mb-4">
+                    <!-- Chart loading state -->
+                    <div id="chartLoading" class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-gray-400 text-sm">Loading chart...</div>
+                    </div>
+                    
+                    <!-- SVG Chart -->
+                    <svg id="mobileChart" viewBox="0 0 400 192" class="w-full h-full opacity-0 transition-opacity duration-300">
+                        <!-- Chart content will be generated here -->
+                    </svg>
+                    
+                    <!-- Touch interaction overlay -->
+                    <div id="touchOverlay" class="absolute inset-0 bg-transparent pointer-events-auto"></div>
+                    
+                    <!-- Value tooltip -->
+                    <div id="chartTooltip" class="absolute pointer-events-none opacity-0 transition-all duration-200 bg-black bg-opacity-90 text-white text-sm px-3 py-2 rounded-lg backdrop-blur-sm border border-white border-opacity-20 z-10">
+                        <div id="tooltipValue" class="font-semibold text-blue-400"></div>
+                        <div id="tooltipDate" class="text-gray-300 text-xs mt-1"></div>
+                    </div>
+                </div>
+                
+                <!-- Time Range Selector -->
+                <div id="timeRangeContainer" class="flex flex-wrap justify-center gap-2">
+                    <button data-range="1d" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1D</button>
+                    <button data-range="1w" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1W</button>
+                    <button data-range="1m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1M</button>
+                    <button data-range="3m" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">3M</button>
+                    <button data-range="1y" class="chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white">1Y</button>
+                    <!-- Year buttons will be inserted here dynamically -->
+                    <button data-range="max" class="chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors">MAX</button>
+                </div>
+            </div>
+            
+            <!-- Current Goal Section -->
+            {% if next_target and progress_info %}
+            <div class="mt-6 bg-gray-800/20 rounded-xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                <div class="mb-4">
+                    <h3 class="text-gray-100 text-lg font-medium">Current Goal</h3>
+                    <p class="text-gray-400 text-sm mt-1">{{ next_target.title if next_target.title else 'Financial Target' }}</p>
+                </div>
+                
+                <!-- Progress Bar Container -->
+                <div class="mb-4">
+                    <!-- Progress Percentage -->
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-400">Progress</span>
+                        <span class="text-lg font-semibold text-white privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            {{ "{:.1f}".format(progress_info.progress_percentage) }}%
+                        </span>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-800 rounded-lg h-3 mb-4">
+                        <div class="h-3 rounded-lg transition-all duration-300" style="background: linear-gradient(90deg, #3B82F6 0%, #06B6D4 100%); width: {{ progress_info.progress_percentage }}%;"></div>
+                    </div>
+                    
+                    <!-- Current and Target Amounts -->
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-blue-400 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            £{{ "{:,.0f}".format(current_net_worth) }}
+                        </div>
+                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            £{{ "{:,.0f}".format(next_target.target_amount) }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Status Info - Mobile Optimized Grid -->
+                <div class="flex space-x-6">
+                    <!-- Days Remaining -->
+                    <div class="flex-1">
+                        <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Days Remaining</div>
+                        <div class="text-gray-100 text-xl font-semibold" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            {{ progress_info.days_remaining }}
+                        </div>
+                    </div>
+                    
+                    <!-- Amount Remaining -->
+                    <div class="flex-1 text-right">
+                        <div class="text-gray-400 text-xs uppercase tracking-wide mb-1">Remaining</div>
+                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Net Worth Breakdown Section -->
+            <div class="mt-6 bg-gray-800/20 rounded-xl p-4 border border-gray-700/30" style="backdrop-filter: blur(8px);">
+                <div class="mb-4">
+                    <h3 class="text-gray-100 text-lg font-medium">Portfolio Breakdown</h3>
+                </div>
+                
+                <!-- Platform List -->
+                <div class="space-y-4">
+                    {% for platform, amount in platform_allocations.items() %}
+                    <div class="flex items-center justify-between py-3 px-2">
+                        <!-- Left side: Platform name and percentage -->
+                        <div class="flex items-center space-x-3 flex-1">
+                            <!-- Platform color dot -->
+                            <div class="w-3 h-3 rounded-full flex-shrink-0" style="background-color: {{ platform_colors.get(platform, '#94a3b8') }};"></div>
+                            
+                            <!-- Platform info -->
+                            <div class="flex-1 min-w-0">
+                                <div class="text-white font-medium text-sm truncate">{{ platform }}</div>
+                                <div class="text-gray-400 text-xs">{{ "{:.1f}".format(platform_percentages.get(platform, 0)) }}% of portfolio</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right side: Value and monthly change -->
+                        <div class="text-right flex-shrink-0">
+                            <div class="text-white font-semibold text-sm privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px;">
+                                £{{ "{:,.0f}".format(amount) }}
+                            </div>
+                            {% set platform_change = platform_monthly_changes.get(platform, {'amount': 0, 'percent': 0}) %}
+                            <div class="text-{% if platform_change.amount >= 0 %}green{% else %}red{% endif %}-400 text-xs privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 0.3px;">
+                                {% if platform_change.amount >= 0 %}+£{{ "{:,.0f}".format(platform_change.amount) }}{% else %}-£{{ "{:,.0f}".format(-platform_change.amount) }}{% endif %} ({% if platform_change.percent >= 0 %}+{% endif %}{{ "{:.1f}".format(platform_change.percent) }}%)
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Mobile Bottom Navigation -->
+    <div class="fixed bottom-0 left-0 right-0 z-50" style="background: rgba(11, 15, 20, 0.95); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+        <div class="flex justify-around items-center py-3 px-2">
+            <!-- Home (Active) -->
+            <a href="{{ url_for('home') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16" style="background: rgba(59, 130, 246, 0.2); border-radius: 12px;">
+                <i class="fas fa-home text-lg mb-1 text-blue-400"></i>
+                <span class="text-xs text-blue-400">Home</span>
+            </a>
+            
+            <!-- Investment Manager -->
+            <a href="{{ url_for('investment_manager') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-briefcase text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Investments</span>
+            </a>
+            
+            <!-- Year Month Tracker -->
+            <a href="{{ url_for('yearly_tracker') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-calendar-alt text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Tracker</span>
+            </a>
+            
+            <!-- Goals -->
+            <a href="{{ url_for('goals') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-bullseye text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Goals</span>
+            </a>
+            
+            <!-- Monthly Breakdown -->
+            <a href="{{ url_for('monthly_breakdown') }}" 
+               class="mobile-nav-item flex flex-col items-center justify-center p-3 w-16 h-16">
+                <i class="fas fa-chart-pie text-lg mb-1 text-gray-400"></i>
+                <span class="text-xs text-gray-400">Monthly</span>
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Mobile Chart System - Clean Implementation
+        class MobileChart {
+            constructor() {
+                this.currentRange = '1d';
+                this.currentPeriod = '24h'; // Track period for auto-refresh
+                this.chartData = null;
+                this.isLoading = false;
+                
+                // Chart dimensions (adjusted for smaller chart height)
+                this.width = 400;
+                this.height = 192;
+                this.padding = { top: 15, right: 55, bottom: 30, left: 15 };
+                this.plotWidth = this.width - this.padding.left - this.padding.right;
+                this.plotHeight = this.height - this.padding.top - this.padding.bottom;
+                
+                this.init();
+            }
+            
+            async init() {
+                console.log('🚀 Initializing Mobile Chart System');
+                await this.loadAvailableYears(); // Load year buttons first
+                this.setupEventListeners();
+                this.loadChart('1d'); // Start with 1D view
+            }
+            
+            async loadAvailableYears() {
+                try {
+                    console.log('🔍 Loading available years for chart buttons...');
+                    const response = await fetch(`/api/available-years?_t=${Date.now()}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const years = data.years || [];
+                        
+                        // Insert year buttons before MAX button
+                        const container = document.getElementById('timeRangeContainer');
+                        const maxButton = container.querySelector('[data-range="max"]');
+                        
+                        // Remove any existing year buttons
+                        container.querySelectorAll('[data-range*="20"]').forEach(btn => btn.remove());
+                        
+                        // Add year buttons
+                        years.forEach(year => {
+                            const yearBtn = document.createElement('button');
+                            yearBtn.setAttribute('data-range', year.toString());
+                            yearBtn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
+                            yearBtn.textContent = year.toString();
+                            container.insertBefore(yearBtn, maxButton);
+                        });
+                        
+                        console.log(`✅ Added ${years.length} year buttons: ${years.join(', ')}`);
+                    }
+                } catch (error) {
+                    console.error('Error loading available years:', error);
+                }
+            }
+            
+            setupEventListeners() {
+                // Range button clicks - use event delegation to handle dynamically added year buttons
+                document.getElementById('timeRangeContainer').addEventListener('click', (e) => {
+                    if (e.target.classList.contains('chart-range-btn')) {
+                        const range = e.target.getAttribute('data-range');
+                        this.loadChart(range);
+                    }
+                });
+                
+                // Touch interactions
+                const overlay = document.getElementById('touchOverlay');
+                if (overlay) {
+                    overlay.addEventListener('touchstart', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchmove', this.handleTouch.bind(this));
+                    overlay.addEventListener('touchend', this.hideTooltip.bind(this));
+                }
+            }
+            
+            updateRangeButtons(activeRange) {
+                document.querySelectorAll('.chart-range-btn').forEach(btn => {
+                    const range = btn.getAttribute('data-range');
+                    if (range === activeRange) {
+                        btn.className = 'chart-range-btn text-white text-xs font-medium px-2 py-1 rounded bg-blue-600 transition-colors';
+                    } else {
+                        btn.className = 'chart-range-btn text-gray-400 text-xs font-medium px-2 py-1 rounded transition-colors hover:text-white';
+                    }
+                });
+            }
+            
+            mapRangeToAPI(range) {
+                // Use same mapping as desktop chart to ensure consistency
+                const mapping = {
+                    '1d': '24H',
+                    '1w': '1W', 
+                    '1m': '1M',
+                    '3m': '3M',
+                    '1y': '1Y',
+                    'max': 'Max'
+                };
+                
+                // For year-specific filters (2023, 2024, 2025, etc.), pass them through directly
+                if (/^\d{4}$/.test(range)) {
+                    return range;
+                }
+                
+                return mapping[range] || range;
+            }
+            
+            async loadChart(range) {
+                if (this.currentRange === range && this.chartData) return;
+                
+                console.log(`📈 Loading chart for range: ${range}`);
+                this.isLoading = true;
+                this.currentRange = range;
+                this.currentPeriod = this.mapRangeToAPI(range); // Track for auto-refresh
+                this.updateRangeButtons(range);
+                this.showLoading();
+                
+                try {
+                    const apiFilter = this.mapRangeToAPI(range);
+                    const response = await fetch(`/api/dashboard-chart-data?period=${apiFilter}&_t=${Date.now()}`);
+                    const data = await response.json();
+                    
+                    console.log(`✅ Received data for ${range}:`, data);
+                    this.chartData = data;
+                    this.renderChart(data);
+                    
+                } catch (error) {
+                    console.error('❌ Error loading chart:', error);
+                    this.showError('Error loading chart data');
+                } finally {
+                    this.isLoading = false;
+                    this.hideLoading();
+                }
+            }
+            
+            // Add loadChartData method for auto-refresh compatibility
+            async loadChartData(period) {
+                // Convert API period back to range format
+                const periodToRange = {
+                    '24H': '1d',
+                    '1W': '1w', 
+                    '1M': '1m',
+                    '3M': '3m',
+                    '1Y': '1y',
+                    'Max': 'max'
+                };
+                
+                const range = periodToRange[period] || '1d';
+                await this.loadChart(range);
+            }
+            
+            renderChart(data) {
+                const svg = document.getElementById('mobileChart');
+                if (!svg || !data || data.length === 0) {
+                    console.error('❌ Missing SVG element or invalid data');
+                    return;
+                }
+                
+                console.log(`🎨 Rendering chart with ${data.length} data points`);
+                
+                // Process desktop data format (array of {date, value} objects)
+                const values = data.map(d => d.value);
+                const labels = data.map(d => {
+                    const date = new Date(d.date);
+                    if (this.currentRange === '1d') {
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
+                    } else if (this.currentRange === '1w') {
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        return `${day} ${hours}:00`;
+                    } else if (this.currentRange === '1m' || this.currentRange === '3m') {
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
+                });
+                
+                // Calculate data bounds
+                const minValue = Math.min(...values);
+                const maxValue = Math.max(...values);
+                const valueRange = maxValue - minValue || 1; // Prevent division by zero
+                
+                // Generate smooth chart line points
+                const chartPoints = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return { x, y };
+                });
+                
+                // Create smooth continuous curve using Catmull-Rom to Bézier conversion
+                function createSmoothPath(points, smoothing = 0.8) {
+                    if (points.length < 2) return '';
+                    
+                    let path = `M ${points[0].x} ${points[0].y}`;
+                    
+                    for (let i = 0; i < points.length - 1; i++) {
+                        // Get neighboring points (duplicate endpoints for boundaries)
+                        const p0 = points[i - 1] || points[i];
+                        const p1 = points[i];
+                        const p2 = points[i + 1];
+                        const p3 = points[i + 2] || points[i + 1];
+                        
+                        // Calculate control points for smooth cubic Bézier curve
+                        const c1x = p1.x + (p2.x - p0.x) / 6 * smoothing;
+                        const c1y = p1.y + (p2.y - p0.y) / 6 * smoothing;
+                        const c2x = p2.x - (p3.x - p1.x) / 6 * smoothing;
+                        const c2y = p2.y - (p3.y - p1.y) / 6 * smoothing;
+                        
+                        // Add cubic Bézier curve segment
+                        path += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2.x} ${p2.y}`;
+                    }
+                    
+                    return path;
+                }
+                
+                const smoothPath = createSmoothPath(chartPoints, 0.8);
+                
+                // Generate gradient fill area points (same as line but closed to bottom)
+                const fillPoints = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `${x},${y}`;
+                });
+                // Close the path for gradient fill
+                fillPoints.push(`${this.padding.left + this.plotWidth},${this.padding.top + this.plotHeight}`);
+                fillPoints.push(`${this.padding.left},${this.padding.top + this.plotHeight}`);
+                
+                // Generate data point circles  
+                const dataPoints = values.map((value, index) => {
+                    const x = this.padding.left + (index / (values.length - 1)) * this.plotWidth;
+                    const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                    return `<circle cx="${x}" cy="${y}" r="2" fill="#3b82f6" stroke="#000" stroke-width="1"/>`;
+                }).join('');
+                
+                // Generate Y-axis labels
+                const yLabels = [];
+                for (let i = 0; i <= 3; i++) {
+                    const value = minValue + (valueRange * i / 3);
+                    const y = this.padding.top + this.plotHeight - (i / 3) * this.plotHeight;
+                    yLabels.push(`<text x="${this.width - 5}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">£${(value / 1000).toFixed(2)}k</text>`);
+                }
+                
+                // Generate X-axis labels with smart spacing
+                const xLabels = [];
+                const labelStep = Math.max(1, Math.ceil(labels.length / 4));
+                for (let i = 0; i < labels.length; i += labelStep) {
+                    const x = this.padding.left + (i / (labels.length - 1)) * this.plotWidth;
+                    xLabels.push(`<text x="${x}" y="${this.height - 5}" font-size="9" fill="#6b7280" text-anchor="middle">${labels[i]}</text>`);
+                }
+                
+                // Current value indicator
+                const lastIndex = values.length - 1;
+                const lastX = this.padding.left + (lastIndex / (values.length - 1)) * this.plotWidth;
+                const lastY = this.padding.top + this.plotHeight - ((values[lastIndex] - minValue) / valueRange) * this.plotHeight;
+                const currentPoint = `<circle cx="${lastX}" cy="${lastY}" r="4" fill="#3b82f6" stroke="#ffffff" stroke-width="2"/>`;
+                
+                // Render complete chart with gradient fill
+                svg.innerHTML = `
+                    <defs>
+                        <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(59, 130, 246, 0.3);stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:rgba(59, 130, 246, 0);stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <polygon fill="url(#chartGradient)" stroke="none" points="${fillPoints.join(' ')}"/>
+                    <path fill="none" stroke="#3b82f6" stroke-width="2" d="${smoothPath}"/>
+                    ${dataPoints}
+                    ${currentPoint}
+                    ${yLabels.join('')}
+                    ${xLabels.join('')}
+                `;
+                
+                // Store data for touch interactions (convert back to expected format)
+                const chartData = { values, labels };
+                this.storeInteractionData(chartData, minValue, maxValue, valueRange);
+                
+                // Show chart with animation
+                svg.style.opacity = '1';
+                console.log('✅ Chart rendered successfully');
+            }
+            
+            storeInteractionData(data, minValue, maxValue, valueRange) {
+                this.interactionData = {
+                    values: data.values,
+                    labels: data.labels,
+                    dataPoints: data.values.map((value, index) => {
+                        const x = this.padding.left + (index / (data.values.length - 1)) * this.plotWidth;
+                        const y = this.padding.top + this.plotHeight - ((value - minValue) / valueRange) * this.plotHeight;
+                        return { x, y, value, label: data.labels[index] };
+                    }),
+                    minValue,
+                    maxValue,
+                    valueRange
+                };
+            }
+            
+            handleTouch(event) {
+                if (!this.interactionData) return;
+                
+                event.preventDefault();
+                const touch = event.touches[0] || event.changedTouches[0];
+                if (!touch) return;
+                
+                const rect = document.getElementById('mobileChartContainer').getBoundingClientRect();
+                const touchX = touch.clientX - rect.left;
+                const touchY = touch.clientY - rect.top;
+                
+                // Find closest data point
+                let closestPoint = null;
+                let minDistance = Infinity;
+                
+                this.interactionData.dataPoints.forEach(point => {
+                    const distance = Math.abs(touchX - point.x * (rect.width / this.width));
+                    if (distance < minDistance && distance < 25) {
+                        minDistance = distance;
+                        closestPoint = point;
+                    }
+                });
+                
+                if (closestPoint) {
+                    this.showTooltip(closestPoint, touchX, touchY);
+                }
+            }
+            
+            showTooltip(point, x, y) {
+                const tooltip = document.getElementById('chartTooltip');
+                const valueEl = document.getElementById('tooltipValue');
+                const dateEl = document.getElementById('tooltipDate');
+                
+                if (tooltip && valueEl && dateEl) {
+                    valueEl.textContent = `£${point.value.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    dateEl.textContent = point.label;
+                    
+                    tooltip.style.left = `${Math.max(10, Math.min(x - 50, window.innerWidth - 110))}px`;
+                    tooltip.style.top = `${Math.max(10, y - 60)}px`;
+                    tooltip.style.opacity = '1';
+                }
+            }
+            
+            hideTooltip() {
+                const tooltip = document.getElementById('chartTooltip');
+                if (tooltip) {
+                    tooltip.style.opacity = '0';
+                }
+            }
+            
+            showLoading() {
+                const loading = document.getElementById('chartLoading');
+                const chart = document.getElementById('mobileChart');
+                if (loading) loading.style.display = 'flex';
+                if (chart) chart.style.opacity = '0';
+            }
+            
+            hideLoading() {
+                const loading = document.getElementById('chartLoading');
+                if (loading) loading.style.display = 'none';
+            }
+            
+            showError(message) {
+                const svg = document.getElementById('mobileChart');
+                if (svg) {
+                    svg.innerHTML = `<text x="200" y="96" text-anchor="middle" fill="#ef4444" font-size="14">${message}</text>`;
+                    svg.style.opacity = '1';
+                }
+            }
+        }
+        
+        // Privacy mode functionality
+        let privacyMode = false;
+        
+        function togglePrivacy() {
+            privacyMode = !privacyMode;
+            const sensitiveElements = document.querySelectorAll('.privacy-sensitive');
+            const privacyIcon = document.getElementById('privacyIcon');
+            const chartContainer = document.getElementById('mobileChartContainer');
+            
+            sensitiveElements.forEach(element => {
+                if (privacyMode) {
+                    // Check if this is the main net worth number (text-5xl)
+                    if (element.classList.contains('text-5xl')) {
+                        element.classList.add('privacy-blur-heavy');
+                    } else {
+                        element.classList.add('privacy-blur');
+                    }
+                } else {
+                    element.classList.remove('privacy-blur');
+                    element.classList.remove('privacy-blur-heavy');
+                }
+            });
+            
+            // Apply privacy mode to chart and breakdown sections
+            if (privacyMode) {
+                chartContainer.classList.add('privacy-blur');
+            } else {
+                chartContainer.classList.remove('privacy-blur');
+            }
+            
+            // Update button icon
+            if (privacyMode) {
+                privacyIcon.className = 'fas fa-eye-slash text-blue-400 text-lg';
+            } else {
+                privacyIcon.className = 'fas fa-eye text-gray-400 text-lg';
+            }
+        }
+        
+        // Number scramble animation function
+        function animateNumber(element, targetValue, duration = 800) {
+            const startValue = parseFloat(element.textContent.replace(/[£,\s]/g, '')) || 0;
+            const startTime = Date.now();
+            const isNegative = targetValue < 0;
+            const absTarget = Math.abs(targetValue);
+            const absStart = Math.abs(startValue);
+            
+            function scrambleStep() {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                if (progress < 1) {
+                    // Generate random numbers during animation
+                    const currentValue = absStart + (absTarget - absStart) * progress;
+                    const randomOffset = (Math.random() - 0.5) * absTarget * 0.1 * (1 - progress);
+                    const displayValue = Math.max(0, currentValue + randomOffset);
+                    
+                    // Format based on element type
+                    if (element.classList.contains('percentage')) {
+                        element.textContent = `${isNegative ? '-' : '+'}${displayValue.toFixed(1)}%`;
+                    } else {
+                        element.textContent = `${isNegative ? '-' : ''}£${Math.round(displayValue).toLocaleString()}`;
+                    }
+                    
+                    requestAnimationFrame(scrambleStep);
+                } else {
+                    // Set final value
+                    if (element.classList.contains('percentage')) {
+                        element.textContent = `${isNegative ? '-' : '+'}${absTarget.toFixed(1)}%`;
+                    } else {
+                        element.textContent = `${isNegative ? '-' : ''}£${Math.round(absTarget).toLocaleString()}`;
+                    }
+                }
+            }
+            
+            scrambleStep();
+        }
+        
+        // Auto-refresh functionality
+        let refreshInterval;
+        
+        async function refreshMobileDashboardData() {
+            try {
+                console.log('📱 Refreshing mobile dashboard data...');
+                
+                // Fetch fresh data from the current page URL
+                const response = await fetch(window.location.pathname, {
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const html = await response.text();
+                const parser = new DOMParser();
+                const newDoc = parser.parseFromString(html, 'text/html');
+                
+                // Extract new values from the fresh HTML
+                const newNetWorth = newDoc.querySelector('.text-5xl');
+                const newLastUpdate = newDoc.querySelector('.text-gray-400.text-sm');
+                const newMomChanges = newDoc.querySelectorAll('.text-lg.text-green-400, .text-lg.text-red-400');
+                
+                if (newNetWorth) {
+                    const currentNetWorth = document.querySelector('.text-5xl');
+                    const currentValue = parseFloat(currentNetWorth.textContent.replace(/[£,\s]/g, ''));
+                    const newValue = parseFloat(newNetWorth.textContent.replace(/[£,\s]/g, ''));
+                    
+                    console.log('📱 Checking mobile net worth:', { currentValue, newValue, difference: Math.abs(currentValue - newValue) });
+                    
+                    if (Math.abs(currentValue - newValue) > 0.01) {
+                        // Animate main net worth with scramble effect (lowered threshold)
+                        animateNumber(currentNetWorth, newValue, 1200);
+                        console.log('🎯 Mobile net worth updated with animation:', currentValue, '->', newValue);
+                    } else {
+                        console.log('⚪ No significant mobile net worth change detected');
+                    }
+                }
+                
+                // Update last updated time
+                if (newLastUpdate) {
+                    const currentLastUpdate = document.querySelector('.text-gray-400.text-sm');
+                    if (currentLastUpdate) {
+                        currentLastUpdate.textContent = newLastUpdate.textContent;
+                    }
+                }
+                
+                // Update monthly and yearly changes
+                if (newMomChanges.length >= 2) {
+                    const currentMomChanges = document.querySelectorAll('.text-lg.text-green-400, .text-lg.text-red-400');
+                    if (currentMomChanges.length >= 2) {
+                        // This month
+                        if (currentMomChanges[0].textContent !== newMomChanges[0].textContent) {
+                            currentMomChanges[0].innerHTML = newMomChanges[0].innerHTML;
+                        }
+                        // This year
+                        if (currentMomChanges[1].textContent !== newMomChanges[1].textContent) {
+                            currentMomChanges[1].innerHTML = newMomChanges[1].innerHTML;
+                        }
+                    }
+                }
+                
+                // Refresh chart - preserve current period
+                if (window.mobileChart) {
+                    await window.mobileChart.loadChartData(window.mobileChart.currentPeriod || '24h');
+                }
+                
+                console.log('✅ Mobile dashboard refresh completed');
+                
+            } catch (error) {
+                console.warn('⚠️  Mobile dashboard refresh failed:', error);
+            }
+        }
+        
+        function startMobileAutoRefresh() {
+            // Clear any existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+            
+            // Start refreshing every 30 seconds
+            refreshInterval = setInterval(refreshMobileDashboardData, 30000);
+            console.log('🚀 Mobile auto-refresh started (30s intervals)');
+        }
+        
+        function stopMobileAutoRefresh() {
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                console.log('⏹️  Mobile auto-refresh stopped');
+            }
+        }
+        
+        // Pause auto-refresh when page is not visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopMobileAutoRefresh();
+            } else {
+                startMobileAutoRefresh();
+            }
+        });
+        
+        // Initialize chart system on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Mobile Dashboard v2 Initializing...');
+            
+            // Initialize privacy toggle
+            document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+            
+            // Initialize chart system
+            window.mobileChart = new MobileChart();
+            
+            // Start auto-refresh
+            startMobileAutoRefresh();
+            
+            console.log('✅ Mobile Dashboard v2 with auto-refresh and animations ready');
+        });
+    </script>
+</body>
+</html>

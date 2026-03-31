@@ -176,8 +176,8 @@
                                         <span class="text-green-400 font-medium">Achieved</span>
                                     </div>
                                     <div>
-                                        <span class="text-gray-400 block">Date</span>
-                                        <span class="text-gray-300 font-medium">{{ goal.target_date.strftime('%b %Y') }}</span>
+                                        <span class="text-gray-400 block">Achieved</span>
+                                        <span class="text-gray-300 font-medium">{% if goal.completed_at %}{{ goal.completed_at.strftime('%d %b %Y') }}{% else %}{{ goal.target_date.strftime('%b %Y') }}{% endif %}</span>
                                     </div>
                                 </div>
                             </div>

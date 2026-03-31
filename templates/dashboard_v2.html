@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard v2</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'steel': {
+                            500: '#6b7280'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen text-gray-200" style="background-color: #0B0F14;">
+    <!-- Charcoal Blue Background -->
+    <div class="fixed inset-0" style="background-color: #0B0F14;"></div>
+
+    <!-- Left Sidebar Navigation - Icon Only -->
+    <div class="fixed left-0 top-0 h-full w-20 z-50">
+        <div class="h-full flex items-center justify-center">
+            <!-- Navigation Links - Icons Only -->
+            <nav class="space-y-4">
+                <a href="{{ url_for('home') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'home' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'home' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-home"></i>
+                </a>
+                <a href="{{ url_for('yearly_tracker') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'yearly_tracker' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'yearly_tracker' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-calendar-alt"></i>
+                </a>
+                <a href="{{ url_for('goals') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'goals' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'goals' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-bullseye"></i>
+                </a>
+                <a href="{{ url_for('monthly_breakdown') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'monthly_breakdown' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'monthly_breakdown' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-chart-pie"></i>
+                </a>
+                <a href="{{ url_for('investment_manager') }}" class="nav-link flex items-center justify-center w-12 h-12 rounded-xl text-lg transition-all duration-300 {% if request.endpoint == 'investment_manager' %}text-white{% else %}text-gray-400 hover:text-white{% endif %}" {% if request.endpoint == 'investment_manager' %}style="background-color: rgba(59, 130, 246, 0.3); box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);"{% else %}onmouseover="this.style.backgroundColor='rgba(59, 130, 246, 0.1)'; this.style.boxShadow='0 0 10px rgba(59, 130, 246, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.boxShadow='none'"{% endif %}>
+                    <i class="fas fa-briefcase"></i>
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="ml-20 min-h-screen relative" style="background-color: #0B0F14;">
+        <div class="p-8 pt-12">
+            <!-- Asymmetric Layout: Left Column (Net Worth + Chart) | Right Column (Breakdown) -->
+            <div class="flex items-stretch space-x-8 ml-4 mr-4">
+                <!-- Left Column: Net Worth Display + Chart -->
+                <div class="w-1/2">
+                    <!-- Glass Card Container for Performance Section -->
+                    <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm" style="background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(31, 41, 55, 0.6) 100%);">
+                    <!-- Net Worth Display Section -->
+                    <div class="flex items-start space-x-24 mb-12">
+                        <!-- Main Net Worth -->
+                        <div>
+                            <!-- Big Net Worth Number with Privacy Button -->
+                            <div class="flex items-center space-x-4">
+                                <div class="text-6xl text-gray-100 mb-2 privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 3px; text-shadow: 0 0 15px rgba(59, 130, 246, 0.4); font-variant-numeric: slashed-zero;">
+                                    £{{ "{:,.0f}".format(current_net_worth) }}
+                                </div>
+                                <!-- Privacy Toggle Button -->
+                                <button id="privacyToggle" class="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-800/60 hover:bg-gray-700/80 border border-gray-600/40 transition-all duration-200 ml-2" style="backdrop-filter: blur(8px);" title="Toggle Privacy Mode">
+                                    <i id="privacyIcon" class="fas fa-eye text-gray-400 text-lg"></i>
+                                </button>
+                            </div>
+                            <!-- Subtitle with last updated -->
+                            <div class="flex items-center space-x-4 text-gray-400">
+                                <span class="text-lg">Current Net Worth</span>
+                                <span class="text-sm">Last updated: {{ last_price_update.strftime('%H:%M') if last_price_update else 'Never' }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Metrics (horizontal layout) -->
+                        <div class="flex space-x-12 text-right">
+                            <!-- This Month -->
+                            <div>
+                                <div class="text-sm text-gray-400 mb-1">THIS MONTH</div>
+                                <div class="text-xl {% if mom_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                    {% if mom_amount_change >= 0 %}+£{{ "{:,.0f}".format(mom_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-mom_amount_change) }}{% endif %}
+                                    <span class="ml-1 text-sm">({{ "{:+.1f}".format(mom_change) }}%)</span>
+                                </div>
+                            </div>
+                            
+                            <!-- This Year -->
+                            <div>
+                                <div class="text-sm text-gray-400 mb-1">THIS YEAR</div>
+                                <div class="text-xl {% if yearly_amount_change >= 0 %}text-green-400{% else %}text-red-400{% endif %}" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 300; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                    {% if yearly_amount_change >= 0 %}+£{{ "{:,.0f}".format(yearly_amount_change) }}{% else %}-£{{ "{:,.0f}".format(-yearly_amount_change) }}{% endif %}
+                                    <span class="ml-1 text-sm">({{ "{:+.1f}".format(yearly_increase) }}%)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart Section (directly under Net Worth) -->
+                    <div class="relative">
+                        <!-- Chart Title -->
+                        <h2 class="text-2xl font-medium text-gray-100 mb-4">Net Worth Performance</h2>
+                        <!-- Filter Controls -->
+                        <div id="chartControls" class="flex justify-start space-x-2 mb-6">
+                            <!-- Controls will be added by JavaScript -->
+                        </div>
+                        <!-- Chart Container -->
+                        <div class="relative" style="height: 500px;">
+                            <canvas id="networthChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    </div> <!-- End Glass Card Container -->
+                </div>
+                
+                <!-- Right Column: Split between Breakdown and Future Content -->
+                <div class="w-1/2 flex space-x-8">
+                    <!-- Net Worth Breakdown (Half Width) -->
+                    <div class="w-1/2">
+                        <!-- Glass Card Container for Breakdown Section - Match left column height -->
+                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm h-full flex flex-col" style="background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(31, 41, 55, 0.6) 100%);">
+                        <div class="text-gray-200 h-full flex flex-col">
+                            <div class="flex justify-between items-center mb-2">
+                                <h2 class="text-2xl font-medium text-gray-100">Net Worth Breakdown</h2>
+                                <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View all →</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-6">Your portfolio allocation and monthly performance by platform</p>
+                            <!-- Platform Vertical List Container -->
+                            <div id="platformBreakdown" class="space-y-3 flex-1 overflow-y-auto">
+                                <!-- Platform cards will be loaded here as vertical list -->
+                                <!-- Future: Add 'and X more' logic here when platforms > 7 -->
+                            </div>
+                        </div>
+                        </div> <!-- End Glass Card Container -->
+                    </div>
+                    
+                    <!-- Goals Progress Section -->
+                    <div class="w-1/2">
+                        <!-- Glass Card Container for Goals Section -->
+                        <div class="rounded-2xl border border-white/10 p-6 backdrop-blur-sm h-full flex flex-col" style="background: linear-gradient(145deg, rgba(17, 24, 39, 0.8) 0%, rgba(31, 41, 55, 0.6) 100%);">
+                        {% if next_target and progress_info %}
+                        <div class="text-gray-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <h2 class="text-2xl font-medium text-gray-100">Current Goal</h2>
+                                <span class="text-blue-400 text-sm hover:text-blue-300 cursor-pointer">View Goals →</span>
+                            </div>
+                            <p class="text-gray-400 text-sm mb-6">{{ next_target.title if next_target.title else 'Financial Target' }}</p>
+                            
+                            <!-- Progress Bar Container -->
+                            <div class="mb-6">
+                                <!-- Progress Percentage -->
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm text-gray-400">Progress</span>
+                                    <span class="text-lg font-semibold text-white privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                        {{ "{:.1f}".format(progress_info.progress_percentage) }}%
+                                    </span>
+                                </div>
+                                
+                                <!-- Progress Bar -->
+                                <div class="w-full bg-gray-800 rounded-lg h-3 mb-4">
+                                    <div class="h-3 rounded-lg transition-all duration-300" style="background: linear-gradient(90deg, #3B82F6 0%, #06B6D4 100%); width: {{ progress_info.progress_percentage }}%;"></div>
+                                </div>
+                                
+                                <!-- Current and Target Amounts -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-blue-400 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                        £{{ "{:,.0f}".format(current_net_worth) }}
+                                    </div>
+                                    <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                        £{{ "{:,.0f}".format(next_target.target_amount) }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Status Info -->
+                            <div class="grid grid-cols-2 gap-6">
+                                <!-- Days Remaining -->
+                                <div class="">
+                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">Days Remaining</div>
+                                    <div class="text-gray-100 text-2xl font-semibold" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 1px; font-variant-numeric: slashed-zero;">
+                                        {{ progress_info.days_remaining }}
+                                    </div>
+                                </div>
+                                
+                                <!-- Amount Remaining -->
+                                <div class="">
+                                    <div class="text-gray-400 text-xs uppercase tracking-wide mb-2">Amount Remaining</div>
+                                    <div class="text-gray-100 text-lg font-semibold privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                        £{{ "{:,.0f}".format(progress_info.remaining_amount) }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Upcoming Goals -->
+                            {% if upcoming_targets and upcoming_targets|length > 0 %}
+                            <div class="mt-6 pt-4 border-t border-gray-800">
+                                <div class="text-sm text-gray-400 mb-3">Upcoming Goals:</div>
+                                <div class="space-y-2">
+                                    {% for goal in upcoming_targets[:4] %}
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-gray-300 text-sm">{{ goal.target_date.strftime('%b %Y') }}</div>
+                                        <div class="text-gray-100 font-medium text-sm privacy-sensitive" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                                            £{{ "{:,.0f}".format(goal.target_amount) }}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <!-- No Goals State -->
+                        <div class="text-center text-gray-500 mt-20">
+                            <div class="mb-4">
+                                <i class="fas fa-target text-4xl text-gray-600"></i>
+                            </div>
+                            <p class="text-lg font-medium mb-2">No active goals</p>
+                            <p class="text-sm text-gray-400">Set financial targets to track your progress</p>
+                            <a href="/goals" class="inline-block mt-4 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                                Create Goal
+                            </a>
+                        </div>
+                        {% endif %}
+                        </div> <!-- End Glass Card Container -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* Privacy mode styling */
+        .privacy-blur {
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+        }
+        
+        /* Extra heavy blur for the main net worth number */
+        .privacy-blur-heavy {
+            filter: blur(15px);
+            transition: filter 0.3s ease;
+        }
+        
+        .privacy-sensitive {
+            transition: filter 0.3s ease;
+        }
+    </style>
+    
+    <script>
+    let chartInstance = null;
+    let currentPeriod = '24H';
+    let privacyMode = false;
+    
+    // Platform colors from backend
+    const platformColors = {{ platform_colors|tojson }};
+    
+    // Store original chart callback functions
+    let originalYTickCallback = null;
+    
+    // Privacy mode functionality
+    function togglePrivacy() {
+        privacyMode = !privacyMode;
+        const sensitiveElements = document.querySelectorAll('.privacy-sensitive');
+        const privacyIcon = document.getElementById('privacyIcon');
+        
+        sensitiveElements.forEach(element => {
+            if (privacyMode) {
+                // Check if this is the main net worth number (6xl text)
+                if (element.classList.contains('text-6xl')) {
+                    element.classList.add('privacy-blur-heavy');
+                } else {
+                    element.classList.add('privacy-blur');
+                }
+            } else {
+                element.classList.remove('privacy-blur');
+                element.classList.remove('privacy-blur-heavy');
+            }
+        });
+        
+        // Handle chart Y-axis labels
+        if (chartInstance && chartInstance.options && chartInstance.options.scales && chartInstance.options.scales.y) {
+            if (privacyMode) {
+                // Store original callback if not already stored
+                if (!originalYTickCallback) {
+                    originalYTickCallback = chartInstance.options.scales.y.ticks.callback;
+                }
+                // Replace with privacy callback
+                chartInstance.options.scales.y.ticks.callback = function(value) {
+                    return '£***';
+                };
+            } else {
+                // Restore original callback
+                if (originalYTickCallback) {
+                    chartInstance.options.scales.y.ticks.callback = originalYTickCallback;
+                }
+            }
+            // Update the chart to reflect changes
+            chartInstance.update('none');
+        }
+        
+        // Update button icon
+        if (privacyMode) {
+            privacyIcon.className = 'fas fa-eye-slash text-blue-400 text-lg';
+        } else {
+            privacyIcon.className = 'fas fa-eye text-gray-400 text-lg';
+        }
+    }
+    
+    // Initialize chart
+    function initChart() {
+        const ctx = document.getElementById('networthChart').getContext('2d');
+        
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Net Worth',
+                    data: [],
+                    borderColor: '#3B82F6',
+                    backgroundColor: function(context) {
+                        const chart = context.chart;
+                        const {ctx, chartArea} = chart;
+                        if (!chartArea) {
+                            return null;
+                        }
+                        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+                        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+                        return gradient;
+                    },
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0,
+                    pointHoverRadius: 6,
+                    pointHoverBackgroundColor: '#3B82F6',
+                    pointHoverBorderColor: '#ffffff',
+                    pointHoverBorderWidth: 2,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            maxTicksLimit: 8
+                        }
+                    },
+                    y: {
+                        display: true,
+                        position: 'right',
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            callback: function(value) {
+                                return '£' + (value / 1000).toFixed(0) + 'k';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                onHover: (event, activeElements) => {
+                    document.getElementById('networthChart').style.cursor = activeElements.length > 0 ? 'pointer' : 'default';
+                }
+            }
+        });
+        
+        // Add time period buttons
+        addTimeControls();
+        
+        // Load initial data
+        loadChartData(currentPeriod);
+    }
+    
+    // Add time period control buttons
+    function addTimeControls() {
+        const controlsContainer = document.getElementById('chartControls');
+        
+        const periods = ['24H', '1W', '1M', '3M', '6M', '1Y', 'Max'];
+        periods.forEach(period => {
+            const btn = document.createElement('button');
+            btn.textContent = period;
+            btn.className = `px-3 py-1 text-sm rounded transition-colors ${
+                period === currentPeriod 
+                    ? 'bg-blue-500 text-white' 
+                    : 'text-gray-400 hover:text-white hover:bg-blue-500/20'
+            }`;
+            btn.onclick = () => switchPeriod(period);
+            controlsContainer.appendChild(btn);
+        });
+    }
+    
+    // Switch time period
+    function switchPeriod(period) {
+        currentPeriod = period;
+        
+        // Update button states
+        const buttons = document.querySelectorAll('#chartControls button');
+        buttons.forEach(btn => {
+            if (btn.textContent === period) {
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors bg-blue-500 text-white';
+            } else {
+                btn.className = 'px-3 py-1 text-sm rounded transition-colors text-gray-400 hover:text-white hover:bg-blue-500/20';
+            }
+        });
+        
+        // Load new data
+        loadChartData(period);
+    }
+    
+    // Calculate smart Y-axis settings based on data range
+    function updateChartYAxis(values, period) {
+        if (!values || values.length === 0) return;
+        
+        const minValue = Math.min(...values);
+        const maxValue = Math.max(...values);
+        const dataRange = maxValue - minValue;
+        
+        // Calculate smart step size based on range
+        function calculateSmartStep(range) {
+            if (range <= 500) return 100;
+            if (range <= 2000) return 250;
+            if (range <= 5000) return 500;
+            if (range <= 10000) return 1000;
+            if (range <= 25000) return 2500;
+            if (range <= 50000) return 5000;
+            return Math.ceil(range / 8 / 10000) * 10000; // For larger ranges
+        }
+        
+        const stepSize = calculateSmartStep(dataRange);
+        
+        // Calculate nice min/max values that align with step size
+        const paddingSteps = Math.max(1, Math.ceil(dataRange * 0.05 / stepSize)); // 5% padding in steps
+        const alignedMin = Math.floor(minValue / stepSize) * stepSize - (paddingSteps * stepSize);
+        const alignedMax = Math.ceil(maxValue / stepSize) * stepSize + (paddingSteps * stepSize);
+        
+        // Update Y-axis configuration
+        chartInstance.options.scales.y.min = alignedMin;
+        chartInstance.options.scales.y.max = alignedMax;
+        chartInstance.options.scales.y.ticks.stepSize = stepSize;
+        
+        // Update tick formatting based on period and step size, respecting privacy mode
+        if (privacyMode) {
+            // In privacy mode, keep showing £*** 
+            chartInstance.options.scales.y.ticks.callback = function(value) {
+                return '£***';
+            };
+        } else {
+            // Normal formatting
+            chartInstance.options.scales.y.ticks.callback = function(value) {
+                if (stepSize < 1000) {
+                    // For small steps, show more precision
+                    return '£' + (value / 1000).toFixed(2) + 'k';
+                } else {
+                    // For large steps, keep simple format
+                    return '£' + (value / 1000).toFixed(0) + 'k';
+                }
+            };
+            // Store as the new original callback for privacy toggle
+            originalYTickCallback = chartInstance.options.scales.y.ticks.callback;
+        }
+    }
+    
+    // Load chart data
+    async function loadChartData(period) {
+        try {
+            const response = await fetch(`/api/dashboard-chart-data?period=${period}`);
+            const data = await response.json();
+            
+            if (chartInstance && data.length > 0) {
+                // Format labels based on time period
+                const labels = data.map(d => {
+                    const date = new Date(d.date);
+                    if (period === '24H') {
+                        // Show clean 15-min intervals: 00:00, 00:15, 00:30, 00:45
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        const minutes = date.getMinutes().toString().padStart(2, '0');
+                        return `${hours}:${minutes}`;
+                    } else if (period === '1W') {
+                        // Show 6-hour intervals: Mon 00:00, Mon 06:00, etc.
+                        const day = date.toLocaleDateString('en-US', { weekday: 'short' });
+                        const hours = date.getHours().toString().padStart(2, '0');
+                        return `${day} ${hours}:00`;
+                    } else if (period === '1M' || period === '3M') {
+                        // Show end of day: Sep 13 (or middle of day)
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    } else {
+                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
+                });
+                
+                chartInstance.data.labels = labels;
+                const values = data.map(d => d.value);
+                chartInstance.data.datasets[0].data = values;
+                
+                // Calculate smart Y-axis scaling
+                updateChartYAxis(values, period);
+                
+                // Update chart instantly without animation for smooth filtering
+                chartInstance.update('none');
+            }
+        } catch (error) {
+            console.error('Error loading chart data:', error);
+        }
+    }
+    
+    // Load platform breakdown data
+    async function loadPlatformBreakdown() {
+        try {
+            const response = await fetch('/api/platform-breakdown');
+            const data = await response.json();
+            
+            if (data.platforms) {
+                displayPlatformBreakdown(data.platforms);
+            }
+        } catch (error) {
+            console.error('Error loading platform breakdown:', error);
+        }
+    }
+    
+    // Display platform breakdown
+    function displayPlatformBreakdown(platforms) {
+        const container = document.getElementById('platformBreakdown');
+        container.innerHTML = '';
+        
+        // Calculate total portfolio value for percentage calculation
+        const totalPortfolioValue = platforms.reduce((sum, platform) => sum + platform.value, 0);
+        
+        platforms.forEach((platform, index) => {
+            // Get platform-specific color from backend, fallback to blue if not found
+            const color = platformColors[platform.name] || '#3B82F6';
+            
+            // Calculate portfolio percentage
+            const portfolioPercentage = ((platform.value / totalPortfolioValue) * 100).toFixed(1);
+            
+            // Format change amount and percentage
+            const changeAmount = platform.change_amount;
+            const changePercent = platform.change_percent;
+            const isPositive = changeAmount >= 0;
+            const changeClass = isPositive ? 'text-green-400' : 'text-red-400';
+            const changeIcon = isPositive ? '↗' : '↘';
+            
+            const platformHtml = `
+                <div class="flex justify-between py-3 px-2 hover:bg-white/5 rounded-lg transition-colors duration-200">
+                    <!-- Left side: Platform name with colored dot and percentage -->
+                    <div class="flex items-baseline space-x-3">
+                        <div class="w-2.5 h-2.5 rounded-full" style="background-color: ${color}; margin-top: 0.125rem;"></div>
+                        <div class="flex flex-col">
+                            <div class="text-gray-100 font-medium text-sm leading-none">${platform.name}</div>
+                            <div class="text-gray-400 text-xs mt-1">${portfolioPercentage}% of total</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right side: Value and change -->
+                    <div class="text-right flex flex-col">
+                        <!-- Value -->
+                        <div class="text-gray-100 text-lg font-semibold privacy-sensitive leading-none" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 500; letter-spacing: 0.5px; font-variant-numeric: slashed-zero;">
+                            £${Math.round(platform.value).toLocaleString()}
+                        </div>
+                        <!-- Monthly change -->
+                        <div class="text-xs ${changeClass} mt-1" style="font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Source Code Pro', 'Menlo', 'Consolas', monospace; font-weight: 400;">
+                            ${isPositive ? '+' : ''}£${Math.abs(changeAmount).toFixed(0)} (${isPositive ? '+' : ''}${changePercent.toFixed(1)}%)
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.innerHTML += platformHtml;
+        });
+    }
+    
+    // Number scramble animation function
+    function animateNumber(element, targetValue, duration = 800) {
+        const startValue = parseFloat(element.textContent.replace(/[£,\s]/g, '')) || 0;
+        const startTime = Date.now();
+        const isNegative = targetValue < 0;
+        const absTarget = Math.abs(targetValue);
+        const absStart = Math.abs(startValue);
+        
+        function scrambleStep() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            if (progress < 1) {
+                // Generate random numbers during animation
+                const currentValue = absStart + (absTarget - absStart) * progress;
+                const randomOffset = (Math.random() - 0.5) * absTarget * 0.1 * (1 - progress);
+                const displayValue = Math.max(0, currentValue + randomOffset);
+                
+                // Format based on element type
+                if (element.classList.contains('percentage')) {
+                    element.textContent = `${isNegative ? '-' : '+'}${displayValue.toFixed(1)}%`;
+                } else {
+                    element.textContent = `${isNegative ? '-' : ''}£${Math.round(displayValue).toLocaleString()}`;
+                }
+                
+                requestAnimationFrame(scrambleStep);
+            } else {
+                // Set final value
+                if (element.classList.contains('percentage')) {
+                    element.textContent = `${isNegative ? '-' : '+'}${absTarget.toFixed(1)}%`;
+                } else {
+                    element.textContent = `${isNegative ? '-' : ''}£${Math.round(absTarget).toLocaleString()}`;
+                }
+            }
+        }
+        
+        scrambleStep();
+    }
+    
+    // Auto-refresh functionality
+    let refreshInterval;
+    
+    async function refreshDashboardData() {
+        try {
+            console.log('🔄 Refreshing dashboard data...');
+            
+            // Fetch fresh data from the current page URL
+            const response = await fetch(window.location.pathname, {
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const newDoc = parser.parseFromString(html, 'text/html');
+            
+            // Extract new values from the fresh HTML
+            const newNetWorth = newDoc.querySelector('.text-6xl');
+            const newMomChange = newDoc.querySelector('.text-xl');
+            const newYearlyChange = newDoc.querySelectorAll('.text-xl')[1];
+            const newLastUpdate = newDoc.querySelector('.text-sm');
+            
+            if (newNetWorth) {
+                const currentNetWorth = document.querySelector('.text-6xl');
+                const currentValue = parseFloat(currentNetWorth.textContent.replace(/[£,\s]/g, ''));
+                const newValue = parseFloat(newNetWorth.textContent.replace(/[£,\s]/g, ''));
+                
+                console.log('🔍 Checking net worth:', { currentValue, newValue, difference: Math.abs(currentValue - newValue) });
+                
+                if (Math.abs(currentValue - newValue) > 0.01) {
+                    // Animate main net worth with scramble effect (lowered threshold to catch small changes)
+                    animateNumber(currentNetWorth, newValue, 1200);
+                    console.log('🎯 Net worth updated with animation:', currentValue, '->', newValue);
+                } else {
+                    console.log('⚪ No significant net worth change detected');
+                }
+            }
+            
+            // Update other financial numbers
+            if (newMomChange) {
+                const currentMomChange = document.querySelector('.text-xl');
+                if (currentMomChange && currentMomChange.textContent !== newMomChange.textContent) {
+                    currentMomChange.innerHTML = newMomChange.innerHTML;
+                }
+            }
+            
+            if (newYearlyChange) {
+                const currentYearlyChange = document.querySelectorAll('.text-xl')[1];
+                if (currentYearlyChange && currentYearlyChange.textContent !== newYearlyChange.textContent) {
+                    currentYearlyChange.innerHTML = newYearlyChange.innerHTML;
+                }
+            }
+            
+            // Update last updated time
+            if (newLastUpdate) {
+                const currentLastUpdate = document.querySelector('.text-sm');
+                if (currentLastUpdate) {
+                    currentLastUpdate.textContent = newLastUpdate.textContent;
+                }
+            }
+            
+            // Refresh chart data - preserve current period
+            await loadChartData(currentPeriod);
+            
+            // Refresh platform breakdown
+            await loadPlatformBreakdown();
+            
+            console.log('✅ Dashboard refresh completed');
+            
+        } catch (error) {
+            console.warn('⚠️  Dashboard refresh failed:', error);
+        }
+    }
+    
+    function startAutoRefresh() {
+        // Clear any existing interval
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+        }
+        
+        // Start refreshing every 30 seconds
+        refreshInterval = setInterval(refreshDashboardData, 30000);
+        console.log('🚀 Auto-refresh started (30s intervals)');
+    }
+    
+    function stopAutoRefresh() {
+        if (refreshInterval) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+            console.log('⏹️  Auto-refresh stopped');
+        }
+    }
+    
+    // Pause auto-refresh when page is not visible
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopAutoRefresh();
+        } else {
+            startAutoRefresh();
+        }
+    });
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initChart();
+        loadPlatformBreakdown();
+        
+        // Add privacy toggle event listener
+        document.getElementById('privacyToggle').addEventListener('click', togglePrivacy);
+        
+        // Start auto-refresh
+        startAutoRefresh();
+        
+        console.log('🎯 Dashboard v2 with auto-refresh and animations ready');
+    });
+    </script>
+</body>
+</html>
